@@ -1,50 +1,44 @@
-# [PROJECT_NAME] Constitution
-<!-- Example: Spec Constitution, TaskFlow Constitution, etc. -->
+<!--
+Sync Impact Report:
+- Version change: 0.0.0 → 1.0.0
+- Modified principles: N/A (Initial creation)
+- Added sections: Core Principles (Stack, Security, Roles, Localization, Integrations), Governance
+- Removed sections: N/A
+- Templates requiring updates:
+  ⚠ .specify/templates/plan-template.md
+  ⚠ .specify/templates/spec-template.md
+  ⚠ .specify/templates/tasks-template.md
+- Follow-up TODOs: Ensure spec templates are customized.
+-->
+
+# Imtihan Constitution
 
 ## Core Principles
 
-### [PRINCIPLE_1_NAME]
-<!-- Example: I. Library-First -->
-[PRINCIPLE_1_DESCRIPTION]
-<!-- Example: Every feature starts as a standalone library; Libraries must be self-contained, independently testable, documented; Clear purpose required - no organizational-only libraries -->
+### I. Stack Alignment & Technology
+Always use Next.js App Router, Javascript, and Tailwind CSS. Components should be built using `shadcn/ui`. Use Supabase PostgreSQL as the database and NextAuth v5 for authentication.
 
-### [PRINCIPLE_2_NAME]
-<!-- Example: II. CLI Interface -->
-[PRINCIPLE_2_DESCRIPTION]
-<!-- Example: Every library exposes functionality via CLI; Text in/out protocol: stdin/args → stdout, errors → stderr; Support JSON + human-readable formats -->
+### II. Data Access & Security
+Always use Prisma ORM for database operations. Never use raw SQL.
+Always check role permission via Casbin before every API route. 
 
-### [PRINCIPLE_3_NAME]
-<!-- Example: III. Test-First (NON-NEGOTIABLE) -->
-[PRINCIPLE_3_DESCRIPTION]
-<!-- Example: TDD mandatory: Tests written → User approved → Tests fail → Then implement; Red-Green-Refactor cycle strictly enforced -->
+### III. Roles and Privacy Constraints
+Roles: `student`, `guardian`, `teacher`, `institution_admin`, `content_editor`, `moderator`, `marketer`, `support_agent`, `finance_manager`, `super_admin`.
+Never expose user PII (Personally Identifiable Information) to `marketer` or `content_editor` roles.
 
-### [PRINCIPLE_4_NAME]
-<!-- Example: IV. Integration Testing -->
-[PRINCIPLE_4_DESCRIPTION]
-<!-- Example: Focus areas requiring integration tests: New library contract tests, Contract changes, Inter-service communication, Shared schemas -->
+### IV. Localization and Design
+The primary language of the UI is English with Urdu text support (specifically using Noto Nastaliq font).
+Colors: Teal (#1aab7a) is the primary color, and Gold (#e6a817) is the accent color.
 
-### [PRINCIPLE_5_NAME]
-<!-- Example: V. Observability, VI. Versioning & Breaking Changes, VII. Simplicity -->
-[PRINCIPLE_5_DESCRIPTION]
-<!-- Example: Text I/O ensures debuggability; Structured logging required; Or: MAJOR.MINOR.BUILD format; Or: Start simple, YAGNI principles -->
+### V. External Integrations
+Payments: JazzCash + EasyPaisa only. No Stripe.
+AI: Gemini API is the exclusive provider. (Use `gemini-1.5-flash` for MCQs, `gemini-1.5-pro` for doubt solver).
 
-## [SECTION_2_NAME]
-<!-- Example: Additional Constraints, Security Requirements, Performance Standards, etc. -->
-
-[SECTION_2_CONTENT]
-<!-- Example: Technology stack requirements, compliance standards, deployment policies, etc. -->
-
-## [SECTION_3_NAME]
-<!-- Example: Development Workflow, Review Process, Quality Gates, etc. -->
-
-[SECTION_3_CONTENT]
-<!-- Example: Code review requirements, testing gates, deployment approval process, etc. -->
+## Roles & Permissions Matrix
+Given the complexity of the platform (student, guardian, teacher, institution_admin, content_editor, moderator, marketer, support_agent, finance_manager, super_admin), Casbin will act as the single source of truth for ABAC/RBAC logic.
 
 ## Governance
-<!-- Example: Constitution supersedes all other practices; Amendments require documentation, approval, migration plan -->
+This Constitution supersedes all other practices and acts as the ultimate truth for code generation and PR reviews.
+Amendments require documentation, approval, and a migration plan if changing core dependencies or security practices.
 
-[GOVERNANCE_RULES]
-<!-- Example: All PRs/reviews must verify compliance; Complexity must be justified; Use [GUIDANCE_FILE] for runtime development guidance -->
-
-**Version**: [CONSTITUTION_VERSION] | **Ratified**: [RATIFICATION_DATE] | **Last Amended**: [LAST_AMENDED_DATE]
-<!-- Example: Version: 2.1.1 | Ratified: 2025-06-13 | Last Amended: 2025-07-16 -->
+**Version**: 1.0.0 | **Ratified**: 2026-04-16 | **Last Amended**: 2026-04-16

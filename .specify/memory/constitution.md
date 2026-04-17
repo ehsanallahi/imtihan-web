@@ -41,4 +41,4 @@ Given the complexity of the platform (student, guardian, teacher, institution_ad
 This Constitution supersedes all other practices and acts as the ultimate truth for code generation and PR reviews.
 Amendments require documentation, approval, and a migration plan if changing core dependencies or security practices.
 
-**Version**: 1.0.0 | **Ratified**: 2026-04-16 | **Last Amended**: 2026-04-16
+**Version**: 1.0.0 | **Ratified**: 2026-04-16 | **Last Amended**: 2026-04-17

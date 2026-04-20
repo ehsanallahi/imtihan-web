@@ -73,6 +73,7 @@ model User {
   avatarId      String?
   isActive      Boolean   @default(true)
   emailVerified DateTime?
+  hashedPassword String?
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
   deletedAt     DateTime?

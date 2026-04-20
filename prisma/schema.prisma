@@ -1,13 +1,319 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Get a free hosted Postgres database in seconds: `npx create-db`
-
 generator client {
-  provider = "prisma-client"
-  output   = "../src/generated/prisma"
+  provider = "prisma-client-js"
 }
 
 datasource db {
-  provider = "postgresql"
+  provider  = "postgresql"
+}
+
+enum Role {
+  super_admin
+  finance_manager
+  content_editor
+  moderator
+  marketer
+  support_agent
+  institution_admin
+  teacher
+  guardian
+  student
+}
+
+enum Grade {
+  nine
+  ten
+  eleven
+  twelve
+}
+
+enum Board {
+  punjab
+  sindh
+  kpk
+  federal
+  aku
+  private
+}
+
+enum Difficulty {
+  easy
+  medium
+  hard
+}
+
+enum SessionType {
+  practice
+  mock_exam
+  past_paper
+}
+
+enum SubscriptionPlan {
+  free
+  student_monthly
+  student_yearly
+  competitive_monthly
+  institution_yearly
+}
+
+enum SubscriptionStatus {
+  active
+  expired
+  cancelled
+  pending
+}
+
+model User {
+  id            String    @id @default(cuid())
+  email         String    @unique
+  name          String?
+  nameUrdu      String?
+  phone         String?   @unique
+  role          Role      @default(student)
+  avatar        String?
+  avatarId      String?
+  isActive      Boolean   @default(true)
+  emailVerified DateTime?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  deletedAt     DateTime?
+
+  accounts        Account[]
+  sessions        Session[]
+  studentProfile  StudentProfile?
+  teacherProfile  TeacherProfile?
+  guardianProfile GuardianProfile?
+  subscriptions   Subscription[]
+  examSessions    ExamSession[]
+  uploadedContent TextbookUpload[]
+  pastPapers      PastPaper[]      @relation("UploadedBy")
+}
+
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String? @db.Text
+  access_token      String? @db.Text
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String? @db.Text
+  session_state     String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+}
+
+model StudentProfile {
+  id                   String            @id @default(cuid())
+  userId               String            @unique
+  grade                Grade?
+  board                Board?
+  studyStreak          Int               @default(0)
+  totalMcqsAttempted   Int               @default(0)
+  createdAt            DateTime          @default(now())
+  updatedAt            DateTime          @updatedAt
+  user                 User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  guardians            GuardianStudent[]
+}
+
+model TeacherProfile {
+  id                String       @id @default(cuid())
+  userId            String       @unique
+  institutionId     String?
+  subjectSpecialty  String?
+  createdAt         DateTime     @default(now())
+  updatedAt         DateTime     @updatedAt
+  user              User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  institution       Institution? @relation(fields: [institutionId], references: [id])
+}
+
+model GuardianProfile {
+  id        String            @id @default(cuid())
+  userId    String            @unique
+  createdAt DateTime          @default(now())
+  updatedAt DateTime          @updatedAt
+  user      User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  students  GuardianStudent[]
+}
+
+model Institution {
+  id        String           @id @default(cuid())
+  name      String
+  city      String?
+  adminId   String
+  createdAt DateTime         @default(now())
+  updatedAt DateTime         @updatedAt
+  teachers  TeacherProfile[]
+}
+
+model GuardianStudent {
+  id               String         @id @default(cuid())
+  guardianId       String
+  studentProfileId String
+  createdAt        DateTime       @default(now())
+  guardian         GuardianProfile @relation(fields: [guardianId], references: [id])
+  student          StudentProfile  @relation(fields: [studentProfileId], references: [id])
+}
+
+model Subject {
+  id        String    @id @default(cuid())
+  name      String
+  nameUrdu  String?
+  grade     Grade
+  board     Board
+  isActive  Boolean   @default(true)
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  chapters  Chapter[]
+  pastPapers PastPaper[]
+  mcqs      MCQ[]
+}
+
+model Chapter {
+  id              String           @id @default(cuid())
+  name            String
+  nameUrdu        String?
+  number          Int
+  subjectId       String
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
+  subject         Subject          @relation(fields: [subjectId], references: [id])
+  mcqs            MCQ[]
+  textbookUploads TextbookUpload[]
+}
+
+model PastPaper {
+  id            String    @id @default(cuid())
+  title         String
+  year          Int
+  board         Board
+  grade         Grade
+  subjectId     String
+  cloudinaryUrl String
+  cloudinaryId  String
+  isPremium     Boolean   @default(false)
+  totalMarks    Int?
+  uploadedById  String
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  deletedAt     DateTime?
+  subject       Subject   @relation(fields: [subjectId], references: [id])
+  uploadedBy    User      @relation("UploadedBy", fields: [uploadedById], references: [id])
+}
+
+model MCQ {
+  id              String          @id @default(cuid())
+  question        String          @db.Text
+  questionUrdu    String?         @db.Text
+  optionA         String          @db.Text
+  optionB         String          @db.Text
+  optionC         String          @db.Text
+  optionD         String          @db.Text
+  correctAnswer   String
+  explanation     String?         @db.Text
+  difficulty      Difficulty      @default(medium)
+  topicTag        String?
+  chapterId       String?
+  subjectId       String
+  isAiGenerated   Boolean         @default(false)
+  isApproved      Boolean         @default(true)
+  createdById     String
+  createdAt       DateTime        @default(now())
+  updatedAt       DateTime        @updatedAt
+  deletedAt       DateTime?
+  chapter         Chapter?        @relation(fields: [chapterId], references: [id])
+  subject         Subject         @relation(fields: [subjectId], references: [id])
+  attempts        MCQAttempt[]
+  textbookUpload  TextbookUpload? @relation(fields: [textbookUploadId], references: [id])
+  textbookUploadId String?
+}
+
+model TextbookUpload {
+  id             String   @id @default(cuid())
+  cloudinaryUrl  String
+  cloudinaryId   String
+  originalName   String
+  uploadedById   String
+  chapterId      String?
+  subjectId      String?
+  mcqsGenerated  Boolean  @default(false)
+  createdAt      DateTime @default(now())
+  uploadedBy     User     @relation(fields: [uploadedById], references: [id])
+  chapter        Chapter? @relation(fields: [chapterId], references: [id])
+  mcqs           MCQ[]
+}
+
+model ExamSession {
+  id                String       @id @default(cuid())
+  studentId         String
+  sessionType       SessionType
+  subjectId         String?
+  pastPaperId       String?
+  totalQuestions    Int
+  correctAnswers    Int          @default(0)
+  timeTakenSeconds  Int?
+  completedAt       DateTime?
+  createdAt         DateTime     @default(now())
+  student           User         @relation(fields: [studentId], references: [id])
+  results           MCQAttempt[]
+}
+
+model MCQAttempt {
+  id               String       @id @default(cuid())
+  examSessionId    String
+  mcqId            String
+  selectedAnswer   String
+  isCorrect        Boolean
+  timeTakenSeconds Int?
+  createdAt        DateTime     @default(now())
+  examSession      ExamSession  @relation(fields: [examSessionId], references: [id])
+  mcq              MCQ          @relation(fields: [mcqId], references: [id])
+}
+
+model Subscription {
+  id            String             @id @default(cuid())
+  userId        String
+  plan          SubscriptionPlan
+  status        SubscriptionStatus
+  startDate     DateTime
+  endDate       DateTime?
+  amountPkr     Int
+  paymentMethod String?
+  paymentRef    String?
+  createdAt     DateTime           @default(now())
+  updatedAt     DateTime           @updatedAt
+  user          User               @relation(fields: [userId], references: [id])
+}
+
+model PromoCode {
+  id              String    @id @default(cuid())
+  code            String    @unique
+  discountPercent Int
+  maxUses         Int?
+  usedCount       Int       @default(0)
+  expiresAt       DateTime?
+  createdById     String
+  isActive        Boolean   @default(true)
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
 }

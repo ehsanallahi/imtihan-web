@@ -1,5 +1,5 @@
 import { newEnforcer, Model } from 'casbin'
-import path from 'path'
+import { PrismaAdapter } from 'casbin-prisma-adapter'
 
 // Casbin RBAC model definition
 const modelText = `
@@ -19,12 +19,23 @@ e = some(where (p.eft == allow))
 m = g(r.sub, p.sub) && (r.obj == p.obj || p.obj == '*') && (r.act == p.act || p.act == '*')
 `
 
-export async function checkPermission(role, resource, action) {
+// Cache enforcer for reuse
+let enforcer = null
+
+async function getEnforcer() {
+  if (enforcer) return enforcer
+
   const model = new Model()
   model.loadModelFromText(modelText)
   
-  const policyPath = path.join(process.cwd(), 'src/lib/casbin-policy.csv')
-  const enforcer = await newEnforcer(model, policyPath)
+  // The adapter will automatically use the Prisma client
+  const adapter = await PrismaAdapter.newAdapter()
+  enforcer = await newEnforcer(model, adapter)
   
-  return await enforcer.enforce(role, resource, action)
+  return enforcer
+}
+
+export async function checkPermission(role, resource, action) {
+  const ef = await getEnforcer()
+  return await ef.enforce(role, resource, action)
 }

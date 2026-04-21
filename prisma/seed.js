@@ -2,6 +2,9 @@ const { PrismaClient } = require("@prisma/client");
 const { PrismaPg } = require("@prisma/adapter-pg");
 const { Pool } = require("pg");
 const bcrypt = require("bcryptjs");
+const fs = require("fs");
+const path = require("path");
+
 // Ensure we load environment variables, prioritizing .env.local
 require("dotenv").config({ path: ".env.local" });
 require("dotenv").config();
@@ -15,6 +18,7 @@ const adapter = new PrismaPg(pool);
 const prisma = new PrismaClient({ adapter });
 
 async function main() {
+  // 1. Seed Admin User
   const hashedPassword = await bcrypt.hash("password123", 10);
   
   const admin = await prisma.user.upsert({
@@ -30,7 +34,54 @@ async function main() {
     },
   });
 
-  console.log({ admin });
+  console.log("Admin user seeded:", admin.email);
+
+  // 1.1 Seed Student User
+  const student = await prisma.user.upsert({
+    where: { email: "student@imtihan.com" },
+    update: {
+      hashedPassword: hashedPassword,
+    },
+    create: {
+      email: "student@imtihan.com",
+      name: "Student User",
+      hashedPassword: hashedPassword,
+      role: "student",
+    },
+  });
+
+  console.log("Student user seeded:", student.email);
+
+  // 2. Seed Casbin Rules from CSV
+  const policyPath = path.join(process.cwd(), "src/lib/casbin-policy.csv");
+  if (fs.existsSync(policyPath)) {
+    const fileContent = fs.readFileSync(policyPath, "utf-8");
+    const lines = fileContent.split("\n").filter(line => line.trim() !== "");
+    
+    console.log(`Found ${lines.length} policy lines in CSV. Migrating to database...`);
+    
+    // Clear existing rules to avoid duplicates on re-seed
+    await prisma.casbinRule.deleteMany({});
+    
+    for (const line of lines) {
+      const [ptype, v0, v1, v2, v3, v4, v5] = line.split(",").map(s => s.trim());
+      
+      await prisma.casbinRule.create({
+        data: {
+          ptype,
+          v0,
+          v1,
+          v2,
+          v3,
+          v4,
+          v5
+        }
+      });
+    }
+    console.log("Casbin rules synced successfully.");
+  } else {
+    console.warn("Casbin policy CSV not found at:", policyPath);
+  }
 }
 
 main()

@@ -1,11 +1,14 @@
 "use client";
 
 import { SessionProvider } from "next-auth/react";
+import { TooltipProvider } from "@/components/ui/tooltip";
 
 export function Providers({ children }) {
   return (
     <SessionProvider>
-      {children}
+      <TooltipProvider>
+        {children}
+      </TooltipProvider>
     </SessionProvider>
   );
 }

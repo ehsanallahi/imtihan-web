@@ -1,16 +1,24 @@
 const { PrismaClient } = require("@prisma/client");
+const { PrismaPg } = require("@prisma/adapter-pg");
+const { Pool } = require("pg");
 const bcrypt = require("bcryptjs");
 
-const prisma = new PrismaClient({
-  datasourceUrl: process.env.DATABASE_URL,
+const connectionString = process.env.DATABASE_URL;
+const pool = new Pool({ 
+  connectionString,
+  ssl: { rejectUnauthorized: false }
 });
+const adapter = new PrismaPg(pool);
+const prisma = new PrismaClient({ adapter });
 
 async function main() {
   const hashedPassword = await bcrypt.hash("password123", 10);
   
   const admin = await prisma.user.upsert({
     where: { email: "admin@imtihan.com" },
-    update: {},
+    update: {
+      hashedPassword: hashedPassword,
+    },
     create: {
       email: "admin@imtihan.com",
       name: "Admin User",

@@ -1,19 +1,27 @@
-import { NextResponse } from 'next/server'
 import cloudinary from '@/lib/cloudinary'
-import { getServerSession } from 'next-auth'
-import { authOptions } from '@/lib/auth'
+import { authorize } from '@/lib/auth-guards'
 
 export async function POST(req) {
-    // Only allow authenticated users to get a signature
-    const session = await getServerSession(authOptions)
-    if (!session) return NextResponse.json(
-        { error: 'Unauthorized' }, { status: 401 }
-    )
-
     const { paramsToSign } = await req.json()
+    
+    // Determine the required permission based on the targeting folder
+    const folder = paramsToSign.folder || ""
+    let resource = "textbook_upload"
+    
+    if (folder.includes("past-papers")) {
+        resource = "past_paper"
+    }
+
+    const authResult = await authorize(resource, "write")
+    
+    if (authResult.error) {
+        return Response.json({ error: authResult.error }, { status: authResult.status })
+    }
+
     const signature = cloudinary.utils.api_sign_request(
         paramsToSign,
         process.env.CLOUDINARY_API_SECRET
     )
-    return NextResponse.json({ signature })
+    
+    return Response.json({ signature })
 }

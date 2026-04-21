@@ -82,6 +82,63 @@ async function main() {
   } else {
     console.warn("Casbin policy CSV not found at:", policyPath);
   }
+
+  // 3. Seed Master Data (Subjects & Chapters)
+  console.log("Seeding Master Data (Subjects & Chapters)...");
+  
+  const subjects = [
+    { name: "Biology", nameUrdu: "حیاتیات", grade: "nine", board: "punjab" },
+    { name: "Physics", nameUrdu: "طبعیات", grade: "nine", board: "punjab" },
+    { name: "Chemistry", nameUrdu: "کیمیاء", grade: "nine", board: "punjab" },
+    { name: "Mathematics", nameUrdu: "ریاضی", grade: "nine", board: "punjab" },
+  ];
+
+  for (const s of subjects) {
+    const subject = await prisma.subject.upsert({
+      where: { 
+        // We'll use a combination of name, grade, and board to uniquely identify subjects for upsert
+        // Since we don't have a unique constraint on these in schema, we'll search first
+        id: (await prisma.subject.findFirst({ 
+          where: { name: s.name, grade: s.grade, board: s.board } 
+        }))?.id || 'new-subject'
+      },
+      update: {
+        nameUrdu: s.nameUrdu,
+      },
+      create: {
+        name: s.name,
+        nameUrdu: s.nameUrdu,
+        grade: s.grade,
+        board: s.board,
+      },
+    });
+
+    // Seed Chapter samples for Biology
+    if (s.name === "Biology") {
+      const bioChapters = [
+        { name: "Introduction to Biology", number: 1 },
+        { name: "Solving a Biological Problem", number: 2 },
+        { name: "Biodiversity", number: 3 },
+      ];
+
+      for (const ch of bioChapters) {
+        await prisma.chapter.upsert({
+          where: {
+            id: (await prisma.chapter.findFirst({
+              where: { name: ch.name, subjectId: subject.id }
+            }))?.id || 'new-chapter'
+          },
+          update: {},
+          create: {
+            name: ch.name,
+            number: ch.number,
+            subjectId: subject.id,
+          }
+        });
+      }
+    }
+  }
+  console.log("Master data seeded successfully.");
 }
 
 main()

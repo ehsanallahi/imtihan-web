@@ -1,5 +1,6 @@
 import { newEnforcer, Model } from 'casbin'
 import { PrismaAdapter } from 'casbin-prisma-adapter'
+import { db } from '@/lib/db'
 
 // Casbin RBAC model definition
 const modelText = `
@@ -28,8 +29,8 @@ async function getEnforcer() {
   const model = new Model()
   model.loadModelFromText(modelText)
   
-  // The adapter will automatically use the Prisma client
-  const adapter = await PrismaAdapter.newAdapter()
+  // Explicitly pass our existing DB client directly
+  const adapter = await PrismaAdapter.newAdapter(db)
   enforcer = await newEnforcer(model, adapter)
   
   return enforcer

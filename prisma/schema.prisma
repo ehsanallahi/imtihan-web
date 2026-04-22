@@ -188,6 +188,7 @@ model Subject {
   chapters  Chapter[]
   pastPapers PastPaper[]
   mcqs      MCQ[]
+  textbookUploads TextbookUpload[]
 }
 
 model Chapter {
@@ -261,6 +262,7 @@ model TextbookUpload {
   createdAt      DateTime @default(now())
   uploadedBy     User     @relation(fields: [uploadedById], references: [id])
   chapter        Chapter? @relation(fields: [chapterId], references: [id])
+  subject        Subject? @relation(fields: [subjectId], references: [id])
   mcqs           MCQ[]
 }
 

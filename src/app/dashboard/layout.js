@@ -18,12 +18,24 @@ import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 const menuItems = [
   { icon: LayoutDashboard, label: "Dashboard", href: "/dashboard" },
   { icon: BookOpen, label: "My Subjects", href: "/dashboard/subjects" },
-  { icon: FileText, label: "Exams", href: "/dashboard/exams" },
+  { 
+    icon: FileText, 
+    label: "Content Management", 
+    href: "/dashboard/content",
+    roles: ["super_admin", "content_editor", "moderator"] 
+  },
+  { icon: GraduationCap, label: "Exams", href: "/dashboard/exams" },
   { icon: Settings, label: "Settings", href: "/dashboard/settings" },
 ];
 
 export default function DashboardLayout({ children }) {
   const { data: session } = useSession();
+  const userRole = session?.user?.role;
+
+  // Filter menu items based on user role
+  const filteredMenuItems = menuItems.filter(item => 
+    !item.roles || item.roles.includes(userRole)
+  );
 
   return (
     <SidebarProvider>
@@ -39,7 +51,7 @@ export default function DashboardLayout({ children }) {
           </SidebarHeader>
           <SidebarContent className="px-4 py-2">
             <SidebarMenu>
-              {menuItems.map((item) => (
+              {filteredMenuItems.map((item) => (
                 <SidebarMenuItem key={item.label}>
                   <SidebarMenuButton asChild tooltip={item.label}>
                     <Link href={item.href} className="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-teal-50 text-muted-foreground hover:text-teal-700 transition-colors">

@@ -67,7 +67,7 @@ export async function generateMcqsAction(textbookUploadId) {
   const prompt = `Generate 20 MCQs based on the attached chapter PDF content. Follow the system instructions strictly.`
 
   // Helper for exponential backoff to handle temporary AI outages
-  const retryWithBackoff = async (fn, maxRetries = 3, initialDelay = 3000) => {
+  const retryWithBackoff = async (fn, maxRetries = 5, initialDelay = 5000) => {
     let lastError;
     for (let i = 0; i < maxRetries; i++) {
       try {

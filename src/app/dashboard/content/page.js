@@ -15,7 +15,8 @@ import { UploadCard } from "@/components/cms/UploadCard"
 import { StatusBadge } from "@/components/cms/StatusBadge"
 import { GenerateMcqsButton } from "@/components/dashboard/GenerateMcqsButton"
 import { DeleteTextbookButton } from "@/components/dashboard/DeleteTextbookButton"
-import { FileText, Database, Layers } from "lucide-react"
+import { FileText, Database, Layers, Eye } from "lucide-react"
+import Link from "next/link"
 
 export default async function ContentManagementPage() {
   const session = await auth()
@@ -166,6 +167,18 @@ export default async function ContentManagementPage() {
                           uploadId={upload.id} 
                           filename={upload.originalName} 
                         />
+                        {upload.mcqsGenerated && (
+                          <Link href={`/dashboard/content/${upload.id}`}>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="h-8 w-8 text-zinc-400 hover:text-teal-600 hover:bg-teal-50 transition-colors"
+                              title="View & Edit MCQs"
+                            >
+                              <Eye className="h-4 w-4" />
+                            </Button>
+                          </Link>
+                        )}
                       </div>
                     </TableCell>
                   </TableRow>

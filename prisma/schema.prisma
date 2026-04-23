@@ -198,14 +198,16 @@ model TextbookUpload {
   cloudinaryId  String
   originalName  String
   uploadedById  String
-  chapterId     String?
-  subjectId     String?
-  mcqsGenerated Boolean  @default(false)
-  createdAt     DateTime @default(now())
-  mcqs          MCQ[]
-  chapter       Chapter? @relation(fields: [chapterId], references: [id])
-  subject       Subject? @relation(fields: [subjectId], references: [id])
-  uploadedBy    User     @relation(fields: [uploadedById], references: [id])
+  chapterId            String?
+  subjectId            String?
+  mcqsGenerated        Boolean          @default(false)
+  explanationGenerated Boolean          @default(false)
+  aiExplanation        String?          @db.Text
+  createdAt            DateTime         @default(now())
+  mcqs                 MCQ[]
+  chapter              Chapter?         @relation(fields: [chapterId], references: [id])
+  subject              Subject?         @relation(fields: [subjectId], references: [id])
+  uploadedBy           User             @relation(fields: [uploadedById], references: [id])
 }
 
 model ExamSession {

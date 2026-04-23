@@ -14,6 +14,7 @@ import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/com
 import { UploadCard } from "@/components/cms/UploadCard"
 import { StatusBadge } from "@/components/cms/StatusBadge"
 import { GenerateMcqsButton } from "@/components/dashboard/GenerateMcqsButton"
+import { GenerateExplanationButton } from "@/components/dashboard/GenerateExplanationButton"
 import { DeleteTextbookButton } from "@/components/dashboard/DeleteTextbookButton"
 import { FileText, Database, Layers, Eye } from "lucide-react"
 import Link from "next/link"
@@ -162,6 +163,10 @@ export default async function ContentManagementPage() {
                         <GenerateMcqsButton 
                           uploadId={upload.id} 
                           isGenerated={upload.mcqsGenerated} 
+                        />
+                        <GenerateExplanationButton 
+                          uploadId={upload.id} 
+                          isGenerated={upload.explanationGenerated} 
                         />
                         <DeleteTextbookButton 
                           uploadId={upload.id} 

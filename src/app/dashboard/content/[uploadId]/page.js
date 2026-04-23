@@ -2,6 +2,7 @@ import { db } from "@/lib/db"
 import { auth } from "@/auth"
 import { redirect, notFound } from "next/navigation"
 import { McqManagementList } from "@/components/dashboard/McqManagementList"
+import { AiExplanationView } from "@/components/dashboard/AiExplanationView"
 import { 
   ChevronLeft, 
   BookOpen, 
@@ -90,6 +91,8 @@ export default async function McqReviewPage({ params }) {
           </div>
         </div>
       </div>
+
+      <AiExplanationView explanation={upload.aiExplanation} />
 
       <McqManagementList 
         initialMcqs={upload.mcqs} 

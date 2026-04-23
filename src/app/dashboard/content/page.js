@@ -11,6 +11,8 @@ import {
 } from "@/components/ui/table"
 import { Badge } from "@/components/ui/badge"
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card"
+import { UploadCard } from "@/components/cms/UploadCard"
+import { StatusBadge } from "@/components/cms/StatusBadge"
 import { GenerateMcqsButton } from "@/components/dashboard/GenerateMcqsButton"
 import { FileText, Database, Layers } from "lucide-react"
 
@@ -23,28 +25,52 @@ export default async function ContentManagementPage() {
     redirect("/dashboard")
   }
 
-  // Fetch uploads with subject/chapter info and MCQ counts
-  const uploads = await db.textbookUpload.findMany({
-    include: {
-      subject: true,
-      chapter: true,
-      _count: {
-        select: { mcqs: true }
-      }
-    },
-    orderBy: { createdAt: 'desc' }
-  })
+  // Fetch subjects and chapters for the upload form
+  const [subjects, chapters, uploads] = await Promise.all([
+    db.subject.findMany({ orderBy: { name: 'asc' } }),
+    db.chapter.findMany({ orderBy: { number: 'asc' } }),
+    db.textbookUpload.findMany({
+      include: {
+        subject: true,
+        chapter: true,
+        _count: {
+          select: { mcqs: true }
+        }
+      },
+      orderBy: { createdAt: 'desc' }
+    })
+  ])
 
   return (
     <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
-      <div className="flex flex-col gap-2">
-        <h1 className="text-3xl font-display font-bold tracking-tight text-teal-900 sm:text-4xl">
-          Content Management
-        </h1>
-        <p className="text-zinc-500">
-          Manage textbook uploads and trigger AI question generation for your subjects.
-        </p>
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div className="flex flex-col gap-2">
+          <h1 className="text-3xl font-display font-bold tracking-tight text-teal-900 sm:text-4xl">
+            Content Management
+          </h1>
+          <p className="text-zinc-500">
+            Manage textbook uploads and trigger AI question generation for your subjects.
+          </p>
+        </div>
       </div>
+
+      <div className="grid gap-8 lg:grid-cols-12">
+        <div className="lg:col-span-4 space-y-6">
+          <Card className="border-none shadow-sm">
+            <CardHeader className="pb-4">
+              <CardTitle className="text-lg font-display font-bold text-teal-900">Upload Textbook</CardTitle>
+              <CardDescription>Upload a chapter PDF to start generating MCQs.</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <UploadCard 
+                subjects={subjects} 
+                chapters={chapters} 
+              />
+            </CardContent>
+          </Card>
+        </div>
+
+        <div className="lg:col-span-8 space-y-6">
 
       <div className="grid gap-4 md:grid-cols-3">
         <Card className="border-none shadow-sm bg-teal-50/50">
@@ -127,15 +153,7 @@ export default async function ContentManagementPage() {
                       <span className="font-bold text-teal-900">{upload._count.mcqs}</span>
                     </TableCell>
                     <TableCell className="text-center">
-                      {upload.mcqsGenerated ? (
-                        <Badge className="bg-emerald-100 text-emerald-700 hover:bg-emerald-100 border-none">
-                          Generated
-                        </Badge>
-                      ) : (
-                        <Badge variant="secondary" className="bg-gold-100 text-gold-700 hover:bg-gold-100 border-none">
-                          Pending
-                        </Badge>
-                      )}
+                      <StatusBadge status={upload.mcqsGenerated ? "COMPLETED" : "PENDING"} />
                     </TableCell>
                     <TableCell className="text-right">
                       <GenerateMcqsButton 
@@ -150,6 +168,8 @@ export default async function ContentManagementPage() {
           </Table>
         </CardContent>
       </Card>
+        </div>
+      </div>
     </div>
   )
 }

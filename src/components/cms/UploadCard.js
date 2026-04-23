@@ -3,15 +3,17 @@
 
 import { useState, useRef } from "react";
 import { Upload, FileText, X, CheckCircle2, AlertCircle, Loader2 } from "lucide-react";
+import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import { Progress } from "@/components/ui/progress";
 import { cn } from "@/lib/utils";
 
 export function UploadCard({ onUploadComplete, subjects = [], chapters = [] }) {
   const [file, setFile] = useState(null);
   const [isUploading, setIsUploading] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState(0);
   const [uploadStatus, setUploadStatus] = useState("idle"); // idle, uploading, success, error
-  const [error, setError] = useState("");
   const [selectedSubject, setSelectedSubject] = useState("");
   const [selectedChapter, setSelectedChapter] = useState("");
   
@@ -21,22 +23,51 @@ export function UploadCard({ onUploadComplete, subjects = [], chapters = [] }) {
     const selectedFile = e.target.files[0];
     if (selectedFile && selectedFile.type === "application/pdf") {
       setFile(selectedFile);
-      setError("");
+      
+      // Smart Detection Logic
+      const fileName = selectedFile.name.toLowerCase();
+      
+      // 1. Try to detect Subject
+      const matchedSubject = subjects.find(s => 
+        fileName.includes(s.name.toLowerCase()) || 
+        s.name.toLowerCase().split(' ').some(word => word.length > 3 && fileName.includes(word))
+      );
+      
+      if (matchedSubject) {
+        setSelectedSubject(matchedSubject.id);
+        toast.success(`Smart Match: ${matchedSubject.name} detected from filename`, {
+          description: "You can still change this manually if needed.",
+          duration: 3000,
+        });
+
+        // 2. Try to detect Chapter number
+        // Look for common patterns: Ch 1, Chapter 2, Unit 3, or a trailing number
+        const chapterMatch = fileName.match(/(?:ch|chapter|unit|unit-)\s*(\d+)/i);
+        if (chapterMatch) {
+          const num = parseInt(chapterMatch[1]);
+          const matchedChapter = chapters.find(c => 
+            c.subjectId === matchedSubject.id && c.number === num
+          );
+          if (matchedChapter) {
+            setSelectedChapter(matchedChapter.id);
+          }
+        }
+      }
     } else {
-      setError("Please select a valid PDF file.");
+      toast.error("Please select a valid PDF file.");
       setFile(null);
     }
   };
 
   const handleUpload = async () => {
     if (!file || !selectedSubject || !selectedChapter) {
-      setError("Please select a file, subject, and chapter.");
+      toast.error("Please select a file, subject, and chapter.");
       return;
     }
 
     setIsUploading(true);
     setUploadStatus("uploading");
-    setError("");
+    setUploadProgress(0);
 
     const formData = new FormData();
     formData.append("file", file);
@@ -44,28 +75,49 @@ export function UploadCard({ onUploadComplete, subjects = [], chapters = [] }) {
     formData.append("chapterId", selectedChapter);
 
     try {
-      const response = await fetch("/api/cms/upload", {
-        method: "POST",
-        body: formData,
+      const result = await new Promise((resolve, reject) => {
+        const xhr = new XMLHttpRequest();
+        
+        xhr.upload.addEventListener("progress", (event) => {
+          if (event.lengthComputable) {
+            const percentComplete = Math.round((event.loaded / event.total) * 100);
+            setUploadProgress(percentComplete);
+          }
+        });
+
+        xhr.addEventListener("load", () => {
+          if (xhr.status >= 200 && xhr.status < 300) {
+            resolve(JSON.parse(xhr.responseText));
+          } else {
+            try {
+              const errorData = JSON.parse(xhr.responseText);
+              reject(new Error(errorData.error || "Upload failed"));
+            } catch {
+              reject(new Error("Upload failed"));
+            }
+          }
+        });
+
+        xhr.addEventListener("error", () => reject(new Error("Network error")));
+        xhr.addEventListener("abort", () => reject(new Error("Upload aborted")));
+
+        xhr.open("POST", "/api/cms/upload");
+        xhr.send(formData);
       });
 
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || "Upload failed");
-      }
-
-      const result = await response.json();
       setUploadStatus("success");
+      toast.success("Upload successful! Processing has started.");
       if (onUploadComplete) onUploadComplete(result.upload);
       
       // Reset after success
       setTimeout(() => {
         setFile(null);
         setUploadStatus("idle");
+        setUploadProgress(0);
       }, 3000);
       
     } catch (err) {
-      setError(err.message);
+      toast.error(err.message || "Upload failed");
       setUploadStatus("error");
     } finally {
       setIsUploading(false);
@@ -74,7 +126,6 @@ export function UploadCard({ onUploadComplete, subjects = [], chapters = [] }) {
 
   const removeFile = () => {
     setFile(null);
-    setError("");
     if (fileInputRef.current) fileInputRef.current.value = "";
   };
 
@@ -109,7 +160,7 @@ export function UploadCard({ onUploadComplete, subjects = [], chapters = [] }) {
                   <FileText className="h-6 w-6" />
                 </div>
                 <div>
-                  <p className="text-sm font-semibold text-teal-900 truncate max-w-[200px]">
+                  <p className="text-sm font-semibold text-teal-900 truncate max-w-[180px] sm:max-w-[300px]">
                     {file.name}
                   </p>
                   <p className="text-xs text-muted-foreground">
@@ -158,17 +209,15 @@ export function UploadCard({ onUploadComplete, subjects = [], chapters = [] }) {
             </div>
           </div>
 
-          {error && (
-            <div className="w-full flex items-center gap-2 p-3 rounded-lg bg-crimson-50 text-crimson-900 text-sm border border-crimson-100">
-              <AlertCircle className="h-4 w-4 shrink-0" />
-              <p>{error}</p>
-            </div>
-          )}
-
-          {uploadStatus === "success" && (
-            <div className="w-full flex items-center gap-2 p-3 rounded-lg bg-teal-50 text-teal-900 text-sm border border-teal-100">
-              <CheckCircle2 className="h-4 w-4 shrink-0" />
-              <p>Upload successful! Processing has started.</p>
+          {/* Sonner toasts handle success/error feedback now */}
+          
+          {isUploading && (
+            <div className="w-full space-y-2 animate-in fade-in slide-in-from-top-2">
+              <div className="flex justify-between text-xs font-medium text-teal-700">
+                <span>Uploading...</span>
+                <span>{uploadProgress}%</span>
+              </div>
+              <Progress value={uploadProgress} className="h-1.5 bg-teal-100" />
             </div>
           )}
 

@@ -1,10 +1,13 @@
 
 import { NextResponse } from "next/server";
+
+export const maxDuration = 300; // 300 seconds (5 minutes)
 import { auth } from "@/auth";
 import { db } from "@/lib/db";
-import { uploadToCloudinary } from "@/lib/cloudinary";
+import { uploadToCloudinary } from "@/lib/cloudinary.js";
 import { checkPermission } from "@/lib/casbin";
 
+// Triggering re-build to clear stale state
 export async function POST(req) {
   try {
     // 1. Authenticate and Check Permissions

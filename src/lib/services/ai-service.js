@@ -42,7 +42,24 @@ export async function generateMCQsFromText(text, count = 10) {
     
     // Clean JSON response (remove markdown code blocks if any)
     const jsonString = responseText.replace(/```json|```/g, "").trim();
-    return JSON.parse(jsonString);
+    const mcqs = JSON.parse(jsonString);
+
+    // Validate Urdu content
+    const urduRegex = /[\u0600-\u06FF\u0750-\u077F\uFB50-\uFDFF\uFE70-\uFEFF]/;
+    
+    mcqs.forEach((mcq, index) => {
+      const hasUrduInQuestion = urduRegex.test(mcq.questionTextUrdu);
+      const hasUrduInExplanation = urduRegex.test(mcq.explanationUrdu);
+      const hasUrduInOptions = mcq.options.every(opt => urduRegex.test(opt.textUrdu));
+
+      if (!hasUrduInQuestion || !hasUrduInOptions) {
+        console.warn(`[AI_VALIDATION_WARNING]: MCQ at index ${index} is missing Urdu characters.`);
+        // We could throw an error here or try to fix it, but for now we'll just log and continue
+        // or optionally mark it for manual review.
+      }
+    });
+
+    return mcqs;
   } catch (error) {
     console.error("[GEMINI_AI_ERROR]:", error);
     throw new Error("Failed to generate MCQs with AI");

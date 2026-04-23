@@ -58,21 +58,50 @@ export async function generateMcqsAction(textbookUploadId) {
 
   // 4. Trigger Gemini
   const pdfResponse = await fetch(upload.cloudinaryUrl)
+  if (!pdfResponse.ok) {
+    throw new Error(`Failed to download PDF from Cloudinary: ${pdfResponse.status} ${pdfResponse.statusText}`)
+  }
   const pdfBuffer = await pdfResponse.arrayBuffer()
   const base64Pdf = Buffer.from(pdfBuffer).toString('base64')
 
   const prompt = `Generate 20 MCQs based on the attached chapter PDF content. Follow the system instructions strictly.`
 
-  const result = await flashModel.generateContent([
-    {
-      inlineData: {
-        data: base64Pdf,
-        mimeType: 'application/pdf'
+  // Helper for exponential backoff to handle temporary AI outages
+  const retryWithBackoff = async (fn, maxRetries = 3, initialDelay = 3000) => {
+    let lastError;
+    for (let i = 0; i < maxRetries; i++) {
+      try {
+        return await fn();
+      } catch (error) {
+        lastError = error;
+        const isRetryable = error.status === 503 || 
+                            error.message?.includes('503') || 
+                            error.message?.includes('high demand');
+        
+        if (isRetryable && i < maxRetries - 1) {
+          const delay = initialDelay * Math.pow(2, i);
+          console.warn(`[AI_RETRY]: Attempt ${i + 1} failed. Retrying in ${delay}ms...`);
+          await new Promise(res => setTimeout(res, delay));
+          continue;
+        }
+        throw error;
       }
-    },
-    systemInstruction,
-    prompt
-  ])
+    }
+    throw lastError;
+  };
+
+  const result = await retryWithBackoff(() => 
+    flashModel.generateContent([
+      {
+        inlineData: {
+          data: base64Pdf,
+          mimeType: 'application/pdf'
+        }
+      },
+      systemInstruction,
+      prompt
+    ])
+  );
 
   const responseText = result.response.text()
   

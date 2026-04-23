@@ -14,6 +14,7 @@ import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/com
 import { UploadCard } from "@/components/cms/UploadCard"
 import { StatusBadge } from "@/components/cms/StatusBadge"
 import { GenerateMcqsButton } from "@/components/dashboard/GenerateMcqsButton"
+import { DeleteTextbookButton } from "@/components/dashboard/DeleteTextbookButton"
 import { FileText, Database, Layers } from "lucide-react"
 
 export default async function ContentManagementPage() {
@@ -156,10 +157,16 @@ export default async function ContentManagementPage() {
                       <StatusBadge status={upload.mcqsGenerated ? "COMPLETED" : "PENDING"} />
                     </TableCell>
                     <TableCell className="text-right">
-                      <GenerateMcqsButton 
-                        uploadId={upload.id} 
-                        isGenerated={upload.mcqsGenerated} 
-                      />
+                      <div className="flex items-center justify-end gap-2">
+                        <GenerateMcqsButton 
+                          uploadId={upload.id} 
+                          isGenerated={upload.mcqsGenerated} 
+                        />
+                        <DeleteTextbookButton 
+                          uploadId={upload.id} 
+                          filename={upload.originalName} 
+                        />
+                      </div>
                     </TableCell>
                   </TableRow>
                 ))

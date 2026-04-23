@@ -50,6 +50,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       return token
     },
     async session({ session, token }) {
+      console.log("Auth session callback - Token:", token);
       if (token && session.user) {
         session.user.id = token.id
         session.user.role = token.role
@@ -57,4 +58,5 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       return session
     },
   },
+  debug: true, // Enable debug mode for more logs
 })

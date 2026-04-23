@@ -10,6 +10,8 @@ import {
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import Link from "next/link";
+import { DashboardUploadSyllabus, DashboardUploadNow } from "@/components/dashboard/DashboardActions";
 
 const stats = [
   {
@@ -48,6 +50,7 @@ const stats = [
 
 export default async function DashboardPage() {
   const session = await auth();
+  const isCmsUser = ["super_admin", "content_editor", "moderator"].includes(session?.user?.role);
 
   return (
     <div className="space-y-8 animate-in fade-in duration-700">
@@ -89,9 +92,7 @@ export default async function DashboardPage() {
           <CardContent className="h-[200px] flex items-center justify-center border-2 border-dashed border-zinc-100 rounded-xl mt-2">
             <div className="text-center space-y-2">
               <p className="text-zinc-400 text-sm font-medium">No recent activity found.</p>
-              <Button variant="outline" size="sm" className="border-teal-200 text-teal-700 hover:bg-teal-50">
-                Upload Syllabus
-              </Button>
+              <DashboardUploadSyllabus isCmsUser={isCmsUser} />
             </div>
           </CardContent>
         </Card>
@@ -106,9 +107,7 @@ export default async function DashboardPage() {
                 <p className="text-sm font-bold">Upload Your First PDF</p>
                 <p className="text-xs text-teal-100">Upload your syllabus or lecture notes to generate AI questions.</p>
               </div>
-              <Button className="w-full bg-white hover:bg-zinc-50 text-teal-700 border-none shadow-sm font-bold">
-                Upload Now
-              </Button>
+              <DashboardUploadNow isCmsUser={isCmsUser} />
             </div>
           </CardContent>
         </Card>

@@ -6,6 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { ChevronLeft, CheckCircle2, XCircle, Award, Clock, ArrowRight } from "lucide-react";
 import ReactMarkdown from 'react-markdown';
+import { Badge } from "@/components/ui/badge";
 
 export default async function QuizResultsPage({ params }) {
   const session = await auth();
@@ -126,7 +127,21 @@ export default async function QuizResultsPage({ params }) {
                   </div>
                   <div className="flex-1">
                     <div className="flex items-center justify-between mb-1">
-                      <span className="text-sm font-semibold text-zinc-500">Question {index + 1}</span>
+                      <div className="flex items-center gap-2">
+                        <span className="text-sm font-semibold text-zinc-500">Question {index + 1}</span>
+                        <Badge variant="outline" className={`text-[10px] uppercase tracking-wider px-2 py-0 h-5 ${
+                          mcq.difficulty === 'easy' ? 'text-emerald-600 border-emerald-200' : 
+                          mcq.difficulty === 'medium' ? 'text-amber-600 border-amber-200' : 
+                          'text-rose-600 border-rose-200'
+                        }`}>
+                          {mcq.difficulty}
+                        </Badge>
+                        {mcq.topicTag && (
+                          <Badge variant="secondary" className="text-[10px] uppercase tracking-wider px-2 py-0 h-5 bg-slate-100 text-slate-500">
+                            {mcq.topicTag}
+                          </Badge>
+                        )}
+                      </div>
                     </div>
                     <p className="text-lg font-medium text-slate-900">{mcq.question}</p>
                     {mcq.questionUrdu && (

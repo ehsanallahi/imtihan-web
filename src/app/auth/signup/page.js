@@ -1,134 +1,191 @@
-import { auth } from "@/auth";
-import { 
-  BarChart3, 
-  Clock, 
-  CheckCircle2, 
-  AlertCircle,
-  TrendingUp,
-  BrainCircuit,
-  FileText
-} from "lucide-react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
+"use client";
 
-const stats = [
-  {
-    title: "Total Exams",
-    value: "12",
-    icon: FileText,
-    description: "+2 from last month",
-    color: "text-teal-600",
-    bg: "bg-teal-50"
-  },
-  {
-    title: "Average Score",
-    value: "84%",
-    icon: CheckCircle2,
-    description: "Across all subjects",
-    color: "text-gold-600",
-    bg: "bg-gold-50"
-  },
-  {
-    title: "Study Hours",
-    value: "48.5",
-    icon: Clock,
-    description: "This week",
-    color: "text-crimson-600",
-    bg: "bg-crimson-50"
-  },
-  {
-    title: "AI Questions",
-    value: "124",
-    icon: BrainCircuit,
-    description: "Generated & solved",
-    color: "text-teal-600",
-    bg: "bg-teal-50"
-  }
+import { useState } from "react";
+import { useRouter } from "next/navigation";
+import Link from "next/link";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import { AlertCircle, Loader2, CheckCircle2 } from "lucide-react";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { registerUser } from "@/actions/authActions";
+import { signIn } from "next-auth/react";
+
+const GRADES = [
+  { value: "nine", label: "Grade 9" },
+  { value: "ten", label: "Grade 10" },
+  { value: "eleven", label: "Grade 11" },
+  { value: "twelve", label: "Grade 12" },
 ];
 
-export default async function DashboardPage() {
-  const session = await auth();
+const BOARDS = [
+  { value: "punjab", label: "Punjab Board" },
+  { value: "sindh", label: "Sindh Board" },
+  { value: "kpk", label: "KPK Board" },
+  { value: "federal", label: "Federal Board" },
+  { value: "aku", label: "AKU" },
+  { value: "private", label: "Private" },
+];
+
+export default function SignUpPage() {
+  const router = useRouter();
+  const [step, setStep] = useState(1);
+  const [form, setForm] = useState({ name: "", email: "", password: "", confirmPassword: "", grade: "", board: "" });
+  const [error, setError] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
+  const [success, setSuccess] = useState(false);
+
+  const update = (field) => (e) => setForm((f) => ({ ...f, [field]: e.target.value }));
+  const pick = (field, val) => setForm((f) => ({ ...f, [field]: val }));
+
+  const handleStep1 = (e) => {
+    e.preventDefault();
+    setError("");
+    if (form.password !== form.confirmPassword) {
+      setError("Passwords do not match.");
+      return;
+    }
+    if (form.password.length < 8) {
+      setError("Password must be at least 8 characters.");
+      return;
+    }
+    setStep(2);
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setIsLoading(true);
+    setError("");
+    const result = await registerUser({ name: form.name, email: form.email, password: form.password, grade: form.grade || null, board: form.board || null });
+    if (!result.success) {
+      setError(result.error);
+      setIsLoading(false);
+      return;
+    }
+    // Auto sign in
+    const signInResult = await signIn("credentials", { email: form.email, password: form.password, redirect: false });
+    if (signInResult?.ok) {
+      setSuccess(true);
+      setTimeout(() => router.push("/study"), 1500);
+    } else {
+      router.push("/auth/signin");
+    }
+    setIsLoading(false);
+  };
+
+  if (success) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-teal-50/60 to-slate-100 px-4">
+        <div className="bg-white rounded-2xl shadow-xl p-10 text-center max-w-sm w-full">
+          <div className="w-16 h-16 bg-teal-100 rounded-full flex items-center justify-center mx-auto mb-4">
+            <CheckCircle2 className="w-8 h-8 text-teal-600" />
+          </div>
+          <h2 className="text-2xl font-display font-bold text-teal-900 mb-2">Account Created!</h2>
+          <p className="text-zinc-500">Redirecting you to your study area...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
-    <div className="space-y-8 animate-in fade-in duration-700">
-      <div className="flex flex-col gap-2">
-        <h1 className="text-3xl font-display font-bold tracking-tight text-teal-900 sm:text-4xl">
-          Dashboard Overview
-        </h1>
-        <p className="text-zinc-500">
-          Track your progress and manage your upcoming examinations.
-        </p>
-      </div>
+    <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-teal-50/60 to-slate-100 px-4 py-8">
+      <Card className="w-full max-w-md border-teal-100 shadow-xl shadow-teal-900/5">
+        <CardHeader className="space-y-1">
+          <div className="flex justify-center mb-2">
+            <div className="text-3xl font-bold bg-gradient-to-r from-teal-600 to-teal-400 bg-clip-text text-transparent font-display">
+              IMTIHAN
+            </div>
+          </div>
+          <CardTitle className="text-2xl font-display font-bold text-center">Create Account</CardTitle>
+          <CardDescription className="text-center">
+            {step === 1 ? "Enter your details to get started" : "Tell us about your studies (optional)"}
+          </CardDescription>
+          {/* Step indicator */}
+          <div className="flex gap-2 pt-2">
+            <div className={`flex-1 h-1.5 rounded-full transition-colors ${step >= 1 ? "bg-teal-500" : "bg-slate-200"}`} />
+            <div className={`flex-1 h-1.5 rounded-full transition-colors ${step >= 2 ? "bg-teal-500" : "bg-slate-200"}`} />
+          </div>
+        </CardHeader>
 
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-        {stats.map((stat) => (
-          <Card key={stat.title} className="border-none shadow-sm hover:shadow-md transition-shadow">
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium text-zinc-600">
-                {stat.title}
-              </CardTitle>
-              <div className={`p-2 rounded-lg ${stat.bg}`}>
-                <stat.icon className={`h-4 w-4 ${stat.color}`} />
+        {step === 1 ? (
+          <form onSubmit={handleStep1}>
+            <CardContent className="space-y-4">
+              {error && (
+                <Alert variant="destructive" className="bg-red-50 text-red-900 border-red-100">
+                  <AlertCircle className="h-4 w-4" />
+                  <AlertDescription>{error}</AlertDescription>
+                </Alert>
+              )}
+              <div className="space-y-2">
+                <Label htmlFor="name">Full Name</Label>
+                <Input id="name" placeholder="Ahmed Khan" value={form.name} onChange={update("name")} required className="focus-visible:ring-teal-500" />
               </div>
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold font-display text-teal-900">{stat.value}</div>
-              <p className="text-xs text-zinc-400 mt-1 flex items-center gap-1">
-                <TrendingUp className="h-3 w-3 text-teal-500" />
-                {stat.description}
-              </p>
+              <div className="space-y-2">
+                <Label htmlFor="email">Email</Label>
+                <Input id="email" type="email" placeholder="name@example.com" value={form.email} onChange={update("email")} required className="focus-visible:ring-teal-500" />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="password">Password</Label>
+                <Input id="password" type="password" placeholder="Min. 8 characters" value={form.password} onChange={update("password")} required className="focus-visible:ring-teal-500" />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="confirmPassword">Confirm Password</Label>
+                <Input id="confirmPassword" type="password" value={form.confirmPassword} onChange={update("confirmPassword")} required className="focus-visible:ring-teal-500" />
+              </div>
             </CardContent>
-          </Card>
-        ))}
-      </div>
-
-      <div className="grid gap-6 md:grid-cols-7">
-        <Card className="md:col-span-4 border-none shadow-sm">
-          <CardHeader>
-            <CardTitle className="text-xl font-display font-bold text-teal-900">Recent Activity</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-6">
-              {[1, 2, 3].map((i) => (
-                <div key={i} className="flex items-center gap-4">
-                  <div className="h-10 w-10 rounded-full bg-teal-50 flex items-center justify-center">
-                    <FileText className="h-5 w-5 text-teal-600" />
-                  </div>
-                  <div className="flex-1 space-y-1">
-                    <p className="text-sm font-medium leading-none">Mathematics Final Prep</p>
-                    <p className="text-xs text-zinc-400">Solved 15 AI-generated questions</p>
-                  </div>
-                  <div className="text-sm font-medium text-teal-600">
-                    2h ago
-                  </div>
-                </div>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card className="md:col-span-3 border-none shadow-sm">
-          <CardHeader>
-            <CardTitle className="text-xl font-display font-bold text-teal-900">Next Exam</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="p-4 rounded-xl bg-gold-50 border border-gold-100 space-y-4">
-              <div className="flex items-center gap-3">
-                <div className="h-10 w-10 rounded-lg bg-white flex items-center justify-center shadow-sm">
-                  <AlertCircle className="h-6 w-6 text-gold-600" />
-                </div>
-                <div>
-                  <p className="text-sm font-bold text-teal-900">Physics 101</p>
-                  <p className="text-xs text-gold-700">Tomorrow at 10:00 AM</p>
+            <CardFooter className="flex flex-col gap-4">
+              <Button type="submit" className="w-full bg-teal-600 hover:bg-teal-700 text-white shadow-lg shadow-teal-600/20">
+                Continue →
+              </Button>
+              <div className="text-center text-sm text-muted-foreground">
+                Already have an account?{" "}
+                <Link href="/auth/signin" className="text-teal-600 hover:text-teal-700 font-semibold">Sign in</Link>
+              </div>
+            </CardFooter>
+          </form>
+        ) : (
+          <form onSubmit={handleSubmit}>
+            <CardContent className="space-y-5">
+              {error && (
+                <Alert variant="destructive" className="bg-red-50 text-red-900 border-red-100">
+                  <AlertCircle className="h-4 w-4" />
+                  <AlertDescription>{error}</AlertDescription>
+                </Alert>
+              )}
+              <div className="space-y-2">
+                <Label>Your Grade</Label>
+                <div className="grid grid-cols-2 gap-2">
+                  {GRADES.map((g) => (
+                    <button key={g.value} type="button" onClick={() => pick("grade", g.value)}
+                      className={`py-2.5 px-4 rounded-xl border-2 text-sm font-semibold transition-all ${form.grade === g.value ? "border-teal-500 bg-teal-50 text-teal-700" : "border-slate-200 text-zinc-600 hover:border-teal-300"}`}>
+                      {g.label}
+                    </button>
+                  ))}
                 </div>
               </div>
-              <Button className="w-full bg-white hover:bg-zinc-50 text-teal-900 border-none shadow-sm font-medium">
-                View Details
+              <div className="space-y-2">
+                <Label>Your Board</Label>
+                <div className="grid grid-cols-2 gap-2">
+                  {BOARDS.map((b) => (
+                    <button key={b.value} type="button" onClick={() => pick("board", b.value)}
+                      className={`py-2.5 px-4 rounded-xl border-2 text-sm font-semibold transition-all ${form.board === b.value ? "border-teal-500 bg-teal-50 text-teal-700" : "border-slate-200 text-zinc-600 hover:border-teal-300"}`}>
+                      {b.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+              <p className="text-xs text-zinc-400 text-center">You can change these later in Settings.</p>
+            </CardContent>
+            <CardFooter className="flex flex-col gap-3">
+              <Button type="submit" disabled={isLoading} className="w-full bg-teal-600 hover:bg-teal-700 text-white shadow-lg shadow-teal-600/20">
+                {isLoading ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Creating Account...</> : "Create Account 🎉"}
               </Button>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
+              <Button type="button" variant="ghost" className="w-full text-zinc-500" onClick={() => setStep(1)}>← Back</Button>
+            </CardFooter>
+          </form>
+        )}
+      </Card>
     </div>
   );
 }

@@ -8,32 +8,32 @@ import { auth } from "@/auth";
  * @param {string} chapterId - The ID of the chapter to practice.
  * @returns {Promise<{success: boolean, sessionId?: string, error?: string}>}
  */
-export async function startExamSession(chapterId) {
+export async function startExamSession(chapterId, difficulty = "all", limit = null) {
   try {
     const session = await auth();
     if (!session) {
       return { success: false, error: "Unauthorized" };
     }
 
-    const chapter = await db.chapter.findUnique({
-      where: { id: chapterId },
-      include: {
-        _count: {
-          select: { mcqs: true }
-        }
-      }
-    });
-
-    if (!chapter || chapter._count.mcqs === 0) {
-      return { success: false, error: "No MCQs available for this chapter" };
+    const where = { chapterId, isApproved: true };
+    if (difficulty && difficulty !== "all") {
+      where.difficulty = difficulty;
     }
+
+    const totalAvailable = await db.mCQ.count({ where });
+
+    if (totalAvailable === 0) {
+      return { success: false, error: "No MCQs available matching your criteria" };
+    }
+
+    const finalLimit = limit ? Math.min(limit, totalAvailable) : totalAvailable;
 
     const examSession = await db.examSession.create({
       data: {
         studentId: session.user.id,
         sessionType: "practice",
-        subjectId: chapter.subjectId,
-        totalQuestions: chapter._count.mcqs,
+        subjectId: (await db.chapter.findUnique({ where: { id: chapterId }, select: { subjectId: true } }))?.subjectId,
+        totalQuestions: finalLimit,
       }
     });
 

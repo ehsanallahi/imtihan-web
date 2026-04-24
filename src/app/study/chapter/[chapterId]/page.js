@@ -9,6 +9,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { startExamSession } from "@/actions/quizActions";
 import { checkUserSubscription } from "@/actions/subscriptionActions";
 import { Lock } from "lucide-react";
+import { QuizStarter } from "@/components/study/QuizStarter";
 
 export default async function ChapterStudyPage({ params }) {
   const session = await auth();
@@ -69,18 +70,10 @@ export default async function ChapterStudyPage({ params }) {
           </div>
 
           {hasMcqs && !isLocked && (
-            <form action={async () => {
-              "use server";
-              const result = await startExamSession(chapterId);
-              if (result.success) {
-                redirect(`/study/quiz/${result.sessionId}?chapterId=${chapterId}`);
-              }
-            }}>
-              <Button type="submit" size="lg" className="w-full sm:w-auto bg-teal-600 hover:bg-teal-700 text-white shadow-md rounded-full px-8">
-                <PlayCircle className="w-5 h-5 mr-2" />
-                Start Practice Quiz ({chapter._count.mcqs} Qs)
-              </Button>
-            </form>
+            <QuizStarter 
+              chapterId={chapterId} 
+              totalMcqs={chapter._count.mcqs} 
+            />
           )}
         </div>
       </div>

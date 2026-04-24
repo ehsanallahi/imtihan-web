@@ -10,7 +10,7 @@ export default async function QuizPage({ params, searchParams }) {
   }
 
   const { sessionId } = await params;
-  const { chapterId } = await searchParams;
+  const { chapterId, difficulty, limit } = await searchParams;
 
   const examSession = await db.examSession.findUnique({
     where: { id: sessionId }
@@ -27,38 +27,32 @@ export default async function QuizPage({ params, searchParams }) {
 
   let mcqs = [];
 
+  const baseWhere = { isApproved: true };
   if (examSession.sessionType === "practice") {
-    mcqs = await db.mCQ.findMany({
-      where: { 
-        chapterId: chapterId,
-        isApproved: true
-      },
-      select: {
-        id: true, question: true, questionUrdu: true,
-        optionA: true, optionB: true, optionC: true, optionD: true
-      }
-    });
-  } else if (examSession.sessionType === "mock_exam") {
-    // Fetch all approved MCQs for the subject, then shuffle and slice
-    const allMcqs = await db.mCQ.findMany({
-      where: {
-        subjectId: examSession.subjectId,
-        isApproved: true
-      },
-      select: {
-        id: true, question: true, questionUrdu: true,
-        optionA: true, optionB: true, optionC: true, optionD: true
-      }
-    });
-
-    // Shuffle array (Fisher-Yates)
-    for (let i = allMcqs.length - 1; i > 0; i--) {
-      const j = Math.floor(Math.random() * (i + 1));
-      [allMcqs[i], allMcqs[j]] = [allMcqs[j], allMcqs[i]];
+    baseWhere.chapterId = chapterId;
+    if (difficulty && difficulty !== "all") {
+      baseWhere.difficulty = difficulty;
     }
-
-    mcqs = allMcqs.slice(0, examSession.totalQuestions);
+  } else {
+    baseWhere.subjectId = examSession.subjectId;
   }
+
+  const allPossibleMcqs = await db.mCQ.findMany({
+    where: baseWhere,
+    select: {
+      id: true, question: true, questionUrdu: true,
+      optionA: true, optionB: true, optionC: true, optionD: true
+    }
+  });
+
+  // Shuffle array (Fisher-Yates)
+  for (let i = allPossibleMcqs.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [allPossibleMcqs[i], allPossibleMcqs[j]] = [allPossibleMcqs[j], allPossibleMcqs[i]];
+  }
+
+  const finalLimit = limit ? parseInt(limit) : examSession.totalQuestions;
+  mcqs = allPossibleMcqs.slice(0, finalLimit);
 
   if (mcqs.length === 0) {
     return (

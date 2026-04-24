@@ -90,9 +90,11 @@ export default function DashboardLayout({ children }) {
                   <span className="text-xs font-semibold uppercase tracking-wider opacity-80">Pro Status</span>
                 </div>
                 <p className="text-sm font-medium">Free Plan</p>
-                <Button size="sm" variant="secondary" className="w-full mt-3 h-8 bg-white/20 hover:bg-white/30 border-none text-white text-xs">
-                  Upgrade Now
-                </Button>
+                <Link href="/pricing">
+                  <Button size="sm" variant="secondary" className="w-full mt-3 h-8 bg-white/20 hover:bg-white/30 border-none text-white text-xs">
+                    Upgrade Now
+                  </Button>
+                </Link>
               </div>
             </div>
 
@@ -119,9 +121,11 @@ export default function DashboardLayout({ children }) {
             </div>
             
             <div className="flex items-center gap-3">
-              <Button variant="ghost" size="icon" className="rounded-full hover:bg-teal-50">
-                <User className="h-5 w-5 text-teal-600" />
-              </Button>
+              <Link href="/dashboard/settings">
+                <Button variant="ghost" size="icon" className="rounded-full hover:bg-teal-50" title="Settings">
+                  <User className="h-5 w-5 text-teal-600" />
+                </Button>
+              </Link>
             </div>
           </header>
 

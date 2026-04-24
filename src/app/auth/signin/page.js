@@ -9,6 +9,7 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { AlertCircle, Loader2 } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import Link from "next/link";
 
 export default function SignInPage() {
   const router = useRouter();
@@ -79,9 +80,9 @@ export default function SignInPage() {
             <div className="space-y-2">
               <div className="flex items-center justify-between">
                 <Label htmlFor="password">Password</Label>
-                <Button variant="link" className="p-0 h-auto text-xs text-teal-600 hover:text-teal-700" type="button">
+                <Link href="/auth/forgot-password" className="p-0 h-auto text-xs text-teal-600 hover:text-teal-700 font-semibold">
                   Forgot password?
-                </Button>
+                </Link>
               </div>
               <Input
                 id="password"
@@ -110,9 +111,9 @@ export default function SignInPage() {
             </Button>
             <div className="text-center text-sm text-muted-foreground">
               Don&apos;t have an account?{" "}
-              <Button variant="link" className="p-0 h-auto text-teal-600 hover:text-teal-700">
+              <Link href="/auth/signup" className="text-teal-600 hover:text-teal-700 font-semibold">
                 Register now
-              </Button>
+              </Link>
             </div>
           </CardFooter>
         </form>

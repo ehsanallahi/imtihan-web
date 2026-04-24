@@ -14,9 +14,12 @@ export default async function AnalyticsPage() {
   if (!session) redirect("/auth/signin");
 
   // Fetch student profile for streak (if it exists)
-  const profile = await db.studentProfile.findUnique({
-    where: { userId: session.user.id }
-  });
+  let profile = null;
+  if (session?.user?.id) {
+    profile = await db.studentProfile.findUnique({
+      where: { userId: session.user.id }
+    });
+  }
 
   const streak = profile?.studyStreak || 0;
 

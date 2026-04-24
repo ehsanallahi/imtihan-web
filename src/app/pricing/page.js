@@ -34,6 +34,39 @@ export default function PricingPage() {
     }
   }
 
+  const [promoCode, setPromoCode] = useState("")
+  const [promoDiscount, setPromoDiscount] = useState(0)
+  const [promoError, setPromoError] = useState("")
+  const [isValidatingPromo, setIsValidatingPromo] = useState(false)
+
+  const handleApplyPromo = async () => {
+    if (!promoCode) return
+    setIsValidatingPromo(true)
+    setPromoError("")
+    
+    try {
+      const { validatePromoCode } = await import("@/actions/promoActions")
+      const result = await validatePromoCode(promoCode)
+      if (result.success) {
+        setPromoDiscount(result.discountPercent)
+        setPromoCode(promoCode.toUpperCase())
+      } else {
+        setPromoError(result.error)
+        setPromoDiscount(0)
+      }
+    } catch (err) {
+      setPromoError("Failed to validate code")
+    } finally {
+      setIsValidatingPromo(false)
+    }
+  }
+
+  const calculatePrice = (basePrice) => {
+    if (promoDiscount === 0) return basePrice
+    const discounted = basePrice * (1 - promoDiscount / 100)
+    return Math.floor(discounted)
+  }
+
   if (success) {
     return (
       <div className="min-h-screen bg-[#F7F7F7] flex flex-col items-center justify-center p-4">
@@ -73,12 +106,17 @@ export default function PricingPage() {
           </p>
         </div>
 
-        <div className="grid md:grid-cols-2 gap-8 max-w-4xl mx-auto">
+        <div className="grid md:grid-cols-2 gap-8 max-w-4xl mx-auto mb-16">
           {/* Monthly Plan */}
           <div className="bg-white rounded-[2rem] border-2 border-[#E5E5E5] p-8 flex flex-col shadow-[0_8px_0_0_#E5E5E5] hover:-translate-y-1 hover:shadow-[0_12px_0_0_#E5E5E5] transition-all">
             <h3 className="text-2xl font-display font-extrabold text-[#3C3C3C] mb-2">Monthly Super</h3>
             <div className="flex items-baseline gap-1 mb-6">
-              <span className="text-5xl font-black text-[#3C3C3C]">Rs. 999</span>
+              <div className="flex flex-col">
+                {promoDiscount > 0 && (
+                  <span className="text-lg text-slate-400 line-through font-bold">Rs. 999</span>
+                )}
+                <span className="text-5xl font-black text-[#3C3C3C]">Rs. {calculatePrice(999)}</span>
+              </div>
               <span className="text-[#777777] font-bold">/ month</span>
             </div>
             
@@ -120,7 +158,12 @@ export default function PricingPage() {
             
             <h3 className="text-2xl font-display font-extrabold text-[#D9A300] mb-2">Yearly Super</h3>
             <div className="flex items-baseline gap-1 mb-6 text-[#806000]">
-              <span className="text-5xl font-black">Rs. 9,999</span>
+              <div className="flex flex-col">
+                {promoDiscount > 0 && (
+                  <span className="text-lg opacity-60 line-through font-bold">Rs. 9,999</span>
+                )}
+                <span className="text-5xl font-black">Rs. {calculatePrice(9999)}</span>
+              </div>
               <span className="opacity-80 font-bold">/ year</span>
             </div>
             
@@ -150,6 +193,52 @@ export default function PricingPage() {
             </Button>
             <p className="text-center text-xs text-[#B38800] mt-4 font-bold uppercase tracking-wider">Simulated Payment</p>
           </div>
+        </div>
+
+        {/* Promo Code Section */}
+        <div className="max-w-md mx-auto bg-white rounded-3xl p-8 border-2 border-slate-200 shadow-[0_4px_0_0_#E5E5E5]">
+          <h4 className="text-lg font-display font-bold text-slate-700 mb-4">Have a promo code?</h4>
+          <div className="flex gap-3">
+            <div className="flex-1 relative">
+              <input 
+                type="text" 
+                placeholder="ENTER CODE" 
+                value={promoCode}
+                onChange={(e) => setPromoCode(e.target.value.toUpperCase())}
+                className="w-full h-12 px-4 rounded-xl border-2 border-slate-200 font-black tracking-wider focus:border-teal-400 focus:outline-none transition-colors"
+                disabled={promoDiscount > 0}
+              />
+              {promoDiscount > 0 && (
+                <div className="absolute right-3 top-1/2 -translate-y-1/2">
+                  <Check className="w-5 h-5 text-emerald-500" />
+                </div>
+              )}
+            </div>
+            {promoDiscount === 0 ? (
+              <Button 
+                onClick={handleApplyPromo}
+                disabled={isValidatingPromo || !promoCode}
+                className="h-12 px-6 rounded-xl font-bold bg-slate-100 hover:bg-slate-200 text-slate-600 transition-colors"
+              >
+                {isValidatingPromo ? <Loader2 className="w-5 h-5 animate-spin" /> : "Apply"}
+              </Button>
+            ) : (
+              <Button 
+                onClick={() => { setPromoDiscount(0); setPromoCode("") }}
+                className="h-12 px-6 rounded-xl font-bold bg-rose-50 hover:bg-rose-100 text-rose-500 transition-colors"
+              >
+                Remove
+              </Button>
+            )}
+          </div>
+          {promoError && (
+            <p className="mt-2 text-rose-500 text-sm font-bold">{promoError}</p>
+          )}
+          {promoDiscount > 0 && (
+            <p className="mt-2 text-emerald-600 text-sm font-bold flex items-center gap-1">
+              <Star className="w-4 h-4 fill-emerald-600" /> {promoDiscount}% discount applied!
+            </p>
+          )}
         </div>
       </main>
     </div>

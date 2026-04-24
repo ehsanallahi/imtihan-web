@@ -111,3 +111,43 @@ export async function submitExam(sessionId, answers) {
     return { success: false, error: "Failed to submit exam" };
   }
 }
+
+/**
+ * Starts a new mock exam session spanning the entire subject.
+ * @param {string} subjectId - The ID of the subject.
+ * @returns {Promise<{success: boolean, sessionId?: string, error?: string}>}
+ */
+export async function startMockExamSession(subjectId) {
+  try {
+    const session = await auth();
+    if (!session) {
+      return { success: false, error: "Unauthorized" };
+    }
+
+    // A full mock exam might take 30 random questions from the subject
+    const mcqsCount = await db.mCQ.count({
+      where: { subjectId: subjectId, isApproved: true }
+    });
+
+    if (mcqsCount === 0) {
+      return { success: false, error: "No MCQs available for this subject" };
+    }
+
+    // Determine how many questions to serve (max 30 for now)
+    const totalQuestions = Math.min(mcqsCount, 30);
+
+    const examSession = await db.examSession.create({
+      data: {
+        studentId: session.user.id,
+        sessionType: "mock_exam",
+        subjectId: subjectId,
+        totalQuestions: totalQuestions,
+      }
+    });
+
+    return { success: true, sessionId: examSession.id };
+  } catch (error) {
+    console.error("Failed to start mock exam session:", error);
+    return { success: false, error: "Failed to start mock exam session" };
+  }
+}

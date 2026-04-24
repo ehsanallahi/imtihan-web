@@ -6,6 +6,8 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter }
 import { Button } from "@/components/ui/button";
 import { BookOpen, FileText, CheckCircle2, ChevronLeft, BrainCircuit } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import { checkUserSubscription } from "@/actions/subscriptionActions";
+import { startMockExamSession } from "@/actions/quizActions";
 
 export default async function SubjectPage({ params }) {
   const session = await auth();
@@ -41,6 +43,10 @@ export default async function SubjectPage({ params }) {
     notFound();
   }
 
+  // Check Subscription for Mock Exam access
+  const sub = await checkUserSubscription();
+  const isPremium = sub.isPremium;
+
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 w-full animate-in fade-in slide-in-from-bottom-4 duration-700">
       
@@ -49,15 +55,43 @@ export default async function SubjectPage({ params }) {
           <ChevronLeft className="w-4 h-4 mr-1" />
           Back to Subjects
         </Link>
-        <div className="flex flex-col gap-2">
-          <h1 className="text-3xl font-display font-bold tracking-tight text-teal-950 sm:text-4xl">
-            {subject.name}
-          </h1>
-          {subject.nameUrdu && (
-            <p className="text-xl text-zinc-600 font-urdu" dir="rtl">
-              {subject.nameUrdu}
-            </p>
-          )}
+        <div className="flex flex-col md:flex-row md:items-start justify-between gap-4">
+          <div className="flex flex-col gap-2">
+            <h1 className="text-3xl font-display font-bold tracking-tight text-teal-950 sm:text-4xl">
+              {subject.name}
+            </h1>
+            {subject.nameUrdu && (
+              <p className="text-xl text-zinc-600 font-urdu" dir="rtl">
+                {subject.nameUrdu}
+              </p>
+            )}
+          </div>
+          
+          <div className="bg-white p-4 rounded-2xl border-2 border-[#E5E5E5] shadow-sm flex flex-col sm:flex-row items-center gap-4">
+            <div className="text-center sm:text-left">
+              <h3 className="font-bold text-[#3C3C3C]">Ready for a challenge?</h3>
+              <p className="text-sm text-[#777777] font-medium">30 random questions across all chapters.</p>
+            </div>
+            {isPremium ? (
+              <form action={async () => {
+                "use server";
+                const result = await startMockExamSession(subject.id);
+                if (result.success) {
+                  redirect(`/study/quiz/${result.sessionId}`);
+                }
+              }}>
+                <Button type="submit" className="h-10 px-6 rounded-xl font-bold uppercase tracking-wide bg-[#FF9600] hover:bg-[#E58700] text-white border-b-4 border-[#D98000] active:border-b-0 active:translate-y-1 transition-all">
+                  Take Mock Exam
+                </Button>
+              </form>
+            ) : (
+              <Link href="/pricing">
+                <Button className="h-10 px-6 rounded-xl font-bold uppercase tracking-wide bg-[#FFD900] hover:bg-[#F2CE00] text-[#D9A300] border-b-4 border-[#E5C300] active:border-b-0 active:translate-y-1 transition-all flex items-center gap-2">
+                  <BrainCircuit className="w-4 h-4" /> Unlock Mock Exams
+                </Button>
+              </Link>
+            )}
+          </div>
         </div>
       </div>
 

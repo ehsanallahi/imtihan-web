@@ -12,37 +12,53 @@ export default async function QuizPage({ params, searchParams }) {
   const { sessionId } = await params;
   const { chapterId } = await searchParams;
 
-  if (!chapterId) {
-    redirect("/study");
-  }
-
   const examSession = await db.examSession.findUnique({
     where: { id: sessionId }
   });
 
   if (!examSession || examSession.studentId !== session.user.id || examSession.completedAt) {
-    // If session doesn't exist, belongs to someone else, or is already completed, redirect.
     redirect("/study");
   }
 
-  // Fetch approved MCQs for this chapter
-  const mcqs = await db.mCQ.findMany({
-    where: { 
-      chapterId: chapterId,
-      isApproved: true
-    },
-    select: {
-      id: true,
-      question: true,
-      questionUrdu: true,
-      optionA: true,
-      optionB: true,
-      optionC: true,
-      optionD: true,
-      // Intentionally omitting 'correctAnswer' and 'explanation' 
-      // so they are not sent to the client during the quiz.
+  // Ensure chapterId exists if it's a practice session
+  if (examSession.sessionType === "practice" && !chapterId) {
+    redirect("/study");
+  }
+
+  let mcqs = [];
+
+  if (examSession.sessionType === "practice") {
+    mcqs = await db.mCQ.findMany({
+      where: { 
+        chapterId: chapterId,
+        isApproved: true
+      },
+      select: {
+        id: true, question: true, questionUrdu: true,
+        optionA: true, optionB: true, optionC: true, optionD: true
+      }
+    });
+  } else if (examSession.sessionType === "mock_exam") {
+    // Fetch all approved MCQs for the subject, then shuffle and slice
+    const allMcqs = await db.mCQ.findMany({
+      where: {
+        subjectId: examSession.subjectId,
+        isApproved: true
+      },
+      select: {
+        id: true, question: true, questionUrdu: true,
+        optionA: true, optionB: true, optionC: true, optionD: true
+      }
+    });
+
+    // Shuffle array (Fisher-Yates)
+    for (let i = allMcqs.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [allMcqs[i], allMcqs[j]] = [allMcqs[j], allMcqs[i]];
     }
-  });
+
+    mcqs = allMcqs.slice(0, examSession.totalQuestions);
+  }
 
   if (mcqs.length === 0) {
     return (

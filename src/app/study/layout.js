@@ -8,7 +8,8 @@ import {
   LogOut, 
   User,
   GraduationCap,
-  ChevronLeft
+  ChevronLeft,
+  BarChart
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
@@ -45,6 +46,12 @@ export default function StudyLayout({ children }) {
                   <Button variant={pathname === "/study" ? "secondary" : "ghost"} className={pathname === "/study" ? "bg-teal-50 text-teal-700" : "text-zinc-600"}>
                     <LayoutDashboardIcon className="w-4 h-4 mr-2" />
                     Dashboard
+                  </Button>
+                </Link>
+                <Link href="/study/analytics">
+                  <Button variant={pathname.startsWith("/study/analytics") ? "secondary" : "ghost"} className={pathname.startsWith("/study/analytics") ? "bg-teal-50 text-teal-700" : "text-zinc-600"}>
+                    <BarChart className="w-4 h-4 mr-2" />
+                    Analytics
                   </Button>
                 </Link>
                 <Link href="/dashboard">

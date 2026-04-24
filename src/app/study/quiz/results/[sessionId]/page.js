@@ -18,7 +18,6 @@ export default async function QuizResultsPage({ params }) {
   const examSession = await db.examSession.findUnique({
     where: { id: sessionId },
     include: {
-      subject: true,
       results: {
         include: {
           mcq: true
@@ -26,6 +25,13 @@ export default async function QuizResultsPage({ params }) {
       }
     }
   });
+
+  let subject = null;
+  if (examSession?.subjectId) {
+    subject = await db.subject.findUnique({
+      where: { id: examSession.subjectId }
+    });
+  }
 
   if (!examSession || examSession.studentId !== session.user.id) {
     notFound();
@@ -58,7 +64,7 @@ export default async function QuizResultsPage({ params }) {
       <div className="mb-8 flex items-center justify-between">
         <Link href={`/study/subject/${examSession.subjectId}`} className="inline-flex items-center text-sm font-medium text-zinc-500 hover:text-teal-700 transition-colors">
           <ChevronLeft className="w-4 h-4 mr-1" />
-          Back to {examSession.subject?.name || 'Subject'}
+          Back to {subject?.name || 'Subject'}
         </Link>
         <Link href="/study">
           <Button variant="outline" size="sm" className="text-teal-700 border-teal-200 hover:bg-teal-50">

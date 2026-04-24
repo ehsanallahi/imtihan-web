@@ -85,7 +85,7 @@ export function QuizInteractive({ sessionId, mcqs }) {
             {formatTime(timeTakenSeconds)}
           </span>
         </div>
-        <Progress value={progress} className="h-2 bg-teal-50" indicatorColor="bg-teal-500" />
+        <Progress value={progress} className="h-2 bg-teal-50" />
       </div>
 
       {/* Question Card */}

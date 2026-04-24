@@ -2,6 +2,7 @@
 
 import { useSession, signOut } from "next-auth/react";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { 
   LayoutDashboard, 
   BookOpen, 
@@ -30,12 +31,18 @@ const menuItems = [
 
 export default function DashboardLayout({ children }) {
   const { data: session } = useSession();
+  const pathname = usePathname();
   const userRole = session?.user?.role;
 
   // Filter menu items based on user role
-  const filteredMenuItems = menuItems.filter(item => 
+  const filteredMenuItems = menuItems.filter(item =>
     !item.roles || item.roles.includes(userRole)
   );
+
+  const isActive = (href) => {
+    if (href === "/dashboard") return pathname === "/dashboard";
+    return pathname.startsWith(href);
+  };
 
   return (
     <SidebarProvider>
@@ -51,16 +58,29 @@ export default function DashboardLayout({ children }) {
           </SidebarHeader>
           <SidebarContent className="px-4 py-2">
             <SidebarMenu>
-              {filteredMenuItems.map((item) => (
-                <SidebarMenuItem key={item.label}>
-                  <SidebarMenuButton asChild tooltip={item.label}>
-                    <Link href={item.href} className="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-teal-50 text-muted-foreground hover:text-teal-700 transition-colors">
-                      <item.icon className="h-5 w-5" />
-                      <span className="font-medium">{item.label}</span>
-                    </Link>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
-              ))}
+              {filteredMenuItems.map((item) => {
+                const active = isActive(item.href);
+                return (
+                  <SidebarMenuItem key={item.label}>
+                    <SidebarMenuButton asChild tooltip={item.label}>
+                      <Link
+                        href={item.href}
+                        className={`flex items-center gap-3 px-3 py-2 rounded-lg transition-colors font-medium ${
+                          active
+                            ? "bg-teal-600 text-white hover:bg-teal-700 shadow-sm"
+                            : "text-muted-foreground hover:bg-teal-50 hover:text-teal-700"
+                        }`}
+                      >
+                        <item.icon className={`h-5 w-5 flex-shrink-0 ${active ? "text-white" : ""}`} />
+                        <span>{item.label}</span>
+                        {active && (
+                          <span className="ml-auto w-1.5 h-1.5 rounded-full bg-white/70" />
+                        )}
+                      </Link>
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
+                );
+              })}
             </SidebarMenu>
             
             <div className="mt-auto pt-4 border-t border-teal-50/50">

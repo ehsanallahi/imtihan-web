@@ -7,6 +7,8 @@ import { ChevronLeft, BrainCircuit, PlayCircle, BookOpen } from "lucide-react";
 import ReactMarkdown from 'react-markdown';
 import { Card, CardContent } from "@/components/ui/card";
 import { startExamSession } from "@/actions/quizActions";
+import { checkUserSubscription } from "@/actions/subscriptionActions";
+import { Lock } from "lucide-react";
 
 export default async function ChapterStudyPage({ params }) {
   const session = await auth();
@@ -38,6 +40,11 @@ export default async function ChapterStudyPage({ params }) {
   const aiExplanation = upload?.aiExplanation;
   const hasMcqs = chapter._count.mcqs > 0;
 
+  // Subscription Gating
+  const sub = await checkUserSubscription();
+  const isPremium = sub.isPremium;
+  const isLocked = chapter.number > 1 && !isPremium;
+
   return (
     <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8 w-full animate-in fade-in slide-in-from-bottom-4 duration-700">
       
@@ -61,7 +68,7 @@ export default async function ChapterStudyPage({ params }) {
             )}
           </div>
 
-          {hasMcqs && (
+          {hasMcqs && !isLocked && (
             <form action={async () => {
               "use server";
               const result = await startExamSession(chapterId);
@@ -79,7 +86,22 @@ export default async function ChapterStudyPage({ params }) {
       </div>
 
       <div className="space-y-8">
-        {!aiExplanation ? (
+        {isLocked ? (
+          <div className="p-12 text-center border-2 border-[#1899D6] rounded-[2rem] bg-[#1CB0F6]/5 shadow-[0_8px_0_0_rgba(28,176,246,0.1)]">
+            <div className="w-20 h-20 bg-[#1CB0F6] rounded-full mx-auto flex items-center justify-center mb-6 shadow-md">
+              <Lock className="w-10 h-10 text-white" />
+            </div>
+            <h3 className="text-2xl font-display font-extrabold text-[#3C3C3C] mb-4">Premium Content Locked</h3>
+            <p className="text-[#777777] font-medium text-lg mb-8 max-w-md mx-auto">
+              Upgrade to Imtihan Super to unlock Chapter {chapter.number} and get unlimited access to all notes, quizzes, and mock exams.
+            </p>
+            <Link href="/pricing">
+              <Button className="h-14 px-8 rounded-2xl font-black text-lg uppercase tracking-wider bg-[#FFD900] hover:bg-[#F2CE00] text-[#D9A300] border-b-[6px] border-[#E5C300] active:border-b-[2px] active:translate-y-[4px] transition-all">
+                Unlock with Super
+              </Button>
+            </Link>
+          </div>
+        ) : !aiExplanation ? (
           <div className="p-12 text-center border-2 border-dashed border-teal-100 rounded-xl bg-teal-50/30">
             <BookOpen className="w-12 h-12 text-teal-300 mx-auto mb-4" />
             <h3 className="text-lg font-medium text-teal-900 mb-1">No study notes available</h3>

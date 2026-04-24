@@ -135,7 +135,7 @@ export async function generateMcqsAction(textbookUploadId) {
     isApproved: true // Defaulted to true as per standard setup
   }))
 
-  const savedCount = await db.mcq.createMany({
+  const savedCount = await db.mCQ.createMany({
     data: mcqData
   })
 

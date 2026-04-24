@@ -10,6 +10,7 @@ import {
   TableRow 
 } from "@/components/ui/table"
 import { Badge } from "@/components/ui/badge"
+import { Button } from "@/components/ui/button"
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card"
 import { UploadCard } from "@/components/cms/UploadCard"
 import { StatusBadge } from "@/components/cms/StatusBadge"

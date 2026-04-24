@@ -125,7 +125,7 @@ export default async function AnalyticsPage() {
           </Link>
         </div>
       ) : (
-        <div className="grid md:grid-cols-2 gap-6 mb-12">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 mb-12">
           {Object.values(subjectStats).map((sub, idx) => {
             const accuracy = sub.totalQuestions > 0 ? Math.round((sub.correctAnswers / sub.totalQuestions) * 100) : 0;
             return (
@@ -166,18 +166,18 @@ export default async function AnalyticsPage() {
         {examSessions.slice(0, 5).map((session, idx) => {
           const acc = session.totalQuestions > 0 ? Math.round((session.correctAnswers / session.totalQuestions) * 100) : 0;
           return (
-            <div key={session.id} className={`p-6 flex items-center justify-between ${idx !== 0 ? 'border-t-2 border-[#E5E5E5]' : ''}`}>
-              <div className="flex items-center gap-4">
-                <div className={`w-12 h-12 rounded-xl flex items-center justify-center font-bold text-white border-b-4 ${acc >= 80 ? 'bg-[#00CD9C] border-[#00A880]' : acc >= 50 ? 'bg-[#FF9600] border-[#D98000]' : 'bg-[#FF4B4B] border-[#D93838]'}`}>
+            <div key={session.id} className={`p-4 sm:p-6 flex items-center justify-between gap-3 ${idx !== 0 ? 'border-t-2 border-[#E5E5E5]' : ''}`}>
+              <div className="flex items-center gap-3 sm:gap-4 min-w-0">
+                <div className={`w-10 h-10 sm:w-12 sm:h-12 rounded-xl flex items-center justify-center font-bold text-white border-b-4 text-sm sm:text-base flex-shrink-0 ${acc >= 80 ? 'bg-[#00CD9C] border-[#00A880]' : acc >= 50 ? 'bg-[#FF9600] border-[#D98000]' : 'bg-[#FF4B4B] border-[#D93838]'}`}>
                   {acc}%
                 </div>
-                <div>
-                  <h4 className="font-display font-bold text-[#3C3C3C] text-lg">{subjectMap[session.subjectId] || 'Quiz'}</h4>
-                  <p className="text-sm font-medium text-[#777777]">{new Date(session.completedAt).toLocaleDateString()}</p>
+                <div className="min-w-0">
+                  <h4 className="font-display font-bold text-[#3C3C3C] text-base sm:text-lg truncate">{subjectMap[session.subjectId] || 'Quiz'}</h4>
+                  <p className="text-xs sm:text-sm font-medium text-[#777777]">{new Date(session.completedAt).toLocaleDateString()}</p>
                 </div>
               </div>
               <Link href={`/study/quiz/results/${session.id}`}>
-                <button className="text-[#1CB0F6] font-bold uppercase text-sm tracking-wider hover:text-[#1899D6] transition-colors flex items-center gap-1">
+                <button className="text-[#1CB0F6] font-bold uppercase text-xs sm:text-sm tracking-wider hover:text-[#1899D6] transition-colors flex items-center gap-1 flex-shrink-0">
                   Review <ChevronRight className="w-4 h-4" />
                 </button>
               </Link>

@@ -43,7 +43,7 @@ export default function SignInPage() {
   };
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-background px-4 py-12 px-6">
+    <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-teal-50/60 to-slate-100 px-4 py-8 sm:py-12">
       <Card className="w-full max-w-md border-teal-100 shadow-xl shadow-teal-900/5">
         <CardHeader className="space-y-1">
           <div className="flex justify-center mb-4">

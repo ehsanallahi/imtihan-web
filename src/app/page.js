@@ -1,7 +1,8 @@
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
-import { BrainCircuit, Target, Trophy, ArrowRight, Star, Sparkles, Check } from "lucide-react";
+import { BrainCircuit, Target, Trophy, Star, Sparkles, Check } from "lucide-react";
 import { auth } from "@/auth";
+import { MarketingHeader } from "@/components/MarketingHeader";
 
 export default async function LandingPage() {
   const session = await auth();
@@ -9,51 +10,7 @@ export default async function LandingPage() {
   return (
     <div className="min-h-screen bg-[#F7F7F7] font-sans flex flex-col selection:bg-teal-200">
       
-      {/* 
-        ========================================
-        MARKETING NAVIGATION BAR
-        ========================================
-      */}
-      <header className="sticky top-0 z-50 bg-white border-b-2 border-slate-200">
-        <div className="max-w-6xl mx-auto px-4 h-16 sm:h-20 flex items-center justify-between">
-          <Link href="/" className="flex items-center gap-3 group">
-            <div className="w-10 h-10 rounded-xl bg-[#00CD9C] border-b-4 border-[#00A880] flex items-center justify-center text-white font-black text-xl group-hover:-translate-y-1 transition-transform">
-              I
-            </div>
-            <span className="font-display font-extrabold text-2xl tracking-tight text-[#3C3C3C]">
-              imtihan
-            </span>
-          </Link>
-
-          <nav className="hidden md:flex items-center gap-6 font-bold text-[#777777]">
-            <Link href="#features" className="hover:text-[#00CD9C] transition-colors">Why Imtihan?</Link>
-            <Link href="#pricing" className="hover:text-[#00CD9C] transition-colors">Pricing</Link>
-          </nav>
-
-          <div className="flex items-center gap-3">
-            {session ? (
-              <Link href="/study">
-                <Button className="h-10 px-6 rounded-xl font-bold uppercase tracking-wide bg-[#00CD9C] hover:bg-[#00D9A6] text-white border-b-4 border-[#00A880] active:border-b-0 active:translate-y-1 transition-all">
-                  Go to Dashboard
-                </Button>
-              </Link>
-            ) : (
-              <>
-                <Link href="/auth/signin">
-                  <Button variant="ghost" className="h-10 px-4 rounded-xl font-bold uppercase tracking-wide text-[#1CB0F6] hover:bg-[#E5F6FF]">
-                    Log In
-                  </Button>
-                </Link>
-                <Link href="/auth/signup">
-                  <Button className="h-10 px-6 rounded-xl font-bold uppercase tracking-wide bg-[#00CD9C] hover:bg-[#00D9A6] text-white border-b-4 border-[#00A880] active:border-b-0 active:translate-y-1 transition-all">
-                    Get Started
-                  </Button>
-                </Link>
-              </>
-            )}
-          </div>
-        </div>
-      </header>
+      <MarketingHeader session={session} />
 
       <main className="flex-1 flex flex-col items-center">
         {/* 
@@ -68,11 +25,11 @@ export default async function LandingPage() {
               <Sparkles className="w-4 h-4" /> The fun way to ace your exams
             </div>
             
-            <h1 className="text-5xl sm:text-6xl lg:text-7xl font-display font-extrabold tracking-tight text-[#3C3C3C] leading-tight">
+            <h1 className="text-4xl sm:text-6xl lg:text-7xl font-display font-extrabold tracking-tight text-[#3C3C3C] leading-tight">
               Learn, Practice, and <span className="text-[#00CD9C]">Score High.</span>
             </h1>
             
-            <p className="text-xl sm:text-2xl text-[#777777] font-medium leading-relaxed max-w-xl mx-auto lg:mx-0">
+            <p className="text-lg sm:text-2xl text-[#777777] font-medium leading-relaxed max-w-xl mx-auto lg:mx-0">
               Imtihan is the smartest way to prepare for your board exams. Bite-sized AI notes and interactive quizzes that feel like a game.
             </p>
             
@@ -90,25 +47,25 @@ export default async function LandingPage() {
             </div>
           </div>
 
-          <div className="flex-1 w-full max-w-md lg:max-w-none relative">
+          <div className="flex-1 w-full max-w-md lg:max-w-none relative mt-12 lg:mt-0">
             {/* Playful Hero Illustration Placeholder */}
             <div className="relative w-full aspect-square max-w-[500px] mx-auto">
               <div className="absolute inset-0 bg-[#00CD9C] rounded-[3rem] rotate-6 opacity-20"></div>
               <div className="absolute inset-0 bg-[#1CB0F6] rounded-[3rem] -rotate-3 opacity-20"></div>
-              <div className="relative h-full w-full bg-white rounded-[3rem] border-4 border-[#E5E5E5] shadow-[0_12px_0_0_#E5E5E5] flex items-center justify-center p-8 overflow-hidden">
-                <div className="flex flex-col items-center text-center gap-6">
-                  <div className="w-32 h-32 bg-[#FFD900] rounded-full border-4 border-[#E5C300] flex items-center justify-center shadow-[0_8px_0_0_#E5C300]">
-                    <Trophy className="w-16 h-16 text-white" />
+              <div className="relative h-full w-full bg-white rounded-[3rem] border-4 border-[#E5E5E5] shadow-[0_12px_0_0_#E5E5E5] flex items-center justify-center p-6 sm:p-8 overflow-hidden">
+                <div className="flex flex-col items-center text-center gap-4 sm:gap-6">
+                  <div className="w-24 h-24 sm:w-32 sm:h-32 bg-[#FFD900] rounded-full border-4 border-[#E5C300] flex items-center justify-center shadow-[0_8px_0_0_#E5C300]">
+                    <Trophy className="w-12 h-12 sm:w-16 sm:h-16 text-white" />
                   </div>
-                  <h3 className="font-display font-extrabold text-2xl text-[#3C3C3C]">Daily Streak!</h3>
-                  <div className="w-full max-w-xs h-4 bg-[#E5E5E5] rounded-full overflow-hidden">
+                  <h3 className="font-display font-extrabold text-xl sm:text-2xl text-[#3C3C3C]">Daily Streak!</h3>
+                  <div className="w-full max-w-xs h-3 sm:h-4 bg-[#E5E5E5] rounded-full overflow-hidden">
                     <div className="h-full bg-[#00CD9C] w-3/4 rounded-full"></div>
                   </div>
-                  <div className="grid grid-cols-2 gap-4 w-full mt-4">
-                    <div className="bg-[#E5F6FF] border-2 border-[#B3E5FF] rounded-2xl p-4 font-bold text-[#1CB0F6]">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 w-full mt-4">
+                    <div className="bg-[#E5F6FF] border-2 border-[#B3E5FF] rounded-2xl p-3 sm:p-4 font-bold text-[#1CB0F6]">
                       Option A
                     </div>
-                    <div className="bg-[#00CD9C] border-b-4 border-[#00A880] rounded-2xl p-4 font-bold text-white shadow-[0_4px_0_0_#00A880]">
+                    <div className="bg-[#00CD9C] border-b-4 border-[#00A880] rounded-2xl p-3 sm:p-4 font-bold text-white shadow-[0_4px_0_0_#00A880]">
                       Option B
                     </div>
                   </div>

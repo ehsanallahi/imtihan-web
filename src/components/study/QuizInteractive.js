@@ -89,9 +89,9 @@ export function QuizInteractive({ sessionId, mcqs }) {
       </div>
 
       {/* Question Card */}
-      <Card className="border-none shadow-sm overflow-hidden mb-6 bg-white min-h-[400px] flex flex-col">
+      <Card className="border-none shadow-sm overflow-hidden mb-4 sm:mb-6 bg-white min-h-[350px] sm:min-h-[400px] flex flex-col">
         <div className="h-1 bg-gradient-to-r from-teal-400 to-emerald-400" />
-        <CardContent className="p-6 sm:p-10 flex-1 flex flex-col">
+        <CardContent className="p-4 sm:p-6 lg:p-10 flex-1 flex flex-col">
           
           <div className="mb-10">
             <h2 className="text-xl sm:text-2xl font-bold text-teal-950 mb-4">
@@ -141,21 +141,21 @@ export function QuizInteractive({ sessionId, mcqs }) {
       </Card>
 
       {/* Navigation Footer */}
-      <div className="flex items-center justify-between pt-4">
+      <div className="flex items-center justify-between pt-4 gap-3">
         <Button 
           variant="outline" 
           onClick={handlePrevious}
           disabled={currentIndex === 0 || isSubmitting}
-          className="px-6"
+          className="px-4 sm:px-6"
         >
-          <ChevronLeft className="w-4 h-4 mr-2" /> Previous
+          <ChevronLeft className="w-4 h-4 sm:mr-2" /> <span className="hidden sm:inline">Previous</span>
         </Button>
 
         {!isLastQuestion ? (
           <Button 
             onClick={handleNext}
             disabled={!answers[currentMcq.id]}
-            className="px-8 bg-teal-600 hover:bg-teal-700 text-white"
+            className="flex-1 sm:flex-none px-6 sm:px-8 bg-teal-600 hover:bg-teal-700 text-white"
           >
             Next <ChevronRight className="w-4 h-4 ml-2" />
           </Button>
@@ -163,7 +163,7 @@ export function QuizInteractive({ sessionId, mcqs }) {
           <Button 
             onClick={handleSubmit}
             disabled={!answers[currentMcq.id] || isSubmitting}
-            className="px-8 bg-indigo-600 hover:bg-indigo-700 text-white"
+            className="flex-1 sm:flex-none px-6 sm:px-8 bg-indigo-600 hover:bg-indigo-700 text-white"
           >
             {isSubmitting ? (
               <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Submitting...</>

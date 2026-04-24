@@ -107,7 +107,7 @@ export default async function SubjectPage({ params }) {
             <p className="text-zinc-500">Content for this subject is still being prepared.</p>
           </div>
         ) : (
-          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+          <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
             {subject.chapters.map((chapter) => {
               const upload = chapter.textbookUploads[0];
               const hasExplanation = upload?.explanationGenerated;
@@ -116,7 +116,7 @@ export default async function SubjectPage({ params }) {
 
               return (
                 <Card key={chapter.id} className={`group overflow-hidden flex flex-col transition-all duration-300 ${isReady ? 'hover:shadow-md border-teal-100/50 hover:border-teal-300' : 'opacity-70 grayscale-[0.5]'}`}>
-                  <CardHeader className="pb-4">
+                  <CardHeader className="p-4 sm:p-6 pb-4 sm:pb-4">
                     <div className="flex justify-between items-start mb-2">
                       <Badge variant="outline" className="bg-slate-50 text-slate-600">
                         Chapter {chapter.number}
@@ -134,7 +134,7 @@ export default async function SubjectPage({ params }) {
                         )}
                       </div>
                     </div>
-                    <CardTitle className={`text-lg font-bold ${isReady ? 'text-teal-950' : 'text-zinc-500'}`}>
+                    <CardTitle className={`text-base sm:text-lg font-bold ${isReady ? 'text-teal-950' : 'text-zinc-500'}`}>
                       {chapter.name}
                     </CardTitle>
                     {chapter.nameUrdu && (
@@ -143,13 +143,13 @@ export default async function SubjectPage({ params }) {
                       </CardDescription>
                     )}
                   </CardHeader>
-                  <CardContent className="flex-1">
-                    <div className="text-sm text-zinc-500 flex items-center gap-2">
+                  <CardContent className="p-4 sm:p-6 pt-0 sm:pt-0 flex-1">
+                    <div className="text-xs sm:text-sm text-zinc-500 flex items-center gap-2">
                       <FileText className="h-4 w-4" />
                       {chapter._count.mcqs} Practice Questions
                     </div>
                   </CardContent>
-                  <CardFooter className="pt-4 border-t border-slate-100 bg-slate-50/50">
+                  <CardFooter className="p-4 sm:p-6 pt-4 border-t border-slate-100 bg-slate-50/50">
                     <Link href={`/study/chapter/${chapter.id}`} className="w-full" aria-disabled={!isReady} tabIndex={!isReady ? -1 : 0}>
                       <Button 
                         disabled={!isReady} 

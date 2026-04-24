@@ -53,7 +53,7 @@ export default async function StudyDashboardPage() {
           Pick up where you left off or start a new chapter. You have {totalMcqs} practice questions available across {subjects.length} subjects.
         </p>
 
-        <div className="grid gap-4 md:grid-cols-3">
+        <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 md:grid-cols-3">
           <Card className="border-none shadow-sm bg-teal-50/50">
             <CardHeader className="pb-2">
               <CardTitle className="text-sm font-medium text-teal-700 flex items-center gap-2">
@@ -61,7 +61,7 @@ export default async function StudyDashboardPage() {
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="text-3xl font-bold text-teal-900">{subjects.length}</div>
+              <div className="text-2xl sm:text-3xl font-bold text-teal-900">{subjects.length}</div>
             </CardContent>
           </Card>
           
@@ -72,18 +72,18 @@ export default async function StudyDashboardPage() {
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="text-3xl font-bold text-indigo-900">{totalChapters}</div>
+              <div className="text-2xl sm:text-3xl font-bold text-indigo-900">{totalChapters}</div>
             </CardContent>
           </Card>
 
-          <Card className="border-none shadow-sm bg-emerald-50/50">
+          <Card className="border-none shadow-sm bg-emerald-50/50 sm:col-span-2 md:col-span-1">
             <CardHeader className="pb-2">
               <CardTitle className="text-sm font-medium text-emerald-700 flex items-center gap-2">
                 <GraduationCap className="h-4 w-4" /> Practice Questions
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="text-3xl font-bold text-emerald-900">{totalMcqs}</div>
+              <div className="text-2xl sm:text-3xl font-bold text-emerald-900">{totalMcqs}</div>
             </CardContent>
           </Card>
         </div>
@@ -102,21 +102,21 @@ export default async function StudyDashboardPage() {
             <p className="text-zinc-500">There are no active subjects available for your grade and board right now.</p>
           </div>
         ) : (
-          <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+          <div className="grid gap-4 sm:gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
             {subjects.map((subject) => (
               <Card key={subject.id} className="group hover:shadow-md transition-all duration-300 border-teal-100/50 overflow-hidden flex flex-col">
                 <div className="h-2 bg-gradient-to-r from-teal-400 to-emerald-400" />
-                <CardHeader>
-                  <CardTitle className="text-xl font-bold text-teal-950 group-hover:text-teal-700 transition-colors">
+                <CardHeader className="p-4 sm:p-6">
+                  <CardTitle className="text-lg sm:text-xl font-bold text-teal-950 group-hover:text-teal-700 transition-colors">
                     {subject.name}
                   </CardTitle>
                   {subject.nameUrdu && (
-                    <CardDescription className="text-base font-urdu text-right" dir="rtl">
+                    <CardDescription className="text-sm sm:text-base font-urdu text-right" dir="rtl">
                       {subject.nameUrdu}
                     </CardDescription>
                   )}
                 </CardHeader>
-                <CardContent className="flex-1">
+                <CardContent className="p-4 sm:p-6 pt-0 sm:pt-0 flex-1">
                   <div className="flex flex-col gap-2 text-sm text-zinc-600">
                     <div className="flex justify-between items-center bg-slate-50 p-2 rounded-md">
                       <span>Chapters</span>
@@ -128,7 +128,7 @@ export default async function StudyDashboardPage() {
                     </div>
                   </div>
                 </CardContent>
-                <CardFooter className="pt-4 border-t border-slate-100">
+                <CardFooter className="p-4 sm:p-6 pt-4 border-t border-slate-100">
                   <Link href={`/study/subject/${subject.id}`} className="w-full">
                     <Button className="w-full bg-teal-50 text-teal-700 hover:bg-teal-100 hover:text-teal-800 transition-colors border-none shadow-none group-hover:bg-teal-600 group-hover:text-white">
                       Study Now <ArrowRight className="w-4 h-4 ml-2" />

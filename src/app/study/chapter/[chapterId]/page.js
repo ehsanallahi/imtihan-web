@@ -53,16 +53,16 @@ export default async function ChapterStudyPage({ params }) {
           <ChevronLeft className="w-4 h-4 mr-1" />
           Back to {chapter.subject.name}
         </Link>
-        <div className="flex flex-col md:flex-row md:items-start justify-between gap-4">
+        <div className="flex flex-col gap-4">
           <div>
             <div className="inline-flex items-center rounded-full border border-teal-200 bg-teal-50 px-2.5 py-0.5 text-xs font-semibold text-teal-800 mb-3">
               Chapter {chapter.number}
             </div>
-            <h1 className="text-3xl font-display font-bold tracking-tight text-teal-950 sm:text-4xl">
+            <h1 className="text-2xl sm:text-3xl lg:text-4xl font-display font-bold tracking-tight text-teal-950">
               {chapter.name}
             </h1>
             {chapter.nameUrdu && (
-              <p className="text-xl text-zinc-600 font-urdu mt-1" dir="rtl">
+              <p className="text-lg sm:text-xl text-zinc-600 font-urdu mt-1" dir="rtl">
                 {chapter.nameUrdu}
               </p>
             )}
@@ -76,7 +76,7 @@ export default async function ChapterStudyPage({ params }) {
                 redirect(`/study/quiz/${result.sessionId}?chapterId=${chapterId}`);
               }
             }}>
-              <Button type="submit" size="lg" className="bg-teal-600 hover:bg-teal-700 text-white shadow-md rounded-full px-8">
+              <Button type="submit" size="lg" className="w-full sm:w-auto bg-teal-600 hover:bg-teal-700 text-white shadow-md rounded-full px-8">
                 <PlayCircle className="w-5 h-5 mr-2" />
                 Start Practice Quiz ({chapter._count.mcqs} Qs)
               </Button>
@@ -110,7 +110,7 @@ export default async function ChapterStudyPage({ params }) {
         ) : (
           <Card className="border-none shadow-sm overflow-hidden bg-white">
             <div className="h-2 bg-gradient-to-r from-teal-400 to-emerald-400" />
-            <CardContent className="p-8 sm:p-10">
+            <CardContent className="p-4 sm:p-8 lg:p-10">
               <div className="flex items-center gap-3 mb-8 pb-6 border-b border-slate-100">
                 <div className="p-2.5 bg-teal-50 rounded-lg text-teal-600">
                   <BrainCircuit className="w-6 h-6" />

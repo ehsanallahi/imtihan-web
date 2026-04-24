@@ -9,13 +9,17 @@ import {
   User,
   GraduationCap,
   ChevronLeft,
-  BarChart
+  BarChart,
+  Menu,
+  X
 } from "lucide-react";
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
 
 export default function StudyLayout({ children }) {
   const { data: session, status } = useSession();
   const pathname = usePathname();
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
 
   if (status === "loading") {
     return <div className="min-h-screen flex items-center justify-center bg-teal-50/30">Loading...</div>;
@@ -63,7 +67,7 @@ export default function StudyLayout({ children }) {
               </nav>
             </div>
             
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-2 sm:gap-3">
               <div className="hidden sm:flex flex-col items-end mr-2">
                 <span className="text-sm font-medium text-teal-900">{session?.user?.name}</span>
                 <span className="text-xs text-zinc-500 capitalize">{session?.user?.role}</span>
@@ -71,8 +75,57 @@ export default function StudyLayout({ children }) {
               <Button variant="outline" size="icon" className="rounded-full border-teal-100 text-teal-600">
                 <User className="h-4 w-4" />
               </Button>
+              
+              {/* Mobile Menu Button */}
+              <Button 
+                variant="ghost" 
+                size="icon" 
+                className="md:hidden text-teal-600"
+                onClick={() => setIsMenuOpen(!isMenuOpen)}
+              >
+                {isMenuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+              </Button>
             </div>
           </div>
+
+          {/* Mobile Navigation Overlay */}
+          {isMenuOpen && (
+            <div className="md:hidden bg-white border-b border-teal-100 p-4 space-y-2 animate-in slide-in-from-top-4 duration-200">
+              <Link href="/study" onClick={() => setIsMenuOpen(false)}>
+                <Button 
+                  variant={pathname === "/study" ? "secondary" : "ghost"} 
+                  className={`w-full justify-start ${pathname === "/study" ? "bg-teal-50 text-teal-700" : "text-zinc-600"}`}
+                >
+                  <LayoutDashboardIcon className="w-4 h-4 mr-2" />
+                  Dashboard
+                </Button>
+              </Link>
+              <Link href="/study/analytics" onClick={() => setIsMenuOpen(false)}>
+                <Button 
+                  variant={pathname.startsWith("/study/analytics") ? "secondary" : "ghost"} 
+                  className={`w-full justify-start ${pathname.startsWith("/study/analytics") ? "bg-teal-50 text-teal-700" : "text-zinc-600"}`}
+                >
+                  <BarChart className="w-4 h-4 mr-2" />
+                  Analytics
+                </Button>
+              </Link>
+              <Link href="/dashboard" onClick={() => setIsMenuOpen(false)}>
+                <Button variant="ghost" className="w-full justify-start text-zinc-600">
+                  <LogOut className="w-4 h-4 mr-2" />
+                  Exit Study Mode
+                </Button>
+              </Link>
+              <div className="pt-2 border-t border-teal-50 flex items-center justify-between px-2">
+                <div className="flex flex-col">
+                  <span className="text-sm font-medium text-teal-900">{session?.user?.name}</span>
+                  <span className="text-xs text-zinc-500 capitalize">{session?.user?.role}</span>
+                </div>
+                <Button variant="ghost" size="sm" onClick={() => signOut()} className="text-crimson-600 hover:bg-crimson-50">
+                  Sign Out
+                </Button>
+              </div>
+            </div>
+          )}
         </header>
       )}
 

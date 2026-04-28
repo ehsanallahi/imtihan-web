@@ -1,4 +1,4 @@
-import cloudinary from '@/lib/cloudinary'
+import { v2 as cloudinary } from 'cloudinary'
 import { authorize } from '@/lib/auth-guards'
 
 export async function POST(req) {

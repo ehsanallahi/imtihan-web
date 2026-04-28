@@ -2,6 +2,7 @@
 import { GoogleGenerativeAI } from "@google/generative-ai";
 
 const genAI = new GoogleGenerativeAI(process.env.GOOGLE_AI_API_KEY);
+const flashModel = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
 
 /**
  * Generates MCQs from provided textbook text using Gemini.
@@ -10,7 +11,7 @@ const genAI = new GoogleGenerativeAI(process.env.GOOGLE_AI_API_KEY);
  * @returns {Promise<Array>} - List of generated MCQs.
  */
 export async function generateMCQsFromText(text, count = 10) {
-  const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+  const model = flashModel;
 
   const prompt = `
     You are an expert educationist. Generate ${count} multiple-choice questions (MCQs) from the following textbook content.
@@ -65,3 +66,77 @@ export async function generateMCQsFromText(text, count = 10) {
     throw new Error("Failed to generate MCQs with AI");
   }
 }
+
+/**
+ * Extracts and separates chapters from a full textbook PDF text using Gemini AI.
+ * @param {string} fullText - The full extracted text of the textbook.
+ * @param {Array<{id: string, number: number, name: string}>} existingChapters - Chapters already in DB for the subject.
+ * @returns {Promise<Array<{chapterNumber, chapterName, chapterText, matchedChapterId}>>}
+ */
+export async function extractChaptersFromText(fullText, existingChapters = []) {
+  const chaptersContext = existingChapters
+    .map((c) => `Chapter ${c.number}: ${c.name} (id: ${c.id})`)
+    .join("\n");
+
+  const prompt = `
+You are an expert educational content analyst. Your task is to identify and separate chapters from a full textbook.
+
+Full Textbook Text (first 80,000 characters):
+---
+${fullText.substring(0, 80000)}
+---
+
+Existing chapters in our database for this subject:
+${chaptersContext || "(none provided)"}
+
+INSTRUCTIONS:
+1. Identify all chapter boundaries in the text. Look for headings like "Chapter 1", "CHAPTER ONE", "Unit 1", "باب اول", numbered sections, etc.
+2. For each chapter found, extract its content (the text belonging to that chapter until the next chapter starts).
+3. Match each detected chapter to one of the existing chapters using the chapter number.
+4. If a chapter cannot be matched to an existing chapter, still include it but set matchedChapterId to null.
+5. Return ONLY a strict JSON array. No markdown, no extra text.
+
+JSON format:
+[
+  {
+    "chapterNumber": 1,
+    "chapterName": "Detected Chapter Name",
+    "chapterText": "Chapter text content (first 5000 chars max per chapter)",
+    "matchedChapterId": "db-chapter-id-or-null"
+  }
+]
+
+JSON OUTPUT:
+`;
+
+  try {
+    const result = await flashModel.generateContent(prompt);
+    const responseText = result.response.text();
+    const jsonString = responseText.replace(/```json|```/g, "").trim();
+    const chapters = JSON.parse(jsonString);
+    return Array.isArray(chapters) ? chapters : [];
+  } catch (error) {
+    console.error("[CHAPTER_EXTRACTION_ERROR]:", error);
+    throw new Error("Failed to extract chapters from PDF with AI");
+  }
+}
+
+/**
+ * Converts a Google Drive shareable link to a direct download link.
+ * Also passes through other URLs unchanged.
+ * @param {string} url
+ * @returns {string}
+ */
+export function normalizeGoogleDriveUrl(url) {
+  // Pattern: https://drive.google.com/file/d/FILE_ID/view?...
+  const match = url.match(/drive\.google\.com\/file\/d\/([^/]+)/);
+  if (match) {
+    return `https://drive.google.com/uc?export=download&id=${match[1]}`;
+  }
+  // Dropbox: change ?dl=0 to ?dl=1
+  if (url.includes("dropbox.com") && url.includes("dl=0")) {
+    return url.replace("dl=0", "dl=1");
+  }
+  return url;
+}
+

@@ -200,6 +200,8 @@ model TextbookUpload {
   uploadedById  String
   chapterId            String?
   subjectId            String?
+  sourceUrl            String?          // Original PDF URL for URL-based uploads
+  isFullBook           Boolean          @default(false) // true = full textbook (AI-split), false = single chapter
   mcqsGenerated        Boolean          @default(false)
   explanationGenerated Boolean          @default(false)
   aiExplanation        String?          @db.Text

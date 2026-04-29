@@ -65,10 +65,27 @@ export async function POST(req) {
         return NextResponse.json({ error: "AI could not detect any chapters in this PDF." }, { status: 422 });
       }
 
-      // Create one TextbookUpload per matched chapter
       const uploads = [];
       for (const ch of detectedChapters) {
-        if (!ch.matchedChapterId) continue; // skip unmatched chapters
+        let currentChapterId = ch.matchedChapterId;
+
+        // Auto-create the chapter in the database if it doesn't exist
+        if (!currentChapterId) {
+          try {
+            const newChapter = await db.chapter.create({
+              data: {
+                number: ch.chapterNumber || 0,
+                name: ch.chapterName || `Chapter ${ch.chapterNumber}`,
+                subjectId,
+              },
+            });
+            currentChapterId = newChapter.id;
+            ch.matchedChapterId = currentChapterId; // Update the object so the UI shows it as matched/saved!
+          } catch (createErr) {
+            console.error("Failed to auto-create chapter:", createErr);
+            continue; // Skip only if creation fails
+          }
+        }
 
         const upload = await db.textbookUpload.create({
           data: {
@@ -77,7 +94,7 @@ export async function POST(req) {
             originalName: `${file.name} — Chapter ${ch.chapterNumber}: ${ch.chapterName}`,
             uploadedById: session.user.id,
             subjectId,
-            chapterId: ch.matchedChapterId,
+            chapterId: currentChapterId,
             isFullBook: true,
             mcqsGenerated: false,
           },

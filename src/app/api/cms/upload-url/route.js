@@ -45,34 +45,58 @@ export async function POST(req) {
     // 3. Normalize URL (Google Drive, Dropbox, etc.)
     const normalizedUrl = normalizeGoogleDriveUrl(pdfUrl.trim());
 
-    // 4. Fetch the PDF from the URL server-side
+    // 4. Fetch the PDF from the URL server-side (with retry logic for slow connections)
     let pdfBuffer;
-    try {
-      const response = await fetch(normalizedUrl, {
-        headers: { "User-Agent": "Mozilla/5.0" },
-      });
+    let fetchErrorMsg = "";
+    
+    for (let attempt = 1; attempt <= 3; attempt++) {
+      try {
+        const response = await fetch(normalizedUrl, {
+          headers: { "User-Agent": "Mozilla/5.0" },
+        });
 
-      if (!response.ok) {
-        return NextResponse.json(
-          { error: `Failed to fetch PDF from URL: ${response.status} ${response.statusText}` },
-          { status: 400 }
-        );
+        if (!response.ok) {
+          return NextResponse.json(
+            { error: `Failed to fetch PDF from URL: ${response.status} ${response.statusText}` },
+            { status: 400 }
+          );
+        }
+
+        const contentType = response.headers.get("content-type") || "";
+        if (contentType.includes("text/html")) {
+          return NextResponse.json(
+            { error: "The provided link returned a web page instead of a raw PDF. If using Google Drive or Dropbox, make sure the file is public and under the size limit." },
+            { status: 400 }
+          );
+        }
+
+        const arrayBuffer = await response.arrayBuffer();
+        pdfBuffer = Buffer.from(arrayBuffer);
+
+        // Strict PDF signature check
+        if (pdfBuffer.length < 5 || pdfBuffer.toString('ascii', 0, 5) !== '%PDF-') {
+          return NextResponse.json(
+            { error: "The downloaded file is not a valid PDF. It might be a login page or an unsupported format." },
+            { status: 400 }
+          );
+        }
+        
+        // If we reached here, download was successful!
+        fetchErrorMsg = "";
+        break;
+
+      } catch (err) {
+        console.warn(`[URL_FETCH_WARN] Attempt ${attempt} failed:`, err.message);
+        fetchErrorMsg = err.message;
+        if (attempt === 3) {
+          console.error("[URL_FETCH_ERROR]:", err);
+        }
       }
+    }
 
-      const contentType = response.headers.get("content-type") || "";
-      if (!contentType.includes("pdf") && !normalizedUrl.endsWith(".pdf") && !pdfUrl.endsWith(".pdf")) {
-        return NextResponse.json(
-          { error: "The URL does not point to a PDF file. Please provide a direct PDF link." },
-          { status: 400 }
-        );
-      }
-
-      const arrayBuffer = await response.arrayBuffer();
-      pdfBuffer = Buffer.from(arrayBuffer);
-    } catch (fetchError) {
-      console.error("[URL_FETCH_ERROR]:", fetchError);
+    if (!pdfBuffer) {
       return NextResponse.json(
-        { error: "Could not fetch the PDF from the provided URL. Make sure the link is publicly accessible." },
+        { error: `Network error downloading the file. Please try again. (${fetchErrorMsg})` },
         { status: 400 }
       );
     }
@@ -82,8 +106,15 @@ export async function POST(req) {
     const guessedName = decodeURIComponent(urlPathParts[urlPathParts.length - 1]) || "textbook.pdf";
     const displayName = guessedName.endsWith(".pdf") ? guessedName : `${guessedName}.pdf`;
 
-    // 6. Upload to Cloudinary (so we have a persistent copy)
-    const cloudinaryResult = await uploadToCloudinary(pdfBuffer, "imtihan/textbooks");
+    // 6. Upload to Cloudinary if file is under 10MB, else fallback to the source URL
+    let cloudinaryResult = { secure_url: normalizedUrl, public_id: `external-${Date.now()}` };
+    if (pdfBuffer.length <= 10485000) {
+      try {
+        cloudinaryResult = await uploadToCloudinary(pdfBuffer, "imtihan/textbooks");
+      } catch (e) {
+        console.warn("[CLOUDINARY_UPLOAD_WARN]: Failed to upload to Cloudinary, falling back to source URL.", e.message);
+      }
+    }
 
     // ── FULL BOOK MODE ──────────────────────────────────────────────────────────
     if (isFullBook) {
@@ -107,7 +138,25 @@ export async function POST(req) {
 
       const uploads = [];
       for (const ch of detectedChapters) {
-        if (!ch.matchedChapterId) continue;
+        let currentChapterId = ch.matchedChapterId;
+
+        // Auto-create the chapter in the database if it doesn't exist
+        if (!currentChapterId) {
+          try {
+            const newChapter = await db.chapter.create({
+              data: {
+                number: ch.chapterNumber || 0,
+                name: ch.chapterName || `Chapter ${ch.chapterNumber}`,
+                subjectId,
+              },
+            });
+            currentChapterId = newChapter.id;
+            ch.matchedChapterId = currentChapterId; // Update the object so the UI shows it as matched/saved!
+          } catch (createErr) {
+            console.error("Failed to auto-create chapter:", createErr);
+            continue; // Skip only if creation fails
+          }
+        }
 
         const upload = await db.textbookUpload.create({
           data: {
@@ -116,7 +165,7 @@ export async function POST(req) {
             originalName: `${displayName} — Chapter ${ch.chapterNumber}: ${ch.chapterName}`,
             uploadedById: session.user.id,
             subjectId,
-            chapterId: ch.matchedChapterId,
+            chapterId: currentChapterId,
             sourceUrl: pdfUrl,
             isFullBook: true,
             mcqsGenerated: false,

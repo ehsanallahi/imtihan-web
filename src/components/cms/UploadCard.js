@@ -12,6 +12,8 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { cn } from "@/lib/utils";
 
+import { useRouter } from "next/navigation";
+
 // ─── Tabs ───────────────────────────────────────────────────────────────────
 const TABS = [
   { id: "file", label: "Upload File", icon: Upload },
@@ -19,6 +21,7 @@ const TABS = [
 ];
 
 export function UploadCard({ onUploadComplete, subjects = [], chapters = [] }) {
+  const router = useRouter();
   const [activeTab, setActiveTab] = useState("file");
   const [isFullBook, setIsFullBook] = useState(false);
 
@@ -172,6 +175,9 @@ export function UploadCard({ onUploadComplete, subjects = [], chapters = [] }) {
       }
 
       if (onUploadComplete) onUploadComplete(response);
+      
+      // Force Next.js to re-fetch server components so the table updates instantly
+      router.refresh();
 
       // Reset file/URL but keep subject selection for quick re-upload
       setTimeout(() => {

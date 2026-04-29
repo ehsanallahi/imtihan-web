@@ -20,8 +20,8 @@ export async function uploadToCloudinary(buffer, folder = 'imtihan/textbooks') {
     const uploadStream = cloudinary.uploader.upload_chunked_stream(
       {
         folder,
-        resource_type: 'raw',
-        chunk_size: 20000000, // 20MB chunks
+        resource_type: 'auto',
+        chunk_size: 6000000, // 6MB chunks (must be > 5MB and < 10MB)
         timeout: 120000, // 120 seconds timeout just in case
       },
       (error, result) => {

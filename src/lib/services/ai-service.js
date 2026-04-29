@@ -78,9 +78,9 @@ export async function extractChaptersFromText(fullText, existingChapters = []) {
   const prompt = `
 You are an expert educational content analyst. Your task is to identify and separate chapters from a full textbook.
 
-Full Textbook Text (first 80,000 characters):
+Full Textbook Text (first 1,500,000 characters):
 ---
-${fullText.substring(0, 80000)}
+${fullText.substring(0, 1500000)}
 ---
 
 Existing chapters in our database for this subject:

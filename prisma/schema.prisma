@@ -27,9 +27,10 @@ model User {
   pastPapers      PastPaper[]      @relation("UploadedBy")
   sessions        Session[]
   studentProfile  StudentProfile?
-  subscriptions   Subscription[]
-  teacherProfile  TeacherProfile?
-  uploadedContent TextbookUpload[]
+  subscriptions        Subscription[]
+  teacherProfile       TeacherProfile?
+  uploadedContent      TextbookUpload[]
+  pastPaperUploads     PastPaperUpload[]
 }
 
 model Account {
@@ -119,18 +120,20 @@ model GuardianStudent {
 }
 
 model Subject {
-  id              String           @id @default(cuid())
-  name            String
-  nameUrdu        String?
-  grade           Grade
-  board           Board
-  isActive        Boolean          @default(true)
-  createdAt       DateTime         @default(now())
-  updatedAt       DateTime         @updatedAt
-  chapters        Chapter[]
-  mcqs            MCQ[]
-  pastPapers      PastPaper[]
-  textbookUploads TextbookUpload[]
+  id               String            @id @default(cuid())
+  name             String
+  nameUrdu         String?
+  grade            Grade
+  board            Board
+  isActive         Boolean           @default(true)
+  createdAt        DateTime          @default(now())
+  updatedAt        DateTime          @updatedAt
+  chapters         Chapter[]
+  mcqs             MCQ[]
+  pastPapers       PastPaper[]
+  textbookUploads  TextbookUpload[]
+  pastPaperUploads PastPaperUpload[]
+  pastPaperMcqs    PastPaperMCQ[]
 }
 
 model Chapter {
@@ -210,6 +213,51 @@ model TextbookUpload {
   chapter              Chapter?         @relation(fields: [chapterId], references: [id])
   subject              Subject?         @relation(fields: [subjectId], references: [id])
   uploadedBy           User             @relation(fields: [uploadedById], references: [id])
+}
+
+// ─── Past Paper MCQ Bank ────────────────────────────────────────────────────
+
+model PastPaperUpload {
+  id            String         @id @default(cuid())
+  originalName  String
+  cloudinaryUrl String
+  cloudinaryId  String
+  sourceUrl     String?        // For URL-based ingestion
+  board         Board
+  grade         Grade
+  medium        Medium         @default(english)
+  year          Int
+  subjectId     String
+  uploadedById  String
+  isProcessed   Boolean        @default(false)
+  createdAt     DateTime       @default(now())
+  subject       Subject        @relation(fields: [subjectId], references: [id])
+  uploadedBy    User           @relation(fields: [uploadedById], references: [id])
+  mcqs          PastPaperMCQ[]
+}
+
+model PastPaperMCQ {
+  id                String          @id @default(cuid())
+  question          String          @db.Text
+  questionUrdu      String?         @db.Text
+  optionA           String
+  optionB           String
+  optionC           String
+  optionD           String
+  correctAnswer     String          // "A" | "B" | "C" | "D"
+  explanation       String?         @db.Text
+  board             Board
+  grade             Grade
+  medium            Medium
+  year              Int
+  subjectId         String
+  repeatCount       Int             @default(1) // how many distinct papers this Q appeared in
+  canonicalId       String?         // points to first occurrence if this is a repeat
+  isApproved        Boolean         @default(true)
+  createdAt         DateTime        @default(now())
+  pastPaperUploadId String
+  subject           Subject         @relation(fields: [subjectId], references: [id])
+  pastPaperUpload   PastPaperUpload @relation(fields: [pastPaperUploadId], references: [id])
 }
 
 model ExamSession {
@@ -319,6 +367,11 @@ enum SessionType {
   practice
   mock_exam
   past_paper
+}
+
+enum Medium {
+  english
+  urdu
 }
 
 enum SubscriptionPlan {

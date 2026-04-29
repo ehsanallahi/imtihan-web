@@ -10,7 +10,8 @@ import {
   Settings, 
   LogOut, 
   User,
-  GraduationCap
+  GraduationCap,
+  Archive
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Sidebar, SidebarContent, SidebarHeader, SidebarMenu, SidebarMenuItem, SidebarMenuButton } from "@/components/ui/sidebar";
@@ -23,6 +24,12 @@ const menuItems = [
     icon: FileText, 
     label: "Content Management", 
     href: "/dashboard/content",
+    roles: ["super_admin", "content_editor", "moderator"] 
+  },
+  { 
+    icon: Archive, 
+    label: "Past Paper MCQ Bank", 
+    href: "/dashboard/past-papers",
     roles: ["super_admin", "content_editor", "moderator"] 
   },
   { icon: GraduationCap, label: "Exams", href: "/dashboard/exams" },

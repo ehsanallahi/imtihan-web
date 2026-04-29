@@ -1,8 +1,7 @@
-
 import { GoogleGenerativeAI } from "@google/generative-ai";
 
 const genAI = new GoogleGenerativeAI(process.env.GOOGLE_AI_API_KEY);
-const flashModel = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
+const flashModel = genAI.getGenerativeModel({ model: "gemini-flash-latest" });
 
 /**
  * Generates MCQs from provided textbook text using Gemini.
@@ -55,8 +54,6 @@ export async function generateMCQsFromText(text, count = 10) {
 
       if (!hasUrduInQuestion || !hasUrduInOptions) {
         console.warn(`[AI_VALIDATION_WARNING]: MCQ at index ${index} is missing Urdu characters.`);
-        // We could throw an error here or try to fix it, but for now we'll just log and continue
-        // or optionally mark it for manual review.
       }
     });
 
@@ -140,3 +137,96 @@ export function normalizeGoogleDriveUrl(url) {
   return url;
 }
 
+// ─── Past Paper MCQ Bank ─────────────────────────────────────────────────────
+
+/**
+ * Uses Gemini to auto-detect a past paper's metadata from its text and filename.
+ * @param {string} text - Extracted PDF text
+ * @param {string} filename - Original filename
+ * @param {Buffer} buffer - Optional PDF buffer for multimodal detection
+ * @returns {Promise<{board, grade, year, subjectName, medium}>}
+ */
+export async function extractPastPaperMetadata(text, filename = "", buffer = null) {
+  const parts = [
+    { text: `Analyze the filename and text to detect this paper's metadata.
+    
+    Filename: "${filename}"
+    PDF Text (first 3000 characters):
+    ---
+    ${text.substring(0, 3000)}
+    ---
+    
+    Rules:
+    - board: must be one of: punjab, sindh, kpk, federal, aku, private
+    - grade: must be one of: nine, ten, eleven, twelve
+    - year: 4-digit number
+    - subjectName: the subject name in English
+    - medium: "english" or "urdu"
+    
+    Return ONLY a strict JSON object.` }
+  ];
+
+  if (buffer && text.length < 200) {
+    parts.push({
+      inlineData: {
+        data: buffer.toString("base64"),
+        mimeType: "application/pdf"
+      }
+    });
+  }
+
+  try {
+    const result = await flashModel.generateContent(parts);
+    const responseText = result.response.text();
+    const jsonString = responseText.replace(/```json|```/g, "").trim();
+    return JSON.parse(jsonString);
+  } catch (error) {
+    console.error("[METADATA_EXTRACT_ERROR]:", error);
+    return { board: null, grade: null, year: null, subjectName: null, medium: "english" };
+  }
+}
+
+/**
+ * Extracts every MCQ found in a past paper PDF text/buffer using Gemini.
+ * @param {string} text - Full extracted PDF text
+ * @param {string} medium - "english" | "urdu"
+ * @param {Buffer} buffer - Optional PDF buffer for multimodal extraction
+ * @returns {Promise<Array>}
+ */
+export async function extractMCQsFromPastPaper(text, medium = "english", buffer = null) {
+  const parts = [
+    { text: `Your task is to EXTRACT every multiple-choice question (MCQ) from the following past paper.
+    
+    Medium: ${medium}
+    
+    Text content:
+    ---
+    ${text.substring(0, 50000)}
+    ---
+    
+    INSTRUCTIONS:
+    1. Find every MCQ.
+    2. Extract: question, questionUrdu, optionA, optionB, optionC, optionD, correctAnswer (A/B/C/D), explanation.
+    3. Return ONLY a strict JSON array.` }
+  ];
+
+  if (buffer && text.length < 500) {
+    parts.push({
+      inlineData: {
+        data: buffer.toString("base64"),
+        mimeType: "application/pdf"
+      }
+    });
+  }
+
+  try {
+    const result = await flashModel.generateContent(parts);
+    const responseText = result.response.text();
+    const jsonString = responseText.replace(/```json|```/g, "").trim();
+    const mcqs = JSON.parse(jsonString);
+    return Array.isArray(mcqs) ? mcqs : [];
+  } catch (error) {
+    console.error("[PAST_PAPER_MCQ_EXTRACT_ERROR]:", error);
+    throw new Error("Failed to extract MCQs from past paper");
+  }
+}

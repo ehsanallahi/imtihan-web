@@ -1,5 +1,8 @@
 
-import pdf from 'pdf-parse';
+import { createRequire } from 'module';
+const require = createRequire(import.meta.url);
+const pdf = require('pdf-parse');
+
 
 /**
  * Extracts text from a PDF buffer.
@@ -8,8 +11,11 @@ import pdf from 'pdf-parse';
  */
 export async function extractTextFromPDF(buffer) {
   try {
-    const data = await pdf(buffer);
-    return data.text;
+    const parser = new pdf.PDFParse({ data: buffer });
+    const result = await parser.getText();
+    const text = result.text;
+    await parser.destroy();
+    return text;
   } catch (error) {
     console.error("[PDF_EXTRACTION_ERROR]:", error);
     throw new Error("Failed to extract text from PDF");

@@ -34,6 +34,7 @@ export function UploadCard({ onUploadComplete, subjects = [], chapters = [] }) {
   const [selectedChapter, setSelectedChapter] = useState("");
   const [isProcessing, setIsProcessing] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
+  const [uploadStats, setUploadStats] = useState(null);
   const [result, setResult] = useState(null); // { uploads, detectedChapters }
 
   // ── Smart detection on file pick ──────────────────────────────────────────
@@ -96,6 +97,7 @@ export function UploadCard({ onUploadComplete, subjects = [], chapters = [] }) {
 
     setIsProcessing(true);
     setUploadProgress(0);
+    setUploadStats(null);
     setResult(null);
 
     try {
@@ -114,6 +116,10 @@ export function UploadCard({ onUploadComplete, subjects = [], chapters = [] }) {
           xhr.upload.addEventListener("progress", (event) => {
             if (event.lengthComputable) {
               setUploadProgress(Math.round((event.loaded / event.total) * 80)); // cap at 80% for AI processing
+              setUploadStats({
+                loaded: (event.loaded / (1024 * 1024)).toFixed(2),
+                total: (event.total / (1024 * 1024)).toFixed(2)
+              });
             }
           });
           xhr.addEventListener("load", () => {
@@ -347,7 +353,14 @@ export function UploadCard({ onUploadComplete, subjects = [], chapters = [] }) {
           {isProcessing && (
             <div className="space-y-2 animate-in fade-in slide-in-from-top-2">
               <div className="flex justify-between text-xs font-medium text-teal-700">
-                <span>{isFullBook ? "AI is extracting chapters…" : "Uploading…"}</span>
+                <span>
+                  {isFullBook ? "AI is extracting chapters…" : "Uploading…"}
+                  {uploadStats && uploadProgress < 80 && (
+                    <span className="ml-2 text-zinc-500 font-normal">
+                      ({uploadStats.loaded} MB / {uploadStats.total} MB)
+                    </span>
+                  )}
+                </span>
                 <span>{uploadProgress}%</span>
               </div>
               <Progress value={uploadProgress} className="h-1.5 bg-teal-100" />

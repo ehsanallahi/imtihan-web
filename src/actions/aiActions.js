@@ -85,13 +85,15 @@ export async function askAiTutor(mcqId, doubt, threadId = null) {
     // Get AI Response
     const context = {
       question: mcq.question,
+      questionUrdu: mcq.questionUrdu,
       optionA: mcq.optionA,
       optionB: mcq.optionB,
       optionC: mcq.optionC,
       optionD: mcq.optionD,
       correctAnswer: mcq.correctAnswer,
       explanation: mcq.explanation,
-      doubt: doubt
+      doubt: doubt,
+      studentMedium: profile.medium // e.g., 'english' or 'urdu'
     };
 
     const aiResponse = await getTutorResponse(context, history);

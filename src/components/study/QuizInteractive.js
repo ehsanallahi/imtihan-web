@@ -9,7 +9,7 @@ import { Loader2, ChevronRight, ChevronLeft, CheckCircle2 } from 'lucide-react'
 import { Progress } from '@/components/ui/progress'
 import { AiTutor } from './AiTutor'
 
-export function QuizInteractive({ sessionId, mcqs }) {
+export function QuizInteractive({ sessionId, mcqs, medium = 'english' }) {
   const router = useRouter()
   const [currentIndex, setCurrentIndex] = useState(0)
   const [answers, setAnswers] = useState({})
@@ -80,7 +80,7 @@ export function QuizInteractive({ sessionId, mcqs }) {
       <div className="mb-8 flex flex-col gap-4">
         <div className="flex items-center justify-between">
           <span className="text-sm font-medium text-zinc-500">
-            Question {currentIndex + 1} of {mcqs.length}
+            {medium === 'urdu' ? `${mcqs.length} میں سے سوال ${currentIndex + 1}` : `Question ${currentIndex + 1} of ${mcqs.length}`}
           </span>
           <span className="text-sm font-mono font-medium text-teal-600 bg-teal-50 px-3 py-1 rounded-md">
             {formatTime(timeTakenSeconds)}
@@ -95,13 +95,26 @@ export function QuizInteractive({ sessionId, mcqs }) {
         <CardContent className="p-4 sm:p-6 lg:p-10 flex-1 flex flex-col">
           
           <div className="mb-10">
-            <h2 className="text-xl sm:text-2xl font-bold text-teal-950 mb-4">
-              {currentMcq.question}
-            </h2>
-            {currentMcq.questionUrdu && (
-              <h3 className="text-xl font-urdu text-zinc-600 text-right leading-loose" dir="rtl">
-                {currentMcq.questionUrdu}
-              </h3>
+            {medium === 'urdu' && currentMcq.questionUrdu ? (
+              <>
+                <h2 className="text-xl sm:text-2xl font-urdu text-teal-950 text-right leading-loose mb-4" dir="rtl">
+                  {currentMcq.questionUrdu}
+                </h2>
+                <h3 className="text-sm font-medium text-zinc-500 italic">
+                  {currentMcq.question}
+                </h3>
+              </>
+            ) : (
+              <>
+                <h2 className="text-xl sm:text-2xl font-bold text-teal-950 mb-4">
+                  {currentMcq.question}
+                </h2>
+                {currentMcq.questionUrdu && (
+                  <h3 className="text-xl font-urdu text-zinc-600 text-right leading-loose" dir="rtl">
+                    {currentMcq.questionUrdu}
+                  </h3>
+                )}
+              </>
             )}
           </div>
 
@@ -142,7 +155,7 @@ export function QuizInteractive({ sessionId, mcqs }) {
       </Card>
 
       {/* AI Tutor Integration */}
-      <AiTutor mcqId={currentMcq.id} />
+      <AiTutor mcqId={currentMcq.id} medium={medium} />
 
       {/* Navigation Footer */}
       <div className="flex items-center justify-between pt-4 gap-3">

@@ -28,6 +28,12 @@ export default async function QuizResultsPage({ params }) {
     }
   });
 
+  const profile = await db.studentProfile.findUnique({
+    where: { userId: session.user.id }
+  });
+
+  const medium = profile?.medium || 'english';
+
   let subject = null;
   if (examSession?.subjectId) {
     subject = await db.subject.findUnique({
@@ -144,11 +150,24 @@ export default async function QuizResultsPage({ params }) {
                         )}
                       </div>
                     </div>
-                    <p className="text-lg font-medium text-slate-900">{mcq.question}</p>
-                    {mcq.questionUrdu && (
-                      <p className="text-lg font-urdu text-zinc-600 text-right leading-loose mt-2" dir="rtl">
-                        {mcq.questionUrdu}
-                      </p>
+                    {medium === 'urdu' && mcq.questionUrdu ? (
+                      <>
+                        <p className="text-xl font-urdu text-zinc-900 text-right leading-loose mb-2" dir="rtl">
+                          {mcq.questionUrdu}
+                        </p>
+                        <p className="text-sm font-medium text-slate-500 italic">
+                          {mcq.question}
+                        </p>
+                      </>
+                    ) : (
+                      <>
+                        <p className="text-lg font-medium text-slate-900">{mcq.question}</p>
+                        {mcq.questionUrdu && (
+                          <p className="text-lg font-urdu text-zinc-600 text-right leading-loose mt-2" dir="rtl">
+                            {mcq.questionUrdu}
+                          </p>
+                        )}
+                      </>
                     )}
                   </div>
                 </div>
@@ -183,8 +202,9 @@ export default async function QuizResultsPage({ params }) {
 
                 {mcq.explanation && (
                   <div className="ml-12 bg-indigo-50/50 border border-indigo-100 rounded-lg p-4">
-                    <h4 className="text-sm font-bold text-indigo-900 mb-2 flex items-center gap-2">
-                      <Award className="w-4 h-4 text-indigo-500" /> AI Explanation
+                    <h4 className={`text-sm font-bold text-indigo-900 mb-2 flex items-center gap-2 ${medium === 'urdu' ? 'flex-row-reverse' : ''}`}>
+                      <Award className="w-4 h-4 text-indigo-500" /> 
+                      {medium === 'urdu' ? 'وضاحت' : 'AI Explanation'}
                     </h4>
                     <div className="text-sm text-indigo-800/80 prose prose-sm max-w-none prose-indigo">
                       <ReactMarkdown>{mcq.explanation}</ReactMarkdown>
@@ -194,7 +214,7 @@ export default async function QuizResultsPage({ params }) {
 
                 {/* AI Tutor Doubts Integration */}
                 <div className="ml-12 mt-4">
-                  <AiTutor mcqId={mcq.id} />
+                  <AiTutor mcqId={mcq.id} medium={medium} />
                 </div>
               </CardContent>
             </Card>

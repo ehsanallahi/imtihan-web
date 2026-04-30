@@ -238,7 +238,18 @@ export async function extractMCQsFromPastPaper(text, medium = "english", buffer 
  * @returns {Promise<string>} - The AI's response.
  */
 export async function getTutorResponse(context, history = []) {
-  const { question, optionA, optionB, optionC, optionD, correctAnswer, explanation, doubt } = context;
+  const { 
+    question, 
+    questionUrdu,
+    optionA, 
+    optionB, 
+    optionC, 
+    optionD, 
+    correctAnswer, 
+    explanation, 
+    doubt,
+    studentMedium 
+  } = context;
 
   const chatHistory = history.map(msg => ({
     role: msg.senderRole === 'student' ? 'user' : 'model',
@@ -249,8 +260,11 @@ export async function getTutorResponse(context, history = []) {
 You are "Imtihan AI Tutor", a helpful and encouraging educational assistant. 
 Your goal is to help the student understand the concepts behind a specific Multiple Choice Question (MCQ).
 
+STUDENT PREFERRED MEDIUM: ${studentMedium || 'english'}
+
 MCQ CONTEXT:
-Question: ${question}
+English Question: ${question}
+Urdu Question: ${questionUrdu || "N/A"}
 Options:
 A) ${optionA}
 B) ${optionB}
@@ -264,7 +278,7 @@ INSTRUCTIONS:
 2. If the student is confused about why an option is wrong, explain the logic.
 3. Use simple language.
 4. Encourage the student to keep practicing.
-5. If the doubt is in Urdu, respond in Urdu. If in English, respond in English. If a mix, respond in the language the student seems most comfortable with.
+5. IMPORTANT: If the student's medium is "urdu", you MUST respond primarily in Urdu, but keep English technical terms/options in English where necessary for clarity. If the medium is "english", respond in English.
 6. Do NOT just give the answer if they ask "what is the answer", explain the logic instead.
 `;
 

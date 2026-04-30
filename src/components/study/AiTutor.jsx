@@ -79,9 +79,9 @@ export function AiTutor({ mcqId }) {
   return (
     <Card className="mt-4 border-indigo-100 shadow-lg animate-in zoom-in-95 duration-200 overflow-hidden">
       <CardHeader className="bg-indigo-50/50 py-3 flex flex-row items-center justify-between">
-        <CardTitle className="text-sm font-bold text-indigo-900 flex items-center gap-2">
+        <CardTitle className={`text-sm font-bold text-indigo-900 flex items-center gap-2 ${medium === 'urdu' ? 'flex-row-reverse' : ''}`}>
           <Sparkles className="w-4 h-4 text-indigo-500" />
-          AI Tutor Help
+          {medium === 'urdu' ? 'اے آئی ٹیوٹر کی مدد' : 'AI Tutor Help'}
         </CardTitle>
         <Button variant="ghost" size="icon" className="h-6 w-6 text-indigo-400 hover:text-indigo-600" onClick={() => setIsOpen(false)}>
           <X className="w-4 h-4" />
@@ -95,8 +95,12 @@ export function AiTutor({ mcqId }) {
           {messages.length === 0 && !loading && (
             <div className="h-full flex flex-col items-center justify-center text-center space-y-2 px-4">
               <BrainCircuit className="w-10 h-10 text-indigo-100" />
-              <p className="text-sm text-zinc-500 font-medium">Confused about this question? Ask me anything!</p>
-              <p className="text-xs text-zinc-400">Example: "Why is option C incorrect?"</p>
+              <p className="text-sm text-zinc-500 font-medium">
+                {medium === 'urdu' ? 'اس سوال میں الجھن ہے؟ مجھ سے کچھ بھی پوچھیں!' : 'Confused about this question? Ask me anything!'}
+              </p>
+              <p className="text-xs text-zinc-400 italic">
+                {medium === 'urdu' ? 'مثال: "آپشن سی کیوں غلط ہے؟"' : 'Example: "Why is option C incorrect?"'}
+              </p>
             </div>
           )}
           
@@ -108,7 +112,10 @@ export function AiTutor({ mcqId }) {
               <div className={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 ${msg.senderRole === 'student' ? 'bg-zinc-100 text-zinc-600' : 'bg-indigo-100 text-indigo-600'}`}>
                 {msg.senderRole === 'student' ? <User className="w-4 h-4" /> : <Sparkles className="w-4 h-4" />}
               </div>
-              <div className={`max-w-[80%] rounded-2xl px-4 py-2 text-sm ${msg.senderRole === 'student' ? 'bg-zinc-100 text-zinc-800 rounded-tr-none' : 'bg-indigo-50 text-indigo-900 rounded-tl-none border border-indigo-100'}`}>
+              <div 
+                className={`max-w-[80%] rounded-2xl px-4 py-2 text-sm ${msg.senderRole === 'student' ? 'bg-zinc-100 text-zinc-800 rounded-tr-none' : 'bg-indigo-50 text-indigo-900 rounded-tl-none border border-indigo-100'}`}
+                dir={medium === 'urdu' ? 'rtl' : 'ltr'}
+              >
                 <div className="prose prose-sm prose-indigo max-w-none break-words">
                   <ReactMarkdown 
                     components={{

@@ -9,6 +9,7 @@ import {
   FileText, ArrowRight, BookOpen, Flame
 } from "lucide-react";
 import { DashboardUploadSyllabus } from "@/components/dashboard/DashboardActions";
+import { LeaderboardWidget, BadgesWidget, DailyReviewWidget } from "@/components/dashboard/GamificationWidgets";
 
 export default async function DashboardPage() {
   const session = await auth();
@@ -161,6 +162,15 @@ export default async function DashboardPage() {
           </CardContent>
         </Card>
       </div>
+
+      {/* Gamification Section */}
+      {profile?.id && (
+        <div className="grid gap-6 grid-cols-1 md:grid-cols-3">
+          <DailyReviewWidget studentProfileId={profile?.id} />
+          <LeaderboardWidget board={profile?.board} grade={profile?.grade} currentUserId={session.user.id} />
+          <BadgesWidget studentProfileId={profile?.id} />
+        </div>
+      )}
     </div>
   );
 }

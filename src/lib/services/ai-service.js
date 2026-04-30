@@ -230,3 +230,57 @@ export async function extractMCQsFromPastPaper(text, medium = "english", buffer 
     throw new Error("Failed to extract MCQs from past paper");
   }
 }
+
+/**
+ * Generates an explanation/answer for a student's doubt about a specific MCQ.
+ * @param {Object} context - The context including the MCQ and student doubt.
+ * @param {Array<{senderRole: string, content: string}>} history - Previous messages in the thread.
+ * @returns {Promise<string>} - The AI's response.
+ */
+export async function getTutorResponse(context, history = []) {
+  const { question, optionA, optionB, optionC, optionD, correctAnswer, explanation, doubt } = context;
+
+  const chatHistory = history.map(msg => ({
+    role: msg.senderRole === 'student' ? 'user' : 'model',
+    parts: [{ text: msg.content }]
+  }));
+
+  const systemPrompt = `
+You are "Imtihan AI Tutor", a helpful and encouraging educational assistant. 
+Your goal is to help the student understand the concepts behind a specific Multiple Choice Question (MCQ).
+
+MCQ CONTEXT:
+Question: ${question}
+Options:
+A) ${optionA}
+B) ${optionB}
+C) ${optionC}
+D) ${optionD}
+Correct Answer: ${correctAnswer}
+Existing Explanation: ${explanation || "No explanation provided."}
+
+INSTRUCTIONS:
+1. Be concise but thorough.
+2. If the student is confused about why an option is wrong, explain the logic.
+3. Use simple language.
+4. Encourage the student to keep practicing.
+5. If the doubt is in Urdu, respond in Urdu. If in English, respond in English. If a mix, respond in the language the student seems most comfortable with.
+6. Do NOT just give the answer if they ask "what is the answer", explain the logic instead.
+`;
+
+  try {
+    const chat = flashModel.startChat({
+      history: chatHistory,
+      systemInstruction: {
+        parts: [{ text: systemPrompt }]
+      },
+    });
+
+    const result = await chat.sendMessage(doubt);
+    return result.response.text();
+  } catch (error) {
+    console.error("[TUTOR_AI_ERROR]:", error);
+    throw new Error("Failed to get response from AI Tutor");
+  }
+}
+

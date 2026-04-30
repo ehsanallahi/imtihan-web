@@ -7,6 +7,7 @@ import { Card, CardContent } from '@/components/ui/card'
 import { submitExam } from '@/actions/quizActions'
 import { Loader2, ChevronRight, ChevronLeft, CheckCircle2 } from 'lucide-react'
 import { Progress } from '@/components/ui/progress'
+import { AiTutor } from './AiTutor'
 
 export function QuizInteractive({ sessionId, mcqs }) {
   const router = useRouter()
@@ -139,6 +140,9 @@ export function QuizInteractive({ sessionId, mcqs }) {
 
         </CardContent>
       </Card>
+
+      {/* AI Tutor Integration */}
+      <AiTutor mcqId={currentMcq.id} />
 
       {/* Navigation Footer */}
       <div className="flex items-center justify-between pt-4 gap-3">

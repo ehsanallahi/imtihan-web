@@ -7,30 +7,32 @@ datasource db {
 }
 
 model User {
-  id              String           @id @default(cuid())
-  email           String           @unique
-  name            String?
-  nameUrdu        String?
-  phone           String?          @unique
-  role            Role             @default(student)
-  avatar          String?
-  avatarId        String?
-  isActive        Boolean          @default(true)
-  emailVerified   DateTime?
-  hashedPassword  String?
-  createdAt       DateTime         @default(now())
-  updatedAt       DateTime         @updatedAt
-  deletedAt       DateTime?
-  accounts        Account[]
-  examSessions    ExamSession[]
-  guardianProfile GuardianProfile?
-  pastPapers      PastPaper[]      @relation("UploadedBy")
-  sessions        Session[]
-  studentProfile  StudentProfile?
-  subscriptions        Subscription[]
-  teacherProfile       TeacherProfile?
-  uploadedContent      TextbookUpload[]
-  pastPaperUploads     PastPaperUpload[]
+  id               String            @id @default(cuid())
+  email            String            @unique
+  name             String?
+  nameUrdu         String?
+  phone            String?           @unique
+  role             Role              @default(student)
+  avatar           String?
+  avatarId         String?
+  isActive         Boolean           @default(true)
+  emailVerified    DateTime?
+  hashedPassword   String?
+  createdAt        DateTime          @default(now())
+  updatedAt        DateTime          @updatedAt
+  deletedAt        DateTime?
+  accounts         Account[]
+  aiUsages         AiUsage[]
+  examSessions     ExamSession[]
+  guardianProfile  GuardianProfile?
+  notifications    Notification[]
+  pastPapers       PastPaper[]       @relation("UploadedBy")
+  pastPaperUploads PastPaperUpload[]
+  sessions         Session[]
+  studentProfile   StudentProfile?
+  subscriptions    Subscription[]
+  teacherProfile   TeacherProfile?
+  uploadedContent  TextbookUpload[]
 }
 
 model Account {
@@ -68,16 +70,19 @@ model VerificationToken {
 }
 
 model StudentProfile {
-  id                 String            @id @default(cuid())
-  userId             String            @unique
+  id                 String               @id @default(cuid())
+  userId             String               @unique
   grade              Grade?
   board              Board?
-  studyStreak        Int               @default(0)
-  totalMcqsAttempted Int               @default(0)
-  createdAt          DateTime          @default(now())
-  updatedAt          DateTime          @updatedAt
+  studyStreak        Int                  @default(0)
+  totalMcqsAttempted Int                  @default(0)
+  createdAt          DateTime             @default(now())
+  updatedAt          DateTime             @updatedAt
+  doubtThreads       DoubtThread[]
   guardians          GuardianStudent[]
-  user               User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  achievements       StudentAchievement[]
+  srsProgress        StudentMCQProgress[]
+  user               User                 @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
 model TeacherProfile {
@@ -131,9 +136,9 @@ model Subject {
   chapters         Chapter[]
   mcqs             MCQ[]
   pastPapers       PastPaper[]
-  textbookUploads  TextbookUpload[]
-  pastPaperUploads PastPaperUpload[]
   pastPaperMcqs    PastPaperMCQ[]
+  pastPaperUploads PastPaperUpload[]
+  textbookUploads  TextbookUpload[]
 }
 
 model Chapter {
@@ -169,7 +174,7 @@ model PastPaper {
 }
 
 model MCQ {
-  id               String          @id @default(cuid())
+  id               String               @id @default(cuid())
   question         String
   questionUrdu     String?
   optionA          String
@@ -178,51 +183,51 @@ model MCQ {
   optionD          String
   correctAnswer    String
   explanation      String?
-  difficulty       Difficulty      @default(medium)
+  difficulty       Difficulty           @default(medium)
   topicTag         String?
   chapterId        String?
   subjectId        String
-  isAiGenerated    Boolean         @default(false)
-  isApproved       Boolean         @default(true)
+  isAiGenerated    Boolean              @default(false)
+  isApproved       Boolean              @default(true)
   createdById      String
-  createdAt        DateTime        @default(now())
-  updatedAt        DateTime        @updatedAt
+  createdAt        DateTime             @default(now())
+  updatedAt        DateTime             @updatedAt
   deletedAt        DateTime?
   textbookUploadId String?
-  chapter          Chapter?        @relation(fields: [chapterId], references: [id])
-  subject          Subject         @relation(fields: [subjectId], references: [id])
-  textbookUpload   TextbookUpload? @relation(fields: [textbookUploadId], references: [id])
+  doubtThreads     DoubtThread[]
+  chapter          Chapter?             @relation(fields: [chapterId], references: [id])
+  subject          Subject              @relation(fields: [subjectId], references: [id])
+  textbookUpload   TextbookUpload?      @relation(fields: [textbookUploadId], references: [id])
   attempts         MCQAttempt[]
+  srsProgress      StudentMCQProgress[]
 }
 
 model TextbookUpload {
-  id            String   @id @default(cuid())
-  cloudinaryUrl String
-  cloudinaryId  String
-  originalName  String
-  uploadedById  String
+  id                   String   @id @default(cuid())
+  cloudinaryUrl        String
+  cloudinaryId         String
+  originalName         String
+  uploadedById         String
   chapterId            String?
   subjectId            String?
-  sourceUrl            String?          // Original PDF URL for URL-based uploads
-  isFullBook           Boolean          @default(false) // true = full textbook (AI-split), false = single chapter
-  mcqsGenerated        Boolean          @default(false)
-  explanationGenerated Boolean          @default(false)
-  aiExplanation        String?          @db.Text
-  createdAt            DateTime         @default(now())
+  mcqsGenerated        Boolean  @default(false)
+  createdAt            DateTime @default(now())
+  aiExplanation        String?
+  explanationGenerated Boolean  @default(false)
+  isFullBook           Boolean  @default(false)
+  sourceUrl            String?
   mcqs                 MCQ[]
-  chapter              Chapter?         @relation(fields: [chapterId], references: [id])
-  subject              Subject?         @relation(fields: [subjectId], references: [id])
-  uploadedBy           User             @relation(fields: [uploadedById], references: [id])
+  chapter              Chapter? @relation(fields: [chapterId], references: [id])
+  subject              Subject? @relation(fields: [subjectId], references: [id])
+  uploadedBy           User     @relation(fields: [uploadedById], references: [id])
 }
-
-// ─── Past Paper MCQ Bank ────────────────────────────────────────────────────
 
 model PastPaperUpload {
   id            String         @id @default(cuid())
   originalName  String
   cloudinaryUrl String
   cloudinaryId  String
-  sourceUrl     String?        // For URL-based ingestion
+  sourceUrl     String?
   board         Board
   grade         Grade
   medium        Medium         @default(english)
@@ -231,33 +236,33 @@ model PastPaperUpload {
   uploadedById  String
   isProcessed   Boolean        @default(false)
   createdAt     DateTime       @default(now())
+  mcqs          PastPaperMCQ[]
   subject       Subject        @relation(fields: [subjectId], references: [id])
   uploadedBy    User           @relation(fields: [uploadedById], references: [id])
-  mcqs          PastPaperMCQ[]
 }
 
 model PastPaperMCQ {
   id                String          @id @default(cuid())
-  question          String          @db.Text
-  questionUrdu      String?         @db.Text
+  question          String
+  questionUrdu      String?
   optionA           String
   optionB           String
   optionC           String
   optionD           String
-  correctAnswer     String          // "A" | "B" | "C" | "D"
-  explanation       String?         @db.Text
+  correctAnswer     String
+  explanation       String?
   board             Board
   grade             Grade
   medium            Medium
   year              Int
   subjectId         String
-  repeatCount       Int             @default(1) // how many distinct papers this Q appeared in
-  canonicalId       String?         // points to first occurrence if this is a repeat
+  repeatCount       Int             @default(1)
+  canonicalId       String?
   isApproved        Boolean         @default(true)
   createdAt         DateTime        @default(now())
   pastPaperUploadId String
-  subject           Subject         @relation(fields: [subjectId], references: [id])
   pastPaperUpload   PastPaperUpload @relation(fields: [pastPaperUploadId], references: [id])
+  subject           Subject         @relation(fields: [subjectId], references: [id])
 }
 
 model ExamSession {
@@ -328,6 +333,98 @@ model CasbinRule {
   @@map("casbin_rule")
 }
 
+model Achievement {
+  id          String               @id @default(cuid())
+  title       String
+  description String               @db.Text
+  badgeUrl    String?
+  criteria    String               // e.g., "100_mcqs_solved", "7_day_streak"
+  createdAt   DateTime             @default(now())
+  students    StudentAchievement[]
+
+  @@map("achievements")
+}
+
+model StudentAchievement {
+  id               String         @id @default(cuid())
+  studentProfileId String
+  achievementId    String
+  unlockedAt       DateTime       @default(now())
+  student          StudentProfile @relation(fields: [studentProfileId], references: [id], onDelete: Cascade)
+  achievement      Achievement    @relation(fields: [achievementId], references: [id], onDelete: Cascade)
+
+  @@unique([studentProfileId, achievementId])
+  @@map("student_achievements")
+}
+
+model StudentMCQProgress {
+  id               String         @id @default(cuid())
+  studentProfileId String
+  mcqId            String
+  easeFactor       Float          @default(2.5) // Standard SuperMemo 2 ease factor
+  interval         Int            @default(0)   // Days until next review
+  nextReviewDate   DateTime       @default(now())
+  lastReviewedAt   DateTime?
+  createdAt        DateTime       @default(now())
+  updatedAt        DateTime       @updatedAt
+  student          StudentProfile @relation(fields: [studentProfileId], references: [id], onDelete: Cascade)
+  mcq              MCQ            @relation(fields: [mcqId], references: [id], onDelete: Cascade)
+
+  @@unique([studentProfileId, mcqId])
+  @@map("student_mcq_progress")
+}
+
+model DoubtThread {
+  id               String         @id @default(cuid())
+  studentProfileId String
+  mcqId            String
+  status           ThreadStatus   @default(open)
+  createdAt        DateTime       @default(now())
+  updatedAt        DateTime       @updatedAt
+  student          StudentProfile @relation(fields: [studentProfileId], references: [id], onDelete: Cascade)
+  mcq              MCQ            @relation(fields: [mcqId], references: [id], onDelete: Cascade)
+  messages         DoubtMessage[]
+
+  @@map("doubt_threads")
+}
+
+model DoubtMessage {
+  id          String       @id @default(cuid())
+  threadId    String
+  senderRole  MessageRole  // student or ai
+  content     String       @db.Text
+  createdAt   DateTime     @default(now())
+  thread      DoubtThread  @relation(fields: [threadId], references: [id], onDelete: Cascade)
+
+  @@map("doubt_messages")
+}
+
+model AiUsage {
+  id        String   @id @default(cuid())
+  userId    String
+  date      DateTime @db.Date
+  count     Int      @default(0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, date])
+  @@map("ai_usage")
+}
+
+model Notification {
+  id        String           @id @default(cuid())
+  userId    String
+  title     String
+  message   String           @db.Text
+  type      NotificationType @default(system)
+  isRead    Boolean          @default(false)
+  createdAt DateTime         @default(now())
+  user      User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("notifications")
+}
+
 enum Role {
   super_admin
   finance_manager
@@ -387,4 +484,21 @@ enum SubscriptionStatus {
   expired
   cancelled
   pending
+}
+
+enum ThreadStatus {
+  open
+  resolved
+}
+
+enum MessageRole {
+  student
+  ai
+}
+
+enum NotificationType {
+  system
+  achievement
+  streak_warning
+  exam_reminder
 }

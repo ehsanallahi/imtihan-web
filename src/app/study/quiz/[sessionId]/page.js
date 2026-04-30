@@ -10,7 +10,7 @@ export default async function QuizPage({ params, searchParams }) {
   }
 
   const { sessionId } = await params;
-  const { chapterId, difficulty, limit } = await searchParams;
+  const { chapterId, difficulty, limit, isReview } = await searchParams;
 
   const examSession = await db.examSession.findUnique({
     where: { id: sessionId }
@@ -20,47 +20,76 @@ export default async function QuizPage({ params, searchParams }) {
     redirect("/study");
   }
 
-  // Ensure chapterId exists if it's a practice session
-  if (examSession.sessionType === "practice" && !chapterId) {
+  // Ensure chapterId exists if it's a practice session (unless it's a review)
+  if (examSession.sessionType === "practice" && !chapterId && !isReview) {
     redirect("/study");
   }
 
   let mcqs = [];
 
-  const baseWhere = { isApproved: true };
-  if (examSession.sessionType === "practice") {
-    baseWhere.chapterId = chapterId;
-    if (difficulty && difficulty !== "all") {
-      baseWhere.difficulty = difficulty;
+  if (isReview) {
+    const profile = await db.studentProfile.findUnique({ where: { userId: session.user.id } });
+    const dueReviews = await db.studentMCQProgress.findMany({
+      where: {
+        studentProfileId: profile.id,
+        nextReviewDate: { lte: new Date() }
+      },
+      select: { mcqId: true },
+      take: 20
+    });
+    
+    mcqs = await db.mCQ.findMany({
+      where: { id: { in: dueReviews.map(r => r.mcqId) } },
+      select: {
+        id: true, question: true, questionUrdu: true,
+        optionA: true, optionB: true, optionC: true, optionD: true
+      }
+    });
+
+    if (mcqs.length === 0) {
+      return (
+        <div className="flex flex-col items-center justify-center min-h-[60vh] text-center px-4">
+          <h2 className="text-2xl font-bold text-teal-900 mb-2">You're All Caught Up!</h2>
+          <p className="text-zinc-600 mb-6">There are no questions due for review right now. Check back tomorrow.</p>
+        </div>
+      );
     }
   } else {
-    baseWhere.subjectId = examSession.subjectId;
-  }
-
-  const allPossibleMcqs = await db.mCQ.findMany({
-    where: baseWhere,
-    select: {
-      id: true, question: true, questionUrdu: true,
-      optionA: true, optionB: true, optionC: true, optionD: true
+    const baseWhere = { isApproved: true };
+    if (examSession.sessionType === "practice") {
+      baseWhere.chapterId = chapterId;
+      if (difficulty && difficulty !== "all") {
+        baseWhere.difficulty = difficulty;
+      }
+    } else {
+      baseWhere.subjectId = examSession.subjectId;
     }
-  });
 
-  // Shuffle array (Fisher-Yates)
-  for (let i = allPossibleMcqs.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
-    [allPossibleMcqs[i], allPossibleMcqs[j]] = [allPossibleMcqs[j], allPossibleMcqs[i]];
-  }
+    const allPossibleMcqs = await db.mCQ.findMany({
+      where: baseWhere,
+      select: {
+        id: true, question: true, questionUrdu: true,
+        optionA: true, optionB: true, optionC: true, optionD: true
+      }
+    });
 
-  const finalLimit = limit ? parseInt(limit) : examSession.totalQuestions;
-  mcqs = allPossibleMcqs.slice(0, finalLimit);
+    // Shuffle array (Fisher-Yates)
+    for (let i = allPossibleMcqs.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [allPossibleMcqs[i], allPossibleMcqs[j]] = [allPossibleMcqs[j], allPossibleMcqs[i]];
+    }
 
-  if (mcqs.length === 0) {
-    return (
-      <div className="flex flex-col items-center justify-center min-h-[60vh] text-center px-4">
-        <h2 className="text-2xl font-bold text-teal-900 mb-2">No Questions Available</h2>
-        <p className="text-zinc-600 mb-6">There are no approved practice questions for this chapter yet.</p>
-      </div>
-    );
+    const finalLimit = limit ? parseInt(limit) : examSession.totalQuestions;
+    mcqs = allPossibleMcqs.slice(0, finalLimit);
+
+    if (mcqs.length === 0) {
+      return (
+        <div className="flex flex-col items-center justify-center min-h-[60vh] text-center px-4">
+          <h2 className="text-2xl font-bold text-teal-900 mb-2">No Questions Available</h2>
+          <p className="text-zinc-600 mb-6">There are no approved practice questions for this chapter yet.</p>
+        </div>
+      );
+    }
   }
 
   return (

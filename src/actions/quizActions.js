@@ -2,6 +2,8 @@
 
 import { db } from "@/lib/db";
 import { auth } from "@/auth";
+import { processGamification } from "@/lib/gamification";
+import { processSRS } from "@/lib/srs";
 
 /**
  * Starts a new exam session for practice.
@@ -105,6 +107,15 @@ export async function submitExam(sessionId, answers) {
       })
     ]);
 
+    // Async Gamification Update
+    processGamification(session.user.id, attemptsData.length, correctAnswers);
+    
+    // Async SRS Update
+    const profile = await db.studentProfile.findUnique({ where: { userId: session.user.id } });
+    if (profile) {
+      processSRS(profile.id, attemptsData);
+    }
+
     return { success: true, score: correctAnswers };
   } catch (error) {
     console.error("Failed to submit exam:", error);
@@ -149,5 +160,50 @@ export async function startMockExamSession(subjectId) {
   } catch (error) {
     console.error("Failed to start mock exam session:", error);
     return { success: false, error: "Failed to start mock exam session" };
+  }
+}
+
+/**
+ * Starts a spaced repetition review session for due MCQs.
+ * @returns {Promise<{success: boolean, sessionId?: string, error?: string}>}
+ */
+export async function startReviewSession() {
+  try {
+    const session = await auth();
+    if (!session) {
+      return { success: false, error: "Unauthorized" };
+    }
+
+    const profile = await db.studentProfile.findUnique({
+      where: { userId: session.user.id }
+    });
+
+    if (!profile) return { success: false, error: "Profile not found" };
+
+    const dueReviews = await db.studentMCQProgress.findMany({
+      where: {
+        studentProfileId: profile.id,
+        nextReviewDate: { lte: new Date() }
+      },
+      select: { mcqId: true },
+      take: 20 // Limit review session to 20 MCQs at a time
+    });
+
+    if (dueReviews.length === 0) {
+      return { success: false, error: "No reviews due right now!" };
+    }
+
+    const examSession = await db.examSession.create({
+      data: {
+        studentId: session.user.id,
+        sessionType: "practice", // We map it as practice
+        totalQuestions: dueReviews.length,
+      }
+    });
+
+    return { success: true, sessionId: examSession.id, dueMcqIds: dueReviews.map(r => r.mcqId) };
+  } catch (error) {
+    console.error("Failed to start review session:", error);
+    return { success: false, error: "Failed to start review session" };
   }
 }

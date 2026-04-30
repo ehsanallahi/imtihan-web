@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { ChevronLeft, CheckCircle2, XCircle, Award, Clock, ArrowRight } from "lucide-react";
 import ReactMarkdown from 'react-markdown';
 import { Badge } from "@/components/ui/badge";
+import { AiTutor } from "@/components/study/AiTutor";
 
 export default async function QuizResultsPage({ params }) {
   const session = await auth();
@@ -190,6 +191,11 @@ export default async function QuizResultsPage({ params }) {
                     </div>
                   </div>
                 )}
+
+                {/* AI Tutor Doubts Integration */}
+                <div className="ml-12 mt-4">
+                  <AiTutor mcqId={mcq.id} />
+                </div>
               </CardContent>
             </Card>
           );

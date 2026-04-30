@@ -16,6 +16,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Sidebar, SidebarContent, SidebarHeader, SidebarMenu, SidebarMenuItem, SidebarMenuButton } from "@/components/ui/sidebar";
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
+import { NotificationBell } from "@/components/dashboard/NotificationBell";
 
 const menuItems = [
   { icon: LayoutDashboard, label: "Dashboard", href: "/dashboard" },
@@ -33,6 +34,12 @@ const menuItems = [
     roles: ["super_admin", "content_editor", "moderator"] 
   },
   { icon: GraduationCap, label: "Exams", href: "/dashboard/exams" },
+  { 
+    icon: User, 
+    label: "Children's Progress", 
+    href: "/dashboard/guardian",
+    roles: ["super_admin", "guardian"] 
+  },
   { icon: Settings, label: "Settings", href: "/dashboard/settings" },
 ];
 
@@ -128,6 +135,7 @@ export default function DashboardLayout({ children }) {
             </div>
             
             <div className="flex items-center gap-3">
+              <NotificationBell />
               <Link href="/dashboard/settings">
                 <Button variant="ghost" size="icon" className="rounded-full hover:bg-teal-50" title="Settings">
                   <User className="h-5 w-5 text-teal-600" />

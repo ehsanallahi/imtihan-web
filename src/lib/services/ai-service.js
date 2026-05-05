@@ -301,9 +301,10 @@ INSTRUCTIONS:
 /**
  * Generates a response using Groq API (OpenAI-compatible).
  * @param {Array<{role: string, content: string}>} messages - List of messages.
+ * @param {string} language - Preferred language ('english' or 'urdu').
  * @returns {Promise<string>}
  */
-export async function getGroqTutorResponse(messages) {
+export async function getGroqTutorResponse(messages, language = 'english') {
   const apiKey = process.env.GROQ_API_KEY;
   const model = "llama-3.3-70b-versatile";
 
@@ -311,12 +312,18 @@ export async function getGroqTutorResponse(messages) {
     throw new Error("GROQ_API_KEY is not configured on the server.");
   }
 
+  const langInstruction = language === 'urdu' 
+    ? "STRICTLY respond in URDU (using Urdu script). If the student uses Roman Urdu, you can also use Roman Urdu, but default to Urdu script for explanations."
+    : "STRICTLY respond in ENGLISH.";
+
   const systemPrompt = `You are "Imtihan AI Tutor", a helpful study companion for Pakistani students.
 Your responsibilities:
+- ${langInstruction}
+- Use Markdown formatting (bold for emphasis, bullet points or numbered lists for steps/points) to make your explanations clear and readable.
 - Explain concepts clearly and simply.
 - Help students understand MCQs and their logic.
-- Support both English and Urdu (respond in the language the student uses).
-- Be encouraging and concise.`;
+- Be encouraging and concise.
+- DO NOT mention any AI model names or "Groq" in your responses.`;
 
   try {
     const response = await fetch("https://api.groq.com/openai/v1/chat/completions", {

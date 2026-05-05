@@ -83,6 +83,7 @@ model StudentProfile {
   guardians          GuardianStudent[]
   achievements       StudentAchievement[]
   srsProgress        StudentMCQProgress[]
+  tutorChats         AiTutorChat[]
   user               User                 @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
@@ -411,6 +412,29 @@ model AiUsage {
 
   @@unique([userId, date])
   @@map("ai_usage")
+}
+
+model AiTutorChat {
+  id               String           @id @default(cuid())
+  studentProfileId String
+  language         Medium           @default(english)
+  createdAt        DateTime         @default(now())
+  updatedAt        DateTime         @updatedAt
+  student          StudentProfile   @relation(fields: [studentProfileId], references: [id], onDelete: Cascade)
+  messages         AiTutorMessage[]
+
+  @@map("ai_tutor_chats")
+}
+
+model AiTutorMessage {
+  id        String      @id @default(cuid())
+  chatId    String
+  role      MessageRole // student or ai
+  content   String      @db.Text
+  createdAt DateTime    @default(now())
+  chat      AiTutorChat @relation(fields: [chatId], references: [id], onDelete: Cascade)
+
+  @@map("ai_tutor_messages")
 }
 
 model Notification {

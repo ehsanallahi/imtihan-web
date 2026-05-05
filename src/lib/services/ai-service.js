@@ -298,3 +298,56 @@ INSTRUCTIONS:
   }
 }
 
+/**
+ * Generates a response using Groq API (OpenAI-compatible).
+ * @param {Array<{role: string, content: string}>} messages - List of messages.
+ * @returns {Promise<string>}
+ */
+export async function getGroqTutorResponse(messages) {
+  const apiKey = process.env.GROQ_API_KEY;
+  const model = "llama-3.3-70b-versatile";
+
+  if (!apiKey) {
+    throw new Error("GROQ_API_KEY is not configured on the server.");
+  }
+
+  const systemPrompt = `You are "Imtihan AI Tutor", a helpful study companion for Pakistani students.
+Your responsibilities:
+- Explain concepts clearly and simply.
+- Help students understand MCQs and their logic.
+- Support both English and Urdu (respond in the language the student uses).
+- Be encouraging and concise.`;
+
+  try {
+    const response = await fetch("https://api.groq.com/openai/v1/chat/completions", {
+      method: "POST",
+      headers: {
+        "Authorization": `Bearer ${apiKey}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        model,
+        messages: [
+          { role: "system", content: systemPrompt },
+          ...messages
+        ],
+        temperature: 0.7,
+        max_tokens: 1024,
+      }),
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      console.error("[GROQ_API_ERROR]:", errorData);
+      throw new Error(`Groq API error: ${response.status}`);
+    }
+
+    const data = await response.json();
+    return data.choices[0]?.message?.content || "Sorry, I couldn't generate a response.";
+  } catch (error) {
+    console.error("[GROQ_SERVICE_ERROR]:", error);
+    throw new Error("Failed to reach Groq AI service.");
+  }
+}
+
+

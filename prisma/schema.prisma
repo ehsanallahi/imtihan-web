@@ -1,0 +1,505 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model User {
+  id               String            @id @default(cuid())
+  email            String            @unique
+  name             String?
+  nameUrdu         String?
+  phone            String?           @unique
+  role             Role              @default(student)
+  avatar           String?
+  avatarId         String?
+  isActive         Boolean           @default(true)
+  emailVerified    DateTime?
+  hashedPassword   String?
+  createdAt        DateTime          @default(now())
+  updatedAt        DateTime          @updatedAt
+  deletedAt        DateTime?
+  accounts         Account[]
+  aiUsages         AiUsage[]
+  examSessions     ExamSession[]
+  guardianProfile  GuardianProfile?
+  notifications    Notification[]
+  pastPapers       PastPaper[]       @relation("UploadedBy")
+  pastPaperUploads PastPaperUpload[]
+  sessions         Session[]
+  studentProfile   StudentProfile?
+  subscriptions    Subscription[]
+  teacherProfile   TeacherProfile?
+  uploadedContent  TextbookUpload[]
+}
+
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String?
+  access_token      String?
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String?
+  session_state     String?
+  user              User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+}
+
+model StudentProfile {
+  id                 String               @id @default(cuid())
+  userId             String               @unique
+  grade              Grade?
+  board              Board?
+  studyStreak        Int                  @default(0)
+  totalMcqsAttempted Int                  @default(0)
+  createdAt          DateTime             @default(now())
+  updatedAt          DateTime             @updatedAt
+  medium             Medium               @default(english)
+  doubtThreads       DoubtThread[]
+  guardians          GuardianStudent[]
+  achievements       StudentAchievement[]
+  srsProgress        StudentMCQProgress[]
+  user               User                 @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model TeacherProfile {
+  id               String       @id @default(cuid())
+  userId           String       @unique
+  institutionId    String?
+  subjectSpecialty String?
+  createdAt        DateTime     @default(now())
+  updatedAt        DateTime     @updatedAt
+  institution      Institution? @relation(fields: [institutionId], references: [id])
+  user             User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model GuardianProfile {
+  id        String            @id @default(cuid())
+  userId    String            @unique
+  createdAt DateTime          @default(now())
+  updatedAt DateTime          @updatedAt
+  user      User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  students  GuardianStudent[]
+}
+
+model Institution {
+  id        String           @id @default(cuid())
+  name      String
+  city      String?
+  adminId   String
+  createdAt DateTime         @default(now())
+  updatedAt DateTime         @updatedAt
+  teachers  TeacherProfile[]
+}
+
+model GuardianStudent {
+  id               String          @id @default(cuid())
+  guardianId       String
+  studentProfileId String
+  createdAt        DateTime        @default(now())
+  guardian         GuardianProfile @relation(fields: [guardianId], references: [id])
+  student          StudentProfile  @relation(fields: [studentProfileId], references: [id])
+}
+
+model Subject {
+  id               String            @id @default(cuid())
+  name             String
+  nameUrdu         String?
+  grade            Grade
+  board            Board
+  isActive         Boolean           @default(true)
+  createdAt        DateTime          @default(now())
+  updatedAt        DateTime          @updatedAt
+  chapters         Chapter[]
+  mcqs             MCQ[]
+  pastPapers       PastPaper[]
+  pastPaperMcqs    PastPaperMCQ[]
+  pastPaperUploads PastPaperUpload[]
+  textbookUploads  TextbookUpload[]
+}
+
+model Chapter {
+  id              String           @id @default(cuid())
+  name            String
+  nameUrdu        String?
+  number          Int
+  subjectId       String
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
+  subject         Subject          @relation(fields: [subjectId], references: [id])
+  mcqs            MCQ[]
+  textbookUploads TextbookUpload[]
+}
+
+model PastPaper {
+  id            String    @id @default(cuid())
+  title         String
+  year          Int
+  board         Board
+  grade         Grade
+  subjectId     String
+  cloudinaryUrl String
+  cloudinaryId  String
+  isPremium     Boolean   @default(false)
+  totalMarks    Int?
+  uploadedById  String
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  deletedAt     DateTime?
+  subject       Subject   @relation(fields: [subjectId], references: [id])
+  uploadedBy    User      @relation("UploadedBy", fields: [uploadedById], references: [id])
+}
+
+model MCQ {
+  id               String               @id @default(cuid())
+  question         String
+  questionUrdu     String?
+  optionA          String
+  optionB          String
+  optionC          String
+  optionD          String
+  correctAnswer    String
+  explanation      String?
+  difficulty       Difficulty           @default(medium)
+  topicTag         String?
+  chapterId        String?
+  subjectId        String
+  isAiGenerated    Boolean              @default(false)
+  isApproved       Boolean              @default(true)
+  createdById      String
+  createdAt        DateTime             @default(now())
+  updatedAt        DateTime             @updatedAt
+  deletedAt        DateTime?
+  textbookUploadId String?
+  doubtThreads     DoubtThread[]
+  chapter          Chapter?             @relation(fields: [chapterId], references: [id])
+  subject          Subject              @relation(fields: [subjectId], references: [id])
+  textbookUpload   TextbookUpload?      @relation(fields: [textbookUploadId], references: [id])
+  attempts         MCQAttempt[]
+  srsProgress      StudentMCQProgress[]
+}
+
+model TextbookUpload {
+  id                   String   @id @default(cuid())
+  cloudinaryUrl        String
+  cloudinaryId         String
+  originalName         String
+  uploadedById         String
+  chapterId            String?
+  subjectId            String?
+  mcqsGenerated        Boolean  @default(false)
+  createdAt            DateTime @default(now())
+  aiExplanation        String?
+  explanationGenerated Boolean  @default(false)
+  isFullBook           Boolean  @default(false)
+  sourceUrl            String?
+  mcqs                 MCQ[]
+  chapter              Chapter? @relation(fields: [chapterId], references: [id])
+  subject              Subject? @relation(fields: [subjectId], references: [id])
+  uploadedBy           User     @relation(fields: [uploadedById], references: [id])
+}
+
+model PastPaperUpload {
+  id            String         @id @default(cuid())
+  originalName  String
+  cloudinaryUrl String
+  cloudinaryId  String
+  sourceUrl     String?
+  board         Board
+  grade         Grade
+  medium        Medium         @default(english)
+  year          Int
+  subjectId     String
+  uploadedById  String
+  isProcessed   Boolean        @default(false)
+  createdAt     DateTime       @default(now())
+  mcqs          PastPaperMCQ[]
+  subject       Subject        @relation(fields: [subjectId], references: [id])
+  uploadedBy    User           @relation(fields: [uploadedById], references: [id])
+}
+
+model PastPaperMCQ {
+  id                String          @id @default(cuid())
+  question          String
+  questionUrdu      String?
+  optionA           String
+  optionB           String
+  optionC           String
+  optionD           String
+  correctAnswer     String
+  explanation       String?
+  board             Board
+  grade             Grade
+  medium            Medium
+  year              Int
+  subjectId         String
+  repeatCount       Int             @default(1)
+  canonicalId       String?
+  isApproved        Boolean         @default(true)
+  createdAt         DateTime        @default(now())
+  pastPaperUploadId String
+  pastPaperUpload   PastPaperUpload @relation(fields: [pastPaperUploadId], references: [id])
+  subject           Subject         @relation(fields: [subjectId], references: [id])
+}
+
+model ExamSession {
+  id               String       @id @default(cuid())
+  studentId        String
+  sessionType      SessionType
+  subjectId        String?
+  pastPaperId      String?
+  totalQuestions   Int
+  correctAnswers   Int          @default(0)
+  timeTakenSeconds Int?
+  completedAt      DateTime?
+  createdAt        DateTime     @default(now())
+  student          User         @relation(fields: [studentId], references: [id])
+  results          MCQAttempt[]
+}
+
+model MCQAttempt {
+  id               String      @id @default(cuid())
+  examSessionId    String
+  mcqId            String
+  selectedAnswer   String
+  isCorrect        Boolean
+  timeTakenSeconds Int?
+  createdAt        DateTime    @default(now())
+  examSession      ExamSession @relation(fields: [examSessionId], references: [id])
+  mcq              MCQ         @relation(fields: [mcqId], references: [id])
+}
+
+model Subscription {
+  id            String             @id @default(cuid())
+  userId        String
+  plan          SubscriptionPlan
+  status        SubscriptionStatus
+  startDate     DateTime
+  endDate       DateTime?
+  amountPkr     Int
+  paymentMethod String?
+  paymentRef    String?
+  createdAt     DateTime           @default(now())
+  updatedAt     DateTime           @updatedAt
+  user          User               @relation(fields: [userId], references: [id])
+}
+
+model PromoCode {
+  id              String    @id @default(cuid())
+  code            String    @unique
+  discountPercent Int
+  maxUses         Int?
+  usedCount       Int       @default(0)
+  expiresAt       DateTime?
+  createdById     String
+  isActive        Boolean   @default(true)
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+}
+
+model CasbinRule {
+  id    Int     @id @default(autoincrement())
+  ptype String
+  v0    String?
+  v1    String?
+  v2    String?
+  v3    String?
+  v4    String?
+  v5    String?
+
+  @@map("casbin_rule")
+}
+
+model Achievement {
+  id          String               @id @default(cuid())
+  title       String
+  description String               @db.Text
+  badgeUrl    String?
+  criteria    String               // e.g., "100_mcqs_solved", "7_day_streak"
+  createdAt   DateTime             @default(now())
+  students    StudentAchievement[]
+
+  @@map("achievements")
+}
+
+model StudentAchievement {
+  id               String         @id @default(cuid())
+  studentProfileId String
+  achievementId    String
+  unlockedAt       DateTime       @default(now())
+  student          StudentProfile @relation(fields: [studentProfileId], references: [id], onDelete: Cascade)
+  achievement      Achievement    @relation(fields: [achievementId], references: [id], onDelete: Cascade)
+
+  @@unique([studentProfileId, achievementId])
+  @@map("student_achievements")
+}
+
+model StudentMCQProgress {
+  id               String         @id @default(cuid())
+  studentProfileId String
+  mcqId            String
+  easeFactor       Float          @default(2.5) // Standard SuperMemo 2 ease factor
+  interval         Int            @default(0)   // Days until next review
+  nextReviewDate   DateTime       @default(now())
+  lastReviewedAt   DateTime?
+  createdAt        DateTime       @default(now())
+  updatedAt        DateTime       @updatedAt
+  student          StudentProfile @relation(fields: [studentProfileId], references: [id], onDelete: Cascade)
+  mcq              MCQ            @relation(fields: [mcqId], references: [id], onDelete: Cascade)
+
+  @@unique([studentProfileId, mcqId])
+  @@map("student_mcq_progress")
+}
+
+model DoubtThread {
+  id               String         @id @default(cuid())
+  studentProfileId String
+  mcqId            String
+  status           ThreadStatus   @default(open)
+  createdAt        DateTime       @default(now())
+  updatedAt        DateTime       @updatedAt
+  student          StudentProfile @relation(fields: [studentProfileId], references: [id], onDelete: Cascade)
+  mcq              MCQ            @relation(fields: [mcqId], references: [id], onDelete: Cascade)
+  messages         DoubtMessage[]
+
+  @@map("doubt_threads")
+}
+
+model DoubtMessage {
+  id          String       @id @default(cuid())
+  threadId    String
+  senderRole  MessageRole  // student or ai
+  content     String       @db.Text
+  createdAt   DateTime     @default(now())
+  thread      DoubtThread  @relation(fields: [threadId], references: [id], onDelete: Cascade)
+
+  @@map("doubt_messages")
+}
+
+model AiUsage {
+  id        String   @id @default(cuid())
+  userId    String
+  date      DateTime @db.Date
+  count     Int      @default(0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, date])
+  @@map("ai_usage")
+}
+
+model Notification {
+  id        String           @id @default(cuid())
+  userId    String
+  title     String
+  message   String           @db.Text
+  type      NotificationType @default(system)
+  isRead    Boolean          @default(false)
+  createdAt DateTime         @default(now())
+  user      User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("notifications")
+}
+
+enum Role {
+  super_admin
+  finance_manager
+  content_editor
+  moderator
+  marketer
+  support_agent
+  institution_admin
+  teacher
+  guardian
+  student
+}
+
+enum Grade {
+  nine
+  ten
+  eleven
+  twelve
+}
+
+enum Board {
+  punjab
+  sindh
+  kpk
+  federal
+  aku
+  private
+}
+
+enum Difficulty {
+  easy
+  medium
+  hard
+}
+
+enum SessionType {
+  practice
+  mock_exam
+  past_paper
+}
+
+enum Medium {
+  english
+  urdu
+}
+
+enum SubscriptionPlan {
+  free
+  student_monthly
+  student_yearly
+  competitive_monthly
+  institution_yearly
+}
+
+enum SubscriptionStatus {
+  active
+  expired
+  cancelled
+  pending
+}
+
+enum ThreadStatus {
+  open
+  resolved
+}
+
+enum MessageRole {
+  student
+  ai
+}
+
+enum NotificationType {
+  system
+  achievement
+  streak_warning
+  exam_reminder
+}

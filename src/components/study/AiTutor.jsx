@@ -9,7 +9,7 @@ import { BrainCircuit, Send, Loader2, User, Sparkles, X } from "lucide-react";
 import { askAiTutor, getDoubtHistory } from "@/actions/aiActions";
 import { toast } from "sonner";
 
-export function AiTutor({ mcqId }) {
+export function AiTutor({ mcqId, medium = 'english' }) {
   const [isOpen, setIsOpen] = useState(false);
   const [doubt, setDoubt] = useState("");
   const [messages, setMessages] = useState([]);

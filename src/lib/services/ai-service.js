@@ -1,7 +1,7 @@
 import { GoogleGenerativeAI } from "@google/generative-ai";
 
 const genAI = new GoogleGenerativeAI(process.env.GOOGLE_AI_API_KEY);
-const flashModel = genAI.getGenerativeModel({ model: "gemini-flash-latest" });
+const flashModel = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
 
 /**
  * Generates MCQs from provided textbook text using Gemini.
@@ -345,8 +345,8 @@ Your responsibilities:
 
     if (!response.ok) {
       const errorData = await response.json();
-      console.error("[GROQ_API_ERROR]:", errorData);
-      throw new Error(`Groq API error: ${response.status}`);
+      console.error("[GROQ_API_ERROR]: Status:", response.status, "Details:", JSON.stringify(errorData, null, 2));
+      throw new Error(`Groq API error: ${response.status}. ${errorData.error?.message || ''}`);
     }
 
     const data = await response.json();

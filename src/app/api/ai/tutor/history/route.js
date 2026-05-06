@@ -15,6 +15,9 @@ export async function GET(req) {
       return NextResponse.json({ error: "Invalid token" }, { status: 401 });
     }
 
+    const { searchParams } = new URL(req.url);
+    const chatId = searchParams.get("chatId");
+
     const studentProfile = await db.studentProfile.findUnique({
       where: { userId: payload.id },
       select: { id: true }
@@ -24,8 +27,13 @@ export async function GET(req) {
       return NextResponse.json({ error: "Student not found" }, { status: 404 });
     }
 
+    const whereClause = { studentProfileId: studentProfile.id };
+    if (chatId) {
+      whereClause.id = chatId;
+    }
+
     const chat = await db.aiTutorChat.findFirst({
-      where: { studentProfileId: studentProfile.id },
+      where: whereClause,
       include: {
         messages: {
           orderBy: { createdAt: 'asc' }
@@ -50,5 +58,40 @@ export async function GET(req) {
   } catch (error) {
     console.error("[AI_TUTOR_HISTORY_ERROR]:", error);
     return NextResponse.json({ error: "Failed to fetch history" }, { status: 500 });
+  }
+}
+
+export async function DELETE(req) {
+  try {
+    const authHeader = req.headers.get("authorization");
+    if (!authHeader || !authHeader.startsWith("Bearer ")) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    const token = authHeader.split(" ")[1];
+    const payload = await verifyToken(token);
+    if (!payload) {
+      return NextResponse.json({ error: "Invalid token" }, { status: 401 });
+    }
+
+    const studentProfile = await db.studentProfile.findUnique({
+      where: { userId: payload.id },
+      select: { id: true }
+    });
+
+    if (!studentProfile) {
+      return NextResponse.json({ error: "Student not found" }, { status: 404 });
+    }
+
+    // Delete the messages first (or the chat itself which will cascade delete messages)
+    // We'll delete the entire chat thread for this student
+    await db.aiTutorChat.deleteMany({
+      where: { studentProfileId: studentProfile.id }
+    });
+
+    return NextResponse.json({ message: "Chat history cleared successfully" });
+  } catch (error) {
+    console.error("[AI_TUTOR_CLEAR_ERROR]:", error);
+    return NextResponse.json({ error: "Failed to clear history" }, { status: 500 });
   }
 }

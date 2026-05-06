@@ -417,6 +417,7 @@ model AiUsage {
 model AiTutorChat {
   id               String           @id @default(cuid())
   studentProfileId String
+  title            String?          @default("New Conversation")
   language         Medium           @default(english)
   createdAt        DateTime         @default(now())
   updatedAt        DateTime         @updatedAt

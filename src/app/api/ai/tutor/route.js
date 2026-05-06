@@ -3,6 +3,22 @@ import { getGroqTutorResponse } from "@/lib/services/ai-service";
 import { db } from "@/lib/db";
 import { verifyToken } from "@/lib/jwt";
 
+async function generateTitle(firstMessage) {
+  try {
+    const prompt = `Generate a very short (2-4 words) title for a conversation that starts with this message: "${firstMessage}". 
+    The title should be in the same language as the message. Respond ONLY with the title.`;
+    
+    const title = await getGroqTutorResponse([
+      { role: 'system', content: 'You are a helpful assistant that generates concise titles for educational chats.' },
+      { role: 'user', content: prompt }
+    ], 'english');
+    
+    return title.replace(/["']/g, '').trim();
+  } catch (error) {
+    return "New Conversation";
+  }
+}
+
 export async function POST(req) {
   try {
     const authHeader = req.headers.get("authorization");
@@ -14,6 +30,27 @@ export async function POST(req) {
     const payload = await verifyToken(token);
     if (!payload) {
       return NextResponse.json({ error: "Invalid token" }, { status: 401 });
+    }
+
+    const userId = payload.id;
+    const isPremium = payload.role === 'premium_student' || payload.role === 'super_admin';
+    const FREE_USER_DAILY_LIMIT = 5;
+
+    // 1. Check Usage Limits for free users
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    if (!isPremium) {
+      const usage = await db.aiUsage.findUnique({
+        where: { userId_date: { userId, date: today } }
+      });
+
+      if (usage && usage.count >= FREE_USER_DAILY_LIMIT) {
+        return NextResponse.json(
+          { error: `You've reached your daily limit of ${FREE_USER_DAILY_LIMIT} AI questions. Upgrade to Premium for unlimited access!` },
+          { status: 429 } // Too Many Requests
+        );
+      }
     }
 
     const { messages, language = 'english' } = await req.json();
@@ -79,7 +116,29 @@ export async function POST(req) {
       }
     });
 
-    return NextResponse.json({ message: aiResponse });
+    // 10. Update usage count for free users
+    if (!isPremium) {
+      await db.aiUsage.upsert({
+        where: { userId_date: { userId, date: today } },
+        create: { userId, date: today, count: 1 },
+        update: { count: { increment: 1 } }
+      });
+    }
+
+    // 11. Generate Title if it's a new conversation
+    if (chat.title === "New Conversation" || !chat.title) {
+      const firstStudentMessage = messages.find(m => m.role === 'student' || m.role === 'user')?.content || messages[0].content;
+      const newTitle = await generateTitle(firstStudentMessage);
+      await db.aiTutorChat.update({
+        where: { id: chat.id },
+        data: { title: newTitle }
+      });
+    }
+
+    return NextResponse.json({ 
+      response: aiResponse,
+      threadId: chat.id 
+    });
   } catch (error) {
     console.error("[AI_TUTOR_ROUTE_ERROR]:", error);
     return NextResponse.json(

@@ -353,7 +353,7 @@ Your responsibilities:
     return data.choices[0]?.message?.content || "Sorry, I couldn't generate a response.";
   } catch (error) {
     console.error("[GROQ_SERVICE_ERROR]:", error);
-    throw new Error("Failed to reach Groq AI service.");
+    throw new Error(`Failed to reach Groq AI service: ${error.message}`);
   }
 }
 

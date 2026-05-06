@@ -126,13 +126,18 @@ export async function POST(req) {
     }
 
     // 11. Generate Title if it's a new conversation
-    if (chat.title === "New Conversation" || !chat.title) {
-      const firstStudentMessage = messages.find(m => m.role === 'student' || m.role === 'user')?.content || messages[0].content;
-      const newTitle = await generateTitle(firstStudentMessage);
-      await db.aiTutorChat.update({
-        where: { id: chat.id },
-        data: { title: newTitle }
-      });
+    try {
+      if (chat.title === "New Conversation" || !chat.title) {
+        const firstStudentMessage = messages.find(m => m.role === 'student' || m.role === 'user')?.content || messages[0].content;
+        const newTitle = await generateTitle(firstStudentMessage);
+        await db.aiTutorChat.update({
+          where: { id: chat.id },
+          data: { title: newTitle }
+        });
+      }
+    } catch (titleError) {
+      console.error("[AUTO_TITLE_ERROR]:", titleError);
+      // Don't throw, just let the chat continue
     }
 
     return NextResponse.json({ 

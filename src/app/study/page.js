@@ -4,7 +4,8 @@ import { redirect } from "next/navigation";
 import Link from "next/link";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { BookOpen, Layers, GraduationCap, ArrowRight } from "lucide-react";
+import { BookOpen, Layers, GraduationCap, ArrowRight, CreditCard, Sparkles } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
 
 export default async function StudyDashboardPage() {
   const session = await auth();
@@ -53,7 +54,7 @@ export default async function StudyDashboardPage() {
           Pick up where you left off or start a new chapter. You have {totalMcqs} practice questions available across {subjects.length} subjects.
         </p>
 
-        <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 md:grid-cols-3">
+        <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
           <Card className="border-none shadow-sm bg-teal-50/50">
             <CardHeader className="pb-2">
               <CardTitle className="text-sm font-medium text-teal-700 flex items-center gap-2">
@@ -76,7 +77,7 @@ export default async function StudyDashboardPage() {
             </CardContent>
           </Card>
 
-          <Card className="border-none shadow-sm bg-emerald-50/50 sm:col-span-2 md:col-span-1">
+          <Card className="border-none shadow-sm bg-emerald-50/50">
             <CardHeader className="pb-2">
               <CardTitle className="text-sm font-medium text-emerald-700 flex items-center gap-2">
                 <GraduationCap className="h-4 w-4" /> Practice Questions
@@ -84,6 +85,36 @@ export default async function StudyDashboardPage() {
             </CardHeader>
             <CardContent>
               <div className="text-2xl sm:text-3xl font-bold text-emerald-900">{totalMcqs}</div>
+            </CardContent>
+          </Card>
+
+          <Card className="border-none shadow-sm bg-amber-50/50">
+            <CardHeader className="pb-2">
+              <CardTitle className="text-sm font-medium text-amber-700 flex items-center gap-2">
+                <CreditCard className="h-4 w-4" /> Current Plan
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                {(session.user.role === 'premium_student' || session.user.role === 'super_admin') ? (
+                  <>
+                    <Badge className="bg-amber-400 text-amber-950 hover:bg-amber-500 border-none font-black px-3 py-1">PRO</Badge>
+                    <span className="text-sm font-medium text-amber-900">Premium Access</span>
+                  </>
+                ) : (
+                  <>
+                    <Badge variant="outline" className="border-zinc-300 text-zinc-500 font-bold px-3 py-1">FREE</Badge>
+                    <span className="text-sm font-medium text-zinc-500">Standard Access</span>
+                  </>
+                )}
+              </div>
+              {!(session.user.role === 'premium_student' || session.user.role === 'super_admin') && (
+                <Link href="#pricing">
+                  <Button variant="ghost" size="sm" className="text-amber-700 hover:text-amber-800 hover:bg-amber-100/50 text-xs font-bold gap-1">
+                    UPGRADE <Sparkles className="w-3 h-3" />
+                  </Button>
+                </Link>
+              )}
             </CardContent>
           </Card>
         </div>

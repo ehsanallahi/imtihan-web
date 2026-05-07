@@ -83,8 +83,21 @@ export async function DELETE(req) {
       return NextResponse.json({ error: "Student not found" }, { status: 404 });
     }
 
-    // Delete the messages first (or the chat itself which will cascade delete messages)
-    // We'll delete the entire chat thread for this student
+    const { searchParams } = new URL(req.url);
+    const chatId = searchParams.get("chatId");
+
+    // If a chatId is provided, delete only that specific chat
+    if (chatId) {
+      await db.aiTutorChat.deleteMany({
+        where: { 
+          id: chatId,
+          studentProfileId: studentProfile.id 
+        }
+      });
+      return NextResponse.json({ message: "Chat session deleted successfully" });
+    }
+
+    // Otherwise, delete all history for this student
     await db.aiTutorChat.deleteMany({
       where: { studentProfileId: studentProfile.id }
     });

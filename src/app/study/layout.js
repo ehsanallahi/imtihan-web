@@ -5,7 +5,7 @@ import Link from "next/link";
 import { redirect, usePathname } from "next/navigation";
 import { 
   BookOpen, LogOut, User, GraduationCap,
-  BarChart, Menu, X, FileText, Settings, Trophy
+  BarChart, Menu, X, FileText, Settings, Trophy, BrainCircuit
 } from "lucide-react";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
@@ -29,6 +29,7 @@ export default function StudyLayout({ children }) {
     { href: "/study", label: "Dashboard", icon: LayoutDashboardIcon, exact: true },
     { href: "/study/analytics", label: "Analytics", icon: BarChart },
     { href: "/study/past-papers", label: "Past Papers", icon: FileText },
+    { href: "/study/tutor", label: "AI Tutor", icon: BrainCircuit },
     { href: "/study/leaderboard", label: "Leaderboard", icon: Trophy },
   ];
 

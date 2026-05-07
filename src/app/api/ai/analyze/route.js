@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
-import { verifyToken } from "@/auth";
+import { verifyToken } from "@/lib/jwt";
 import { getGroqTutorResponse } from "@/lib/services/ai-service";
 
 export async function POST(req) {

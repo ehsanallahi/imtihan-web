@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect, useRef } from "react";
+import { useSession } from "next-auth/react";
 import ReactMarkdown from "react-markdown";
 import { 
   getChatSessions, 
@@ -12,6 +13,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { Badge } from "@/components/ui/badge";
 import { 
   BrainCircuit, 
   Plus, 
@@ -36,6 +38,8 @@ import {
 } from "@/components/ui/dropdown-menu";
 
 export default function TutorPage() {
+  const { data: session } = useSession();
+  const isPremium = session?.user?.role === 'premium_student' || session?.user?.role === 'super_admin';
   const [sessions, setSessions] = useState([]);
   const [currentSessionId, setCurrentSessionId] = useState(null);
   const [messages, setMessages] = useState([]);
@@ -221,7 +225,12 @@ export default function TutorPage() {
                 <BrainCircuit className="w-5 h-5" />
               </div>
               <div>
-                <h1 className="font-bold text-slate-900 leading-tight">Imtihan AI Tutor</h1>
+                <div className="flex items-center gap-2">
+                  <h1 className="font-bold text-slate-900 leading-tight">Imtihan AI Tutor</h1>
+                  {isPremium && (
+                    <Badge variant="default" className="bg-amber-400 text-amber-950 border-none font-black text-[10px] px-1.5 h-4">PRO</Badge>
+                  )}
+                </div>
                 <p className="text-[10px] text-teal-600 font-medium uppercase tracking-wider">Always learning</p>
               </div>
             </div>

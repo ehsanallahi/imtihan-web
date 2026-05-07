@@ -9,6 +9,7 @@ import {
 } from "lucide-react";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 
 export default function StudyLayout({ children }) {
   const { data: session, status } = useSession();
@@ -64,8 +65,13 @@ export default function StudyLayout({ children }) {
             
             <div className="flex items-center gap-2 sm:gap-3">
               <div className="hidden sm:flex flex-col items-end mr-1">
-                <span className="text-sm font-medium text-teal-900">{session?.user?.name}</span>
-                <span className="text-xs text-zinc-500 capitalize">{session?.user?.role}</span>
+                <div className="flex items-center gap-2">
+                  <span className="text-sm font-medium text-teal-900">{session?.user?.name}</span>
+                  {(session?.user?.role === 'premium_student' || session?.user?.role === 'super_admin') && (
+                    <Badge variant="default" className="bg-amber-400 hover:bg-amber-500 text-amber-950 border-none font-black text-[10px] px-1.5 h-4">PRO</Badge>
+                  )}
+                </div>
+                <span className="text-xs text-zinc-500 capitalize">{session?.user?.role?.replace('_', ' ')}</span>
               </div>
               <Link href="/dashboard/settings">
                 <Button variant="outline" size="icon" className="rounded-full border-teal-100 text-teal-600 hover:bg-teal-50" title="Settings">
@@ -112,8 +118,13 @@ export default function StudyLayout({ children }) {
               </Link>
               <div className="pt-2 border-t border-teal-50 flex items-center justify-between px-2">
                 <div className="flex flex-col">
-                  <span className="text-sm font-medium text-teal-900">{session?.user?.name}</span>
-                  <span className="text-xs text-zinc-500 capitalize">{session?.user?.role}</span>
+                  <div className="flex items-center gap-2">
+                    <span className="text-sm font-medium text-teal-900">{session?.user?.name}</span>
+                    {(session?.user?.role === 'premium_student' || session?.user?.role === 'super_admin') && (
+                      <Badge variant="default" className="bg-amber-400 text-amber-950 border-none font-black text-[10px] px-1.5 h-4">PRO</Badge>
+                    )}
+                  </div>
+                  <span className="text-xs text-zinc-500 capitalize">{session?.user?.role?.replace('_', ' ')}</span>
                 </div>
                 <Button variant="ghost" size="sm" onClick={() => signOut({ callbackUrl: "/" })} className="text-rose-600 hover:bg-rose-50">
                   Sign Out

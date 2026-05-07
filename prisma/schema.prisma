@@ -462,6 +462,7 @@ enum Role {
   teacher
   guardian
   student
+  premium_student
 }
 
 enum Grade {

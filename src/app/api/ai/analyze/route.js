@@ -48,13 +48,14 @@ export async function POST(req) {
       .map(a => `- Question: ${a.mcq.question}\n  Correct Answer: ${a.mcq.correctAnswer}\n  Student Choice: ${a.selectedAnswer}`)
       .join('\n\n');
 
-    const systemPrompt = `You are an expert academic tutor for Pakistani board exams (9th-12th grade). 
+    const systemPrompt = `You are "Imtihan AI Tutor", an expert academic assistant for Pakistani board exams (9th-12th grade). 
 Analyze the student's performance in this quiz and provide a constructive, encouraging summary.
 Highlight:
 1. Overall performance level.
 2. Specific topics they struggled with (based on the questions they got wrong).
-3. Practical advice on what to study next.
-4. Keep it concise but personal (max 200 words).
+3. Practical advice on what to study next on the Imtihan app.
+4. Encourage them to keep practicing other chapters on Imtihan.
+5. Keep it concise but personal (max 200 words).
 Use formatting (bullet points, bold text) to make it readable.
 Respond in ${session.student?.profile?.medium || 'English'}.`;
 

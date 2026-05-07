@@ -1,23 +1,9 @@
 import { NextResponse } from "next/server";
-import { getGroqTutorResponse } from "@/lib/services/ai-service";
+import { getGroqTutorResponse, generateChatTitle } from "@/lib/services/ai-service";
 import { db } from "@/lib/db";
 import { verifyToken } from "@/lib/jwt";
 
-async function generateTitle(firstMessage) {
-  try {
-    const prompt = `Generate a very short (2-4 words) title for a conversation that starts with this message: "${firstMessage}". 
-    The title should be in the same language as the message. Respond ONLY with the title.`;
-    
-    const title = await getGroqTutorResponse([
-      { role: 'system', content: 'You are a helpful assistant that generates concise titles for educational chats.' },
-      { role: 'user', content: prompt }
-    ], 'english');
-    
-    return title.replace(/["']/g, '').trim();
-  } catch (error) {
-    return "New Conversation";
-  }
-}
+// Title generation moved to ai-service.js
 
 export async function POST(req) {
   try {
@@ -53,7 +39,7 @@ export async function POST(req) {
       }
     }
 
-    const { messages, language = 'english' } = await req.json();
+    const { messages, language = 'english', chatId } = await req.json();
 
     if (!messages || !Array.isArray(messages)) {
       return NextResponse.json(
@@ -72,10 +58,23 @@ export async function POST(req) {
       return NextResponse.json({ error: "Student profile not found" }, { status: 404 });
     }
 
-    let chat = await db.aiTutorChat.findFirst({
-      where: { studentProfileId: studentProfile.id },
-      orderBy: { updatedAt: 'desc' }
-    });
+    let chat;
+    
+    if (chatId) {
+      chat = await db.aiTutorChat.findFirst({
+        where: { 
+          id: chatId,
+          studentProfileId: studentProfile.id 
+        }
+      });
+    }
+
+    if (!chat) {
+      chat = await db.aiTutorChat.findFirst({
+        where: { studentProfileId: studentProfile.id },
+        orderBy: { updatedAt: 'desc' }
+      });
+    }
 
     if (!chat) {
       chat = await db.aiTutorChat.create({
@@ -129,7 +128,7 @@ export async function POST(req) {
     try {
       if (chat.title === "New Conversation" || !chat.title) {
         const firstStudentMessage = messages.find(m => m.role === 'student' || m.role === 'user')?.content || messages[0].content;
-        const newTitle = await generateTitle(firstStudentMessage);
+        const newTitle = await generateChatTitle(firstStudentMessage);
         await db.aiTutorChat.update({
           where: { id: chat.id },
           data: { title: newTitle }

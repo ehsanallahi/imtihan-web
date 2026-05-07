@@ -326,6 +326,7 @@ Your responsibilities:
 - DO NOT mention any AI model names or "Groq" in your responses.`;
 
   try {
+    console.log("[GROQ_DEBUG]: Calling API with model:", model);
     const response = await fetch("https://api.groq.com/openai/v1/chat/completions", {
       method: "POST",
       headers: {
@@ -336,7 +337,10 @@ Your responsibilities:
         model,
         messages: [
           { role: "system", content: systemPrompt },
-          ...messages
+          ...messages.map(msg => ({
+            role: (msg.role === 'student' || msg.role === 'user') ? 'user' : 'assistant',
+            content: msg.content
+          }))
         ],
         temperature: 0.7,
         max_tokens: 1024,
@@ -344,17 +348,46 @@ Your responsibilities:
     });
 
     if (!response.ok) {
-      const errorData = await response.json();
+      const errorData = await response.json().catch(() => ({}));
       console.error("[GROQ_API_ERROR]: Status:", response.status, "Details:", JSON.stringify(errorData, null, 2));
-      throw new Error(`Groq API error: ${response.status}. ${errorData.error?.message || ''}`);
+      throw new Error(`Groq API error: ${response.status}. ${errorData.error?.message || 'Unknown error'}`);
     }
 
     const data = await response.json();
     return data.choices[0]?.message?.content || "Sorry, I couldn't generate a response.";
   } catch (error) {
-    console.error("[GROQ_SERVICE_ERROR]:", error);
-    throw new Error(`Failed to reach Groq AI service: ${error.message}`);
+    console.error("[GROQ_SERVICE_ERROR]:", error.message);
+    // Fallback to Gemini if Groq fails
+    console.log("[GROQ_FALLBACK]: Attempting fallback to Gemini Flash...");
+    try {
+      const result = await flashModel.generateContent(
+        messages.map(m => (m.role === 'student' || m.role === 'user' ? 'user: ' : 'model: ') + m.content).join("\n")
+      );
+      return result.response.text();
+    } catch (geminiError) {
+      console.error("[GEMINI_FALLBACK_ERROR]:", geminiError.message);
+      throw new Error(`AI service unavailable. ${error.message}`);
+    }
   }
 }
 
 
+
+/**
+ * Generates a short, descriptive title for a chat session based on the first message.
+ * @param {string} firstMessage - The first message of the conversation.
+ * @returns {Promise<string>}
+ */
+export async function generateChatTitle(firstMessage) {
+  const prompt = `Generate a very short (2-4 words) title for a conversation that starts with this message: "${firstMessage}". 
+  The title should be in the same language as the message (English or Urdu). Respond ONLY with the title.`;
+
+  try {
+    const result = await flashModel.generateContent(prompt);
+    const title = result.response.text();
+    return title.replace(/["']/g, "").trim().substring(0, 50);
+  } catch (error) {
+    console.error("[TITLE_GENERATION_ERROR]:", error);
+    return "New Conversation";
+  }
+}

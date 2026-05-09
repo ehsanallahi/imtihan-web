@@ -248,7 +248,7 @@ export default function LandingPage() {
             <p className="text-lg md:text-xl text-teal-900/60">Comprehensive coverage for all major boards and competitive exams.</p>
           </div>
           
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
             {[
               { name: "FBISE", desc: "Federal Board" },
               { name: "BISE LHR", desc: "Punjab Board" },
@@ -298,7 +298,7 @@ export default function LandingPage() {
             </ul>
           </div>
           
-          <div className="relative group mt-8 lg:mt-0">
+          <div className="relative group mt-8 lg:mt-0 overflow-hidden lg:overflow-visible">
             <div className="absolute inset-0 bg-gold-400/20 blur-[60px] md:blur-[100px] rounded-full group-hover:bg-teal-400/20 transition-all duration-1000" />
             <div className="relative glass p-6 md:p-10 rounded-[2rem] md:rounded-[3rem] border border-white/50 shadow-2xl space-y-6 md:space-y-8 overflow-hidden">
                <div className="flex justify-between items-center border-b border-teal-900/5 pb-4 md:pb-6">

@@ -3,12 +3,12 @@ import { Bell, Search, User } from "lucide-react";
 
 export default function AdminLayout({ children }) {
   return (
-    <div className="flex min-h-screen bg-slate-50">
+    <div className="flex h-screen overflow-hidden bg-slate-50">
       <AdminSidebar />
       
       <div className="flex-1 flex flex-col min-w-0">
         {/* Header */}
-        <header className="h-20 bg-white border-b border-slate-200 px-8 flex items-center justify-between sticky top-0 z-40">
+        <header className="h-20 bg-white border-b border-slate-200 px-8 flex items-center justify-between z-40">
           <div className="flex items-center gap-4 bg-slate-50 px-4 py-2 rounded-xl w-full max-w-md border border-slate-200 focus-within:border-teal-500 focus-within:ring-1 focus-within:ring-teal-500 transition-all">
             <Search className="w-4 h-4 text-slate-400" />
             <input 
@@ -30,7 +30,7 @@ export default function AdminLayout({ children }) {
         </header>
 
         {/* Content */}
-        <main className="flex-1 p-8">
+        <main className="flex-1 p-8 overflow-y-auto">
           {children}
         </main>
       </div>

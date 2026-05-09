@@ -11,7 +11,8 @@ import {
   LogOut, 
   User,
   GraduationCap,
-  Archive
+  Archive,
+  ShieldCheck
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Sidebar, SidebarContent, SidebarHeader, SidebarMenu, SidebarMenuItem, SidebarMenuButton } from "@/components/ui/sidebar";
@@ -39,6 +40,12 @@ const menuItems = [
     label: "Children's Progress", 
     href: "/dashboard/guardian",
     roles: ["super_admin", "guardian"] 
+  },
+  { 
+    icon: ShieldCheck, 
+    label: "Admin Panel", 
+    href: "/admin",
+    roles: ["super_admin", "moderator", "marketer", "content_editor", "finance_manager", "support_agent"] 
   },
   { icon: Settings, label: "Settings", href: "/dashboard/settings" },
 ];

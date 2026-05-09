@@ -28,6 +28,7 @@ export async function joinWaitlist(formData) {
     });
 
     revalidatePath("/");
+    revalidatePath("/admin/waitlist");
     return { success: true, data: entry };
   } catch (error) {
     console.error("Waitlist Error:", error);

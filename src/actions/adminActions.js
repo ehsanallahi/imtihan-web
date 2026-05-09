@@ -140,7 +140,31 @@ export async function getAdminMcqStats() {
       }
     };
   } catch (error) {
-    console.error("Admin MCQ Stats Error:", error);
     return { error: error.message };
   }
 }
+
+export async function getAdminUsers() {
+  try {
+    await ensureAdmin();
+    
+    const adminRoles = ["super_admin", "moderator", "marketer", "content_editor", "finance_manager", "support_agent"];
+    
+    const admins = await db.user.findMany({
+      where: {
+        role: {
+          in: adminRoles
+        }
+      },
+      orderBy: {
+        role: "asc"
+      }
+    });
+    
+    return { success: true, data: admins };
+  } catch (error) {
+    console.error("Admin Users Fetch Error:", error);
+    return { error: error.message };
+  }
+}
+

@@ -21,9 +21,9 @@ export default function RootLayout({ children }) {
   return (
     <html
       lang="en"
-      className={`${inter.variable} ${sora.variable} h-full antialiased`}
+      className={`${inter.variable} ${sora.variable} antialiased`}
     >
-      <body className="min-h-full flex flex-col font-sans">
+      <body className="font-sans">
         <Providers>{children}</Providers>
       </body>
     </html>

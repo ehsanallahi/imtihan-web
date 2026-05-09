@@ -529,3 +529,16 @@ enum NotificationType {
   streak_warning
   exam_reminder
 }
+
+model WaitlistEntry {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  name      String
+  phone     String?
+  grade     String?
+  board     String?
+  interest  String?
+  createdAt DateTime @default(now())
+
+  @@map("waitlist_entries")
+}

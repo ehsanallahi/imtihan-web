@@ -71,12 +71,13 @@ export default function WaitlistForm() {
                   defaultValue=""
                 >
                   <option value="" disabled>Select Your Grade</option>
-                  <option value="Class 9">Class 9</option>
-                  <option value="Class 10">Class 10</option>
-                  <option value="1st Year">1st Year</option>
-                  <option value="2nd Year">2nd Year</option>
-                  <option value="MDCAT/ECAT">MDCAT/ECAT</option>
-                </select>
+                   <option value="Class 9">Class 9</option>
+                   <option value="Class 10">Class 10</option>
+                   <option value="1st Year">1st Year</option>
+                   <option value="2nd Year">2nd Year</option>
+                   <option value="MDCAT/ECAT">MDCAT/ECAT</option>
+                   <option value="Others">Others</option>
+                 </select>
                 <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none opacity-40">
                   <ChevronDown className="w-4 h-4 md:w-5 md:h-5" />
                 </div>

@@ -17,7 +17,7 @@ import Link from "next/link";
 export const dynamic = 'force-dynamic';
 
 export default async function AdminStudentDetailsPage({ params }) {
-  const { id } = params;
+  const { id } = await params;
   const { data: student, error } = await getAdminStudentDetails(id);
 
   if (error || !student) {
@@ -115,32 +115,32 @@ export default async function AdminStudentDetailsPage({ params }) {
                         </tr>
                      </thead>
                      <tbody className="divide-y divide-slate-50">
-                        {student.quizResults?.map((result) => (
+                        {student.examSessions?.map((result) => (
                           <tr key={result.id} className="hover:bg-slate-50/30 transition-colors">
                              <td className="p-4 whitespace-nowrap">
                                 <p className="text-xs font-bold text-slate-900">{format(new Date(result.createdAt), "MMM d, HH:mm")}</p>
                              </td>
                              <td className="p-4">
-                                <p className="text-xs font-bold text-slate-900">{result.subject?.name}</p>
-                                <p className="text-[10px] font-medium text-slate-400">{result.chapter?.name}</p>
+                                <p className="text-xs font-bold text-slate-900 uppercase">{result.sessionType}</p>
+                                <p className="text-[10px] font-medium text-slate-400">ID: {result.id.slice(0, 8)}</p>
                              </td>
                              <td className="p-4">
                                 <div className="flex items-center gap-2">
                                    <div className="w-12 h-1.5 bg-slate-100 rounded-full overflow-hidden">
                                       <div 
-                                        className={`h-full rounded-full ${result.score >= 70 ? 'bg-emerald-500' : result.score >= 40 ? 'bg-orange-500' : 'bg-red-500'}`}
-                                        style={{ width: `${(result.score / result.totalQuestions) * 100}%` }}
+                                        className={`h-full rounded-full ${result.correctAnswers >= (result.totalQuestions * 0.7) ? 'bg-emerald-500' : result.correctAnswers >= (result.totalQuestions * 0.4) ? 'bg-orange-500' : 'bg-red-500'}`}
+                                        style={{ width: `${(result.correctAnswers / result.totalQuestions) * 100}%` }}
                                       />
                                    </div>
-                                   <span className="text-xs font-black text-slate-900">{result.score}/{result.totalQuestions}</span>
+                                   <span className="text-xs font-black text-slate-900">{result.correctAnswers}/{result.totalQuestions}</span>
                                 </div>
                              </td>
                              <td className="p-4 text-right">
-                                <span className="text-xs font-medium text-slate-500">{Math.floor(result.timeSpent / 60)}m {result.timeSpent % 60}s</span>
+                                <span className="text-xs font-medium text-slate-500">{Math.floor((result.timeTakenSeconds || 0) / 60)}m {(result.timeTakenSeconds || 0) % 60}s</span>
                              </td>
                           </tr>
                         ))}
-                        {student.quizResults?.length === 0 && (
+                        {student.examSessions?.length === 0 && (
                           <tr>
                              <td colSpan="4" className="p-12 text-center text-slate-400 italic text-sm">
                                 No quiz attempts recorded yet.

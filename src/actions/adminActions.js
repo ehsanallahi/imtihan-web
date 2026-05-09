@@ -234,13 +234,9 @@ export async function getAdminStudentDetails(id) {
       where: { id },
       include: {
         studentProfile: true,
-        quizResults: {
+        examSessions: {
           take: 10,
-          orderBy: { createdAt: "desc" },
-          include: {
-            subject: true,
-            chapter: true
-          }
+          orderBy: { createdAt: "desc" }
         },
         subscriptions: {
           orderBy: { createdAt: "desc" }
@@ -259,6 +255,7 @@ export async function getAdminStudentDetails(id) {
 
 export async function createMcq(data) {
   try {
+    const session = await auth();
     await ensureAdmin();
     
     const mcq = await db.mCQ.create({
@@ -269,10 +266,11 @@ export async function createMcq(data) {
         optionB: data.optionB,
         optionC: data.optionC,
         optionD: data.optionD,
-        correctOption: data.correctOption,
+        correctAnswer: data.correctOption,
         explanation: data.explanation,
         subjectId: data.subjectId,
         chapterId: data.chapterId,
+        createdById: session.user.id,
         isApproved: true,
         isAiGenerated: false
       }

@@ -95,3 +95,52 @@ export async function getAdminStats() {
     return { error: error.message };
   }
 }
+
+export async function getAdminContent() {
+  try {
+    await ensureAdmin();
+    
+    const subjects = await db.subject.findMany({
+      include: {
+        _count: {
+          select: { chapters: true, mcqs: true }
+        }
+      },
+      orderBy: [
+        { grade: "asc" },
+        { name: "asc" }
+      ]
+    });
+    
+    return { success: true, data: subjects };
+  } catch (error) {
+    console.error("Admin Content Error:", error);
+    return { error: error.message };
+  }
+}
+
+export async function getAdminMcqStats() {
+  try {
+    await ensureAdmin();
+    
+    const [total, approved, pending, aiGenerated] = await Promise.all([
+      db.mCQ.count(),
+      db.mCQ.count({ where: { isApproved: true } }),
+      db.mCQ.count({ where: { isApproved: false } }),
+      db.mCQ.count({ where: { isAiGenerated: true } })
+    ]);
+    
+    return {
+      success: true,
+      data: {
+        total,
+        approved,
+        pending,
+        aiGenerated
+      }
+    };
+  } catch (error) {
+    console.error("Admin MCQ Stats Error:", error);
+    return { error: error.message };
+  }
+}

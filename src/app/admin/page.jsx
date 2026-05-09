@@ -7,7 +7,9 @@ import {
   Clock
 } from "lucide-react";
 import { getWaitlist } from "@/actions/waitlist";
+import { getAdminStats } from "@/actions/adminActions";
 import { db } from "@/lib/db";
+import { Zap } from "lucide-react";
 
 const StatCard = ({ title, value, icon: Icon, color, trend }) => (
   <div className="bg-white p-6 rounded-3xl border border-slate-200 shadow-sm hover:shadow-md transition-shadow">
@@ -31,10 +33,7 @@ const StatCard = ({ title, value, icon: Icon, color, trend }) => (
 
 export default async function AdminDashboard() {
   const { data: waitlist } = await getWaitlist();
-  
-  // Fetch real stats from DB
-  const userCount = await db.user.count();
-  const mcqCount = await db.mCQ.count();
+  const { data: statsData } = await getAdminStats();
   
   const stats = [
     { 
@@ -46,23 +45,23 @@ export default async function AdminDashboard() {
     },
     { 
       title: "Total Students", 
-      value: userCount, 
+      value: statsData?.students || 0, 
       icon: Users, 
       color: "bg-blue-100",
       trend: "+5%" 
     },
     { 
       title: "MCQs Bank", 
-      value: mcqCount, 
+      value: statsData?.mcqs || 0, 
       icon: BookOpen, 
       color: "bg-purple-100",
       trend: "+24" 
     },
     { 
-      title: "Active Sessions", 
-      value: "142", 
-      icon: Clock, 
-      color: "bg-orange-100",
+      title: "Premium Users", 
+      value: statsData?.premium || 0, 
+      icon: Zap, 
+      color: "bg-gold-100",
       trend: "Live" 
     },
   ];

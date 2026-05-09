@@ -102,8 +102,11 @@ export async function getAdminContent() {
     
     const subjects = await db.subject.findMany({
       include: {
+        chapters: {
+          orderBy: { number: "asc" }
+        },
         _count: {
-          select: { chapters: true, mcqs: true }
+          select: { mcqs: true }
         }
       },
       orderBy: [
@@ -219,6 +222,131 @@ export async function deleteMcq(id) {
     return { success: true };
   } catch (error) {
     console.error("Delete MCQ Error:", error);
+    return { error: error.message };
+  }
+}
+
+export async function getAdminStudentDetails(id) {
+  try {
+    await ensureAdmin();
+    
+    const student = await db.user.findUnique({
+      where: { id },
+      include: {
+        studentProfile: true,
+        quizResults: {
+          take: 10,
+          orderBy: { createdAt: "desc" },
+          include: {
+            subject: true,
+            chapter: true
+          }
+        },
+        subscriptions: {
+          orderBy: { createdAt: "desc" }
+        }
+      }
+    });
+    
+    if (!student) throw new Error("Student not found");
+    
+    return { success: true, data: student };
+  } catch (error) {
+    console.error("Student Details Error:", error);
+    return { error: error.message };
+  }
+}
+
+export async function createMcq(data) {
+  try {
+    await ensureAdmin();
+    
+    const mcq = await db.mCQ.create({
+      data: {
+        question: data.question,
+        questionUrdu: data.questionUrdu,
+        optionA: data.optionA,
+        optionB: data.optionB,
+        optionC: data.optionC,
+        optionD: data.optionD,
+        correctOption: data.correctOption,
+        explanation: data.explanation,
+        subjectId: data.subjectId,
+        chapterId: data.chapterId,
+        isApproved: true,
+        isAiGenerated: false
+      }
+    });
+    
+    return { success: true, data: mcq };
+  } catch (error) {
+    console.error("Create MCQ Error:", error);
+    return { error: error.message };
+  }
+}
+
+export async function getAdminSubscriptionStats() {
+  try {
+    await ensureAdmin();
+    
+    const [activeSubscriptions, totalRevenue] = await Promise.all([
+      db.subscription.findMany({
+        where: { status: "active" },
+        include: { user: true }
+      }),
+      db.subscription.aggregate({
+        _sum: { amountPkr: true }
+      })
+    ]);
+    
+    // Calculate Monthly Recurring Revenue (Estimate)
+    const mrr = activeSubscriptions.reduce((acc, sub) => {
+      const monthlyAmount = sub.plan.includes('yearly') ? sub.amountPkr / 12 : sub.amountPkr;
+      return acc + monthlyAmount;
+    }, 0);
+    
+    return { 
+      success: true, 
+      data: {
+        activeCount: activeSubscriptions.length,
+        totalRevenue: totalRevenue._sum.amountPkr || 0,
+        mrr: Math.round(mrr),
+        recentPayments: activeSubscriptions.slice(0, 10)
+      } 
+    };
+  } catch (error) {
+    console.error("Subscription Stats Error:", error);
+    return { error: error.message };
+  }
+}
+
+export async function broadcastNotification(data) {
+  try {
+    await ensureAdmin();
+    
+    // Fetch all active students
+    const users = await db.user.findMany({
+      where: {
+        role: { in: ["student", "premium_student"] }
+      },
+      select: { id: true }
+    });
+    
+    // Create notifications for all users
+    const notifications = users.map(user => ({
+      userId: user.id,
+      title: data.title,
+      message: data.message,
+      type: "system"
+    }));
+    
+    await db.notification.createMany({
+      data: notifications
+    });
+    
+    return { success: true, count: users.length };
+  } catch (error) {
+    console.error("Broadcast Error:", error);
     return { error: error.message };
   }
 }

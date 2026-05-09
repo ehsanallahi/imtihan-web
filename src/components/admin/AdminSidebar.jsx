@@ -12,7 +12,10 @@ import {
   ChevronRight,
   ShieldCheck,
   Bell,
-  Search
+  Search,
+  Sparkles,
+  Megaphone,
+  CreditCard
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import Image from "next/image";
@@ -34,6 +37,11 @@ const sidebarLinks = [
     icon: Users 
   },
   { 
+    title: "Finance", 
+    href: "/admin/finance", 
+    icon: CreditCard 
+  },
+  { 
     title: "Teachers", 
     href: "/admin/teachers", 
     icon: ShieldCheck 
@@ -42,6 +50,16 @@ const sidebarLinks = [
     title: "Content", 
     href: "/admin/content", 
     icon: BookOpen 
+  },
+  { 
+    title: "Review Queue", 
+    href: "/admin/content/review", 
+    icon: Sparkles 
+  },
+  { 
+    title: "Announcements", 
+    href: "/admin/notifications", 
+    icon: Megaphone 
   },
   { 
     title: "Settings", 

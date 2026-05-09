@@ -42,8 +42,11 @@ export default async function AdminContentPage() {
           <p className="text-slate-500 font-medium italic">Manage subjects, chapters, and your MCQ database.</p>
         </div>
         <div className="flex items-center gap-3">
-           <button className="flex items-center gap-2 bg-teal-600 text-white px-6 py-2.5 rounded-xl font-bold hover:bg-teal-700 transition-all shadow-lg shadow-teal-600/20">
-              <Plus className="w-4 h-4" /> Add New Subject
+           <Link href="/admin/content/new" className="flex items-center gap-2 bg-teal-600 text-white px-6 py-2.5 rounded-xl font-bold hover:bg-teal-700 transition-all shadow-lg shadow-teal-600/20">
+              <Plus className="w-4 h-4" /> Add New MCQ
+           </Link>
+           <button className="flex items-center gap-2 bg-white text-slate-600 px-4 py-2.5 rounded-xl font-bold border border-slate-200 hover:bg-slate-50 transition-all">
+              <Settings2 className="w-4 h-4" /> Manage Subjects
            </button>
         </div>
       </div>

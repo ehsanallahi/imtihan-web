@@ -10,6 +10,7 @@ import {
   ChevronRight,
   Settings2
 } from "lucide-react";
+import Link from "next/link";
 
 export const dynamic = 'force-dynamic';
 
@@ -24,6 +25,13 @@ export default async function AdminContentPage() {
       </div>
     );
   }
+
+  const statCards = [
+    { label: "Total MCQs", value: mcqStats?.total, icon: FileText, color: "text-blue-600", bg: "bg-blue-50" },
+    { label: "Approved", value: mcqStats?.approved, icon: CheckCircle2, color: "text-emerald-600", bg: "bg-emerald-50" },
+    { label: "Pending Review", value: mcqStats?.pending, icon: Clock, color: "text-orange-600", bg: "bg-orange-50", href: "/admin/content/review" },
+    { label: "AI Generated", value: mcqStats?.aiGenerated, icon: Sparkles, color: "text-purple-600", bg: "bg-purple-50" },
+  ];
 
   return (
     <div className="space-y-8">
@@ -42,22 +50,29 @@ export default async function AdminContentPage() {
 
       {/* MCQ Repository Overview */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-         {[
-           { label: "Total MCQs", value: mcqStats?.total, icon: FileText, color: "text-blue-600", bg: "bg-blue-50" },
-           { label: "Approved", value: mcqStats?.approved, icon: CheckCircle2, color: "text-emerald-600", bg: "bg-emerald-50" },
-           { label: "Pending Review", value: mcqStats?.pending, icon: Clock, color: "text-orange-600", bg: "bg-orange-50" },
-           { label: "AI Generated", value: mcqStats?.aiGenerated, icon: Sparkles, color: "text-purple-600", bg: "bg-purple-50" },
-         ].map((stat, i) => (
-           <div key={i} className="bg-white p-6 rounded-3xl border border-slate-200 shadow-sm">
-              <div className="flex items-center gap-3 mb-2">
-                 <div className={`p-2 rounded-lg ${stat.bg} ${stat.color}`}>
-                    <stat.icon className="w-4 h-4" />
-                 </div>
-                 <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{stat.label}</span>
-              </div>
-              <p className="text-2xl font-black text-slate-900">{stat.value || 0}</p>
-           </div>
-         ))}
+         {statCards.map((stat, i) => {
+           const CardWrapper = stat.href ? Link : 'div';
+           return (
+             <CardWrapper 
+               key={i} 
+               href={stat.href}
+               className={`bg-white p-6 rounded-3xl border border-slate-200 shadow-sm transition-all ${stat.href ? 'hover:border-purple-500/50 hover:shadow-md cursor-pointer group' : ''}`}
+             >
+                <div className="flex items-center justify-between mb-4">
+                   <div className={`p-2 rounded-lg ${stat.bg} ${stat.color} ${stat.href ? 'group-hover:bg-purple-600 group-hover:text-white transition-all' : ''}`}>
+                      <stat.icon className="w-4 h-4" />
+                   </div>
+                   {stat.href && <ChevronRight className="w-4 h-4 text-slate-300 group-hover:text-purple-600 transition-colors" />}
+                </div>
+                <div>
+                   <span className={`text-[10px] font-black text-slate-400 uppercase tracking-widest ${stat.href ? 'group-hover:text-purple-600 transition-colors' : ''}`}>
+                      {stat.label}
+                   </span>
+                   <p className="text-2xl font-black text-slate-900 mt-1">{stat.value || 0}</p>
+                </div>
+             </CardWrapper>
+           );
+         })}
       </div>
 
       {/* Subjects Grid */}
@@ -120,11 +135,6 @@ export default async function AdminContentPage() {
                 </div>
              </div>
            ))}
-           {subjects?.length === 0 && (
-             <div className="col-span-full p-20 text-center bg-white rounded-3xl border border-dashed border-slate-300">
-                <p className="text-slate-400 font-medium italic">No subjects added yet. Start by adding a subject for a specific grade and board.</p>
-             </div>
-           )}
         </div>
       </div>
     </div>

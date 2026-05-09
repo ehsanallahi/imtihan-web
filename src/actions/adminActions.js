@@ -168,3 +168,58 @@ export async function getAdminUsers() {
   }
 }
 
+export async function getPendingMcqs() {
+  try {
+    await ensureAdmin();
+    
+    const mcqs = await db.mCQ.findMany({
+      where: {
+        isApproved: false
+      },
+      include: {
+        subject: true,
+        chapter: true
+      },
+      orderBy: {
+        createdAt: "desc"
+      }
+    });
+    
+    return { success: true, data: mcqs };
+  } catch (error) {
+    console.error("Pending MCQs Fetch Error:", error);
+    return { error: error.message };
+  }
+}
+
+export async function approveMcq(id) {
+  try {
+    await ensureAdmin();
+    
+    await db.mCQ.update({
+      where: { id },
+      data: { isApproved: true }
+    });
+    
+    return { success: true };
+  } catch (error) {
+    console.error("Approve MCQ Error:", error);
+    return { error: error.message };
+  }
+}
+
+export async function deleteMcq(id) {
+  try {
+    await ensureAdmin();
+    
+    await db.mCQ.delete({
+      where: { id }
+    });
+    
+    return { success: true };
+  } catch (error) {
+    console.error("Delete MCQ Error:", error);
+    return { error: error.message };
+  }
+}
+

@@ -4,7 +4,7 @@ import { redirect } from "next/navigation";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
-import { Flame, BrainCircuit, CheckCircle2, Trophy, Clock, ArrowRight } from "lucide-react";
+import { Flame, BrainCircuit, CheckCircle2, Trophy, Clock, ArrowRight, User } from "lucide-react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 

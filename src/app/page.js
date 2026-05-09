@@ -72,7 +72,7 @@ export default function LandingPage() {
   };
 
   return (
-    <div className="min-h-screen bg-mesh selection:bg-teal-200 relative">
+    <div className="min-h-screen bg-mesh selection:bg-teal-200 relative overflow-x-hidden w-full">
       {/* Subtle background decorative elements */}
       <div className="absolute top-[-10%] right-[-10%] w-[500px] h-[500px] bg-teal-200/20 rounded-full blur-[120px] animate-pulse-slow" />
       <div className="absolute bottom-[-10%] left-[-10%] w-[600px] h-[600px] bg-gold-200/20 rounded-full blur-[120px] animate-pulse-slow" />
@@ -113,7 +113,7 @@ export default function LandingPage() {
         </motion.div>
       </nav>
 
-      <main className="relative z-10 max-w-7xl mx-auto px-6 pt-12 pb-24 space-y-20 md:space-y-32">
+      <main className="relative z-10 max-w-7xl mx-auto px-6 pt-12 pb-24 space-y-20 md:space-y-32 overflow-x-hidden">
         {/* Hero Section */}
         <section className="grid lg:grid-cols-2 gap-12 lg:gap-16 items-center">
           {/* Hero Content */}
@@ -127,7 +127,7 @@ export default function LandingPage() {
               <Sparkles className="w-4 h-4 animate-pulse" /> Under Development
             </div>
 
-            <h1 className="text-4xl md:text-5xl lg:text-7xl font-display font-extrabold tracking-tight text-teal-900 leading-[1.2] lg:leading-[1.1]">
+            <h1 className="text-3xl md:text-5xl lg:text-7xl font-display font-extrabold tracking-tight text-teal-900 leading-[1.2] lg:leading-[1.1] break-words">
               The Future of <span className="text-gradient">Board Exam</span> Prep is Coming.
             </h1>
 
@@ -161,7 +161,7 @@ export default function LandingPage() {
           >
             <div className="relative aspect-square w-full max-w-[500px] lg:max-w-[600px] mx-auto animate-float">
               {/* Glass cards floating around - hidden or repositioned on small mobile */}
-              <div className="absolute top-0 -left-4 md:top-10 md:-left-10 z-20 glass p-3 md:p-6 rounded-2xl md:rounded-3xl border border-white/50 shadow-2xl animate-float" style={{ animationDelay: '1s' }}>
+              <div className="absolute top-0 left-0 sm:-left-4 md:top-10 md:-left-10 z-20 glass p-3 md:p-6 rounded-2xl md:rounded-3xl border border-white/50 shadow-2xl animate-float" style={{ animationDelay: '1s' }}>
                 <div className="flex items-center gap-2 md:gap-4">
                   <div className="w-8 h-8 md:w-12 md:h-12 bg-gold-400 rounded-xl flex items-center justify-center text-white shadow-lg">
                     <CheckCircle2 className="w-5 h-5 md:w-8 md:h-8" />
@@ -173,7 +173,7 @@ export default function LandingPage() {
                 </div>
               </div>
 
-              <div className="absolute -bottom-2 -right-4 md:-bottom-5 md:-right-5 z-20 glass p-3 md:p-6 rounded-2xl md:rounded-3xl border border-white/50 shadow-2xl animate-float" style={{ animationDelay: '2s' }}>
+              <div className="absolute bottom-0 right-0 sm:-right-4 md:-bottom-5 md:-right-5 z-20 glass p-3 md:p-6 rounded-2xl md:rounded-3xl border border-white/50 shadow-2xl animate-float" style={{ animationDelay: '2s' }}>
                 <div className="flex items-center gap-2 md:gap-4">
                   <div className="w-8 h-8 md:w-12 md:h-12 bg-crimson-400 rounded-xl flex items-center justify-center text-white shadow-lg">
                     <Bell className="w-5 h-5 md:w-8 md:h-8" />
@@ -201,7 +201,7 @@ export default function LandingPage() {
         {/* Meet Your AI Tutor Section */}
         <section className="space-y-8 md:space-y-16">
           <div className="text-center max-w-3xl mx-auto space-y-4">
-            <h2 className="text-3xl md:text-4xl lg:text-5xl font-display font-extrabold text-teal-900">Meet Your AI Study Buddy</h2>
+            <h2 className="text-2xl md:text-4xl lg:text-5xl font-display font-extrabold text-teal-900 break-words">Meet Your AI Study Buddy</h2>
             <p className="text-lg md:text-xl text-teal-900/60">Ask anything, anytime. Our AI understands your syllabus better than a textbook.</p>
           </div>
           
@@ -244,7 +244,7 @@ export default function LandingPage() {
         {/* Master Your Syllabus Section */}
         <section className="space-y-12 md:space-y-16 bg-white/30 -mx-6 px-6 py-16 md:py-24 rounded-[3rem] md:rounded-[4rem]">
           <div className="text-center max-w-3xl mx-auto space-y-4">
-            <h2 className="text-3xl md:text-4xl lg:text-5xl font-display font-extrabold text-teal-900">Master Your Syllabus</h2>
+            <h2 className="text-2xl md:text-4xl lg:text-5xl font-display font-extrabold text-teal-900 break-words">Master Your Syllabus</h2>
             <p className="text-lg md:text-xl text-teal-900/60">Comprehensive coverage for all major boards and competitive exams.</p>
           </div>
           
@@ -264,7 +264,7 @@ export default function LandingPage() {
                 whileHover={{ y: -5, backgroundColor: "rgba(255, 255, 255, 0.8)" }}
                 className="glass p-4 md:p-8 rounded-2xl md:rounded-3xl border border-white/50 text-center space-y-1 md:space-y-2 transition-all cursor-default shadow-sm hover:shadow-xl"
               >
-                <p className="text-xl md:text-2xl font-display font-black text-teal-900">{board.name}</p>
+                <p className="text-lg sm:text-xl md:text-2xl font-display font-black text-teal-900">{board.name}</p>
                 <p className="text-[10px] md:text-sm font-bold text-teal-600/60 uppercase tracking-tighter">{board.desc}</p>
               </motion.div>
             ))}
@@ -274,7 +274,7 @@ export default function LandingPage() {
         {/* Gamified Learning Section */}
         <section className="grid lg:grid-cols-2 gap-16 lg:gap-24 items-center">
           <div className="space-y-6 md:space-y-8 text-center lg:text-left">
-            <h2 className="text-3xl md:text-4xl lg:text-5xl font-display font-extrabold text-teal-900 leading-tight">Learning That Feels Like a Game</h2>
+            <h2 className="text-2xl md:text-4xl lg:text-5xl font-display font-extrabold text-teal-900 leading-tight break-words">Learning That Feels Like a Game</h2>
             <p className="text-lg md:text-xl text-teal-900/60 leading-relaxed">
               Ditch the boring textbooks. Earn XP, build your streak, and unlock achievements as you master each chapter. Competition has never been this fun.
             </p>
@@ -335,7 +335,7 @@ export default function LandingPage() {
         {/* FAQ Section */}
         <section className="space-y-12 md:space-y-16 max-w-4xl mx-auto">
           <div className="text-center space-y-4">
-            <h2 className="text-3xl md:text-4xl lg:text-5xl font-display font-extrabold text-teal-900">Frequently Asked Questions</h2>
+            <h2 className="text-2xl md:text-4xl lg:text-5xl font-display font-extrabold text-teal-900">Frequently Asked Questions</h2>
             <p className="text-lg md:text-xl text-teal-900/60">Everything you need to know about Imtihan.</p>
           </div>
           
@@ -371,7 +371,7 @@ export default function LandingPage() {
           <div className="absolute top-0 left-0 w-full h-full bg-teal-600 opacity-[0.03] pointer-events-none" />
           <ImtihanLogo size="lg" className="mx-auto" />
           <div className="space-y-4 md:space-y-6 max-w-2xl mx-auto">
-            <h2 className="text-3xl md:text-4xl lg:text-6xl font-display font-extrabold text-teal-900">Ready to transform your preparation?</h2>
+            <h2 className="text-2xl md:text-4xl lg:text-6xl font-display font-extrabold text-teal-900">Ready to transform your preparation?</h2>
             <p className="text-lg md:text-xl lg:text-2xl text-teal-900/60 font-medium">Join the waitlist today and get exclusive early access to the smartest AI tutor in Pakistan.</p>
           </div>
           

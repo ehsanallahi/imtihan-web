@@ -17,8 +17,7 @@ export default {
       const isAdmin = isLoggedIn && role && adminRoles.includes(role);
 
       if (isAdminPath) {
-        if (isAdmin) return true;
-        if (isLoggedIn) return Response.redirect(new URL("/dashboard", nextUrl));
+        if (isLoggedIn) return true;
         return false; // Redirect to login
       }
 

@@ -51,7 +51,7 @@ const menuItems = [
 ];
 
 export default function DashboardLayout({ children }) {
-  const { data: session } = useSession();
+  const { data: session, status } = useSession();
   const pathname = usePathname();
   const userRole = session?.user?.role;
 
@@ -81,11 +81,16 @@ export default function DashboardLayout({ children }) {
             <SidebarMenu>
               {filteredMenuItems.map((item) => {
                 const active = isActive(item.href);
+                // Redirect 'Dashboard' to '/admin' for admins
+                const href = (item.label === "Dashboard" && ["super_admin", "moderator", "marketer", "content_editor", "finance_manager", "support_agent", "institution_admin"].includes(userRole)) 
+                  ? "/admin" 
+                  : item.href;
+
                 return (
                   <SidebarMenuItem key={item.label}>
                     <SidebarMenuButton asChild tooltip={item.label}>
                       <Link
-                        href={item.href}
+                        href={href}
                         className={`flex items-center gap-3 px-3 py-2 rounded-lg transition-colors font-medium ${
                           active
                             ? "bg-teal-600 text-white hover:bg-teal-700 shadow-sm"
@@ -104,20 +109,37 @@ export default function DashboardLayout({ children }) {
               })}
             </SidebarMenu>
             
-            <div className="mt-auto pt-4 border-t border-teal-50/50">
-              <div className="p-4 rounded-xl bg-gradient-to-br from-teal-600 to-teal-400 text-white shadow-lg shadow-teal-600/20">
-                <div className="flex items-center gap-2 mb-2">
-                  <GraduationCap className="h-4 w-4" />
-                  <span className="text-xs font-semibold uppercase tracking-wider opacity-80">Pro Status</span>
+            {userRole === "student" && (
+              <div className="mt-auto pt-4 border-t border-teal-50/50">
+                <div className="p-4 rounded-xl bg-gradient-to-br from-teal-600 to-teal-400 text-white shadow-lg shadow-teal-600/20">
+                  <div className="flex items-center gap-2 mb-2">
+                    <GraduationCap className="h-4 w-4" />
+                    <span className="text-xs font-semibold uppercase tracking-wider opacity-80">Pro Status</span>
+                  </div>
+                  <p className="text-sm font-medium">Free Plan</p>
+                  <Link href="/pricing">
+                    <Button size="sm" variant="secondary" className="w-full mt-3 h-8 bg-white/20 hover:bg-white/30 border-none text-white text-xs">
+                      Upgrade Now
+                    </Button>
+                  </Link>
                 </div>
-                <p className="text-sm font-medium">Free Plan</p>
-                <Link href="/pricing">
-                  <Button size="sm" variant="secondary" className="w-full mt-3 h-8 bg-white/20 hover:bg-white/30 border-none text-white text-xs">
-                    Upgrade Now
-                  </Button>
-                </Link>
               </div>
-            </div>
+            )}
+
+            {userRole === "premium_student" && (
+              <div className="mt-auto pt-4 border-t border-teal-50/50">
+                <div className="p-4 rounded-xl bg-gradient-to-br from-amber-500 to-orange-400 text-white shadow-lg shadow-orange-500/20">
+                  <div className="flex items-center gap-2 mb-2">
+                    <GraduationCap className="h-4 w-4" />
+                    <span className="text-xs font-semibold uppercase tracking-wider opacity-80">Pro Status</span>
+                  </div>
+                  <p className="text-sm font-medium">Pro Plan Active</p>
+                  <div className="w-full mt-3 h-8 flex items-center justify-center bg-white/20 rounded-md text-white text-[10px] font-bold uppercase tracking-widest">
+                    Lifetime Access
+                  </div>
+                </div>
+              </div>
+            )}
 
             <div className="mt-4 px-2 space-y-1">
               <button 

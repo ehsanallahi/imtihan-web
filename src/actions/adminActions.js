@@ -5,7 +5,7 @@ import { auth } from "@/auth";
 
 async function ensureAdmin() {
   const session = await auth();
-  const adminRoles = ["super_admin", "moderator", "marketer", "content_editor", "finance_manager", "support_agent"];
+  const adminRoles = ["super_admin", "moderator", "marketer", "content_editor", "finance_manager", "support_agent", "institution_admin"];
   
   if (!session?.user || !adminRoles.includes(session.user.role)) {
     throw new Error("Unauthorized access to admin actions");
@@ -87,7 +87,13 @@ export async function getAdminStats() {
         students: studentCount,
         teachers: teacherCount,
         premium: premiumCount,
-        mcqs: mcqCount
+        mcqs: mcqCount,
+        recentStudents: await db.user.findMany({
+          where: { role: { in: ["student", "premium_student"] } },
+          include: { studentProfile: true },
+          orderBy: { updatedAt: "desc" },
+          take: 5
+        })
       }
     };
   } catch (error) {
@@ -151,7 +157,7 @@ export async function getAdminUsers() {
   try {
     await ensureAdmin();
     
-    const adminRoles = ["super_admin", "moderator", "marketer", "content_editor", "finance_manager", "support_agent"];
+    const adminRoles = ["super_admin", "moderator", "marketer", "content_editor", "finance_manager", "support_agent", "institution_admin"];
     
     const admins = await db.user.findMany({
       where: {
@@ -345,6 +351,29 @@ export async function broadcastNotification(data) {
     return { success: true, count: users.length };
   } catch (error) {
     console.error("Broadcast Error:", error);
+    return { error: error.message };
+  }
+}
+
+export async function toggleUserStatus(userId) {
+  try {
+    await ensureAdmin();
+    
+    const user = await db.user.findUnique({
+      where: { id: userId },
+      select: { isActive: true }
+    });
+    
+    if (!user) throw new Error("User not found");
+    
+    const updatedUser = await db.user.update({
+      where: { id: userId },
+      data: { isActive: !user.isActive }
+    });
+    
+    return { success: true, isActive: updatedUser.isActive };
+  } catch (error) {
+    console.error("Toggle Status Error:", error);
     return { error: error.message };
   }
 }

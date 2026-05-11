@@ -5,31 +5,36 @@ export default {
   callbacks: {
     authorized({ auth, request: { nextUrl } }) {
       const isLoggedIn = !!auth?.user;
+      // In middleware, the role might be directly on the user object
       const role = auth?.user?.role;
-      const isAdminPath = nextUrl.pathname.startsWith("/admin");
-      const isOnDashboard = nextUrl.pathname.startsWith("/dashboard");
-      const isOnAuth = nextUrl.pathname.startsWith("/auth");
+      const { pathname } = nextUrl;
+      
+      const isAdminPath = pathname.startsWith("/admin");
+      const isOnDashboard = pathname.startsWith("/dashboard");
+      const isOnAuth = pathname.startsWith("/auth");
 
-      const adminRoles = ["super_admin", "moderator", "marketer", "content_editor", "finance_manager", "support_agent"];
+      const adminRoles = ["super_admin", "moderator", "marketer", "content_editor", "finance_manager", "support_agent", "institution_admin", "admin"];
+      const isAdmin = isLoggedIn && role && adminRoles.includes(role);
 
       if (isAdminPath) {
-        if (isLoggedIn && adminRoles.includes(role)) return true;
-        return Response.redirect(new URL("/auth/signin", nextUrl));
+        if (isAdmin) return true;
+        if (isLoggedIn) return Response.redirect(new URL("/dashboard", nextUrl));
+        return false; // Redirect to login
       }
 
       if (isOnDashboard) {
         if (isLoggedIn) return true;
-        return false; // Redirect unauthenticated users to login page
-      } else if (isOnAuth) {
+        return false;
+      }
+
+      if (isOnAuth) {
         if (isLoggedIn) {
-          const adminRoles = ["super_admin", "moderator", "marketer", "content_editor", "finance_manager", "support_agent"];
-          if (adminRoles.includes(role)) {
-            return Response.redirect(new URL("/admin", nextUrl));
-          }
+          if (isAdmin) return Response.redirect(new URL("/admin", nextUrl));
           return Response.redirect(new URL("/dashboard", nextUrl));
         }
         return true;
       }
+
       return true;
     },
   },

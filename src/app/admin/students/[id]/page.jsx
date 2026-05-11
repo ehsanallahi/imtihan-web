@@ -14,6 +14,8 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 
+import StudentStatusManager from "@/components/admin/StudentStatusManager";
+
 export const dynamic = 'force-dynamic';
 
 export default async function AdminStudentDetailsPage({ params }) {
@@ -65,14 +67,16 @@ export default async function AdminStudentDetailsPage({ params }) {
                  </div>
               </div>
            </div>
-           <div className="flex gap-3">
-              <button className="bg-white text-slate-700 px-6 py-2.5 rounded-xl font-bold border border-slate-200 hover:bg-slate-50 transition-all shadow-sm">
-                 Edit Profile
-              </button>
-              <button className="bg-teal-600 text-white px-8 py-2.5 rounded-xl font-bold hover:bg-teal-700 transition-all shadow-lg shadow-teal-600/20">
-                 Manage Subscription
-              </button>
-           </div>
+            <div className="flex gap-3">
+               <Link href={`/dashboard?studentId=${student.id}`} target="_blank">
+                  <button className="bg-teal-600 text-white px-6 py-2.5 rounded-xl font-bold hover:bg-teal-700 transition-all shadow-lg shadow-teal-600/20 flex items-center gap-2">
+                     <BookOpen className="w-4 h-4" /> View Dashboard
+                  </button>
+               </Link>
+               <button className="bg-white text-slate-700 px-6 py-2.5 rounded-xl font-bold border border-slate-200 hover:bg-slate-50 transition-all shadow-sm">
+                  Edit Profile
+               </button>
+            </div>
         </div>
       </div>
 
@@ -155,38 +159,7 @@ export default async function AdminStudentDetailsPage({ params }) {
 
          {/* Sidebar: Status & Info */}
          <div className="space-y-8">
-            <div className="bg-white rounded-[2rem] border border-slate-200 shadow-sm p-8 space-y-6">
-               <h3 className="font-black text-slate-900 flex items-center gap-3 border-b border-slate-100 pb-4">
-                  <ShieldCheck className="w-5 h-5 text-teal-600" /> Account Status
-               </h3>
-               
-               <div className="space-y-4">
-                  <div className="flex items-center justify-between p-4 bg-emerald-50 rounded-2xl border border-emerald-100">
-                     <div>
-                        <p className="text-xs font-black text-emerald-900 uppercase">Status</p>
-                        <p className="text-sm font-bold text-emerald-700">Active Account</p>
-                     </div>
-                     <div className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse" />
-                  </div>
-
-                  <div className="p-4 bg-slate-50 rounded-2xl border border-slate-100 space-y-3">
-                     <div className="flex items-center justify-between">
-                        <span className="text-[10px] font-black text-slate-400 uppercase">Verification</span>
-                        <span className="text-[10px] font-black text-emerald-600 uppercase">Verified</span>
-                     </div>
-                     <div className="flex items-center justify-between">
-                        <span className="text-[10px] font-black text-slate-400 uppercase">User ID</span>
-                        <span className="text-[10px] font-mono font-bold text-slate-500">{student.id.slice(0, 8)}...</span>
-                     </div>
-                  </div>
-               </div>
-
-               <div className="pt-4">
-                  <button className="w-full py-3 rounded-xl border border-red-100 text-red-600 font-black text-sm hover:bg-red-50 transition-all">
-                     Suspend Account
-                  </button>
-               </div>
-            </div>
+            <StudentStatusManager studentId={student.id} initialStatus={student.isActive} />
 
             <div className="bg-slate-900 rounded-[2rem] p-8 text-white relative overflow-hidden">
                <div className="absolute top-0 right-0 w-32 h-32 bg-teal-500/10 rounded-full blur-3xl" />

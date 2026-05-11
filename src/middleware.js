@@ -1,8 +1,14 @@
+import NextAuth from "next-auth";
+import authConfig from "./auth.config";
 import { NextResponse } from 'next/server';
 
-export function middleware(request) {
+const { auth } = NextAuth(authConfig);
+
+export default auth((request) => {
+  const { nextUrl } = request;
+  
   // Handle CORS for API routes
-  if (request.nextUrl.pathname.startsWith('/api')) {
+  if (nextUrl.pathname.startsWith('/api')) {
     const response = NextResponse.next();
     
     response.headers.set('Access-Control-Allow-Origin', '*');
@@ -18,8 +24,8 @@ export function middleware(request) {
   }
   
   return NextResponse.next();
-}
+});
 
 export const config = {
-  matcher: '/api/:path*',
+  matcher: ["/((?!api|_next/static|_next/image|favicon.ico).*)", "/api/:path*"],
 };

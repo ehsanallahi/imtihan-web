@@ -5,7 +5,7 @@ import Link from "next/link";
 import { db } from "@/lib/db";
 
 export async function LeaderboardWidget({ board, grade, currentUserId }) {
-  if (!board || !grade) {
+  if (!board || !grade || !currentUserId) {
     return (
       <Card className="border-none shadow-sm h-full">
         <CardHeader>
@@ -16,7 +16,7 @@ export async function LeaderboardWidget({ board, grade, currentUserId }) {
         </CardHeader>
         <CardContent>
           <div className="text-sm text-zinc-500 text-center py-6">
-            Complete your profile (Grade & Board) in Settings to join the Leaderboard!
+            {!currentUserId ? "Sign in to join the Leaderboard!" : "Complete your profile (Grade & Board) in Settings to join the Leaderboard!"}
           </div>
         </CardContent>
       </Card>
@@ -110,12 +110,12 @@ export async function BadgesWidget({ studentProfileId }) {
 export async function DailyReviewWidget({ studentProfileId }) {
   if (!studentProfileId) return null;
 
-  const dueForReviewCount = await db.studentMCQProgress.count({
+  const dueForReviewCount = studentProfileId ? await db.studentMCQProgress.count({
     where: {
       studentProfileId,
       nextReviewDate: { lte: new Date() }
     }
-  });
+  }) : 0;
 
   return (
     <Card className="border-none shadow-sm h-full bg-gradient-to-br from-indigo-600 to-violet-700 text-white">

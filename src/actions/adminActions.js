@@ -115,7 +115,7 @@ export async function getAdminContent() {
           orderBy: { number: "asc" }
         },
         _count: {
-          select: { mcqs: true }
+          select: { mcqs: true, chapters: true }
         }
       },
       orderBy: [
@@ -373,7 +373,7 @@ export async function broadcastNotification(data) {
     await recordAuditLog({
       action: "BROADCAST_NOTIFICATION",
       entity: "Notification",
-      details: { title: data.title, count: users.length }
+      details: { title: data.title, targetCount: users.length }
     });
     
     return { success: true, count: users.length };
@@ -642,3 +642,20 @@ export async function deleteInstitution(id) {
   }
 }
 
+
+
+export async function getBroadcastHistory() {
+  try {
+    await ensureAdmin();
+    const logs = await db.auditLog.findMany({
+      where: { action: "BROADCAST_NOTIFICATION" },
+      include: { user: true },
+      orderBy: { createdAt: "desc" },
+      take: 20
+    });
+    return { success: true, data: logs };
+  } catch (error) {
+    console.error("Get Broadcast History Error:", error);
+    return { error: error.message };
+  }
+}

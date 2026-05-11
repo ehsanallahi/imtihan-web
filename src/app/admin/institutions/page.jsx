@@ -43,7 +43,7 @@ export default async function AdminInstitutionsPage() {
                 <h3 className="text-xl font-black text-slate-900 leading-tight">{inst.name}</h3>
                 <div className="flex items-center gap-2 mt-2 text-slate-400">
                   <MapPin className="w-3.5 h-3.5" />
-                  <p className="text-[10px] font-bold uppercase tracking-tight">{inst.address || "No Address Provided"}</p>
+                  <p className="text-[10px] font-bold uppercase tracking-tight">{inst.city || "No Address Provided"}</p>
                 </div>
               </div>
 

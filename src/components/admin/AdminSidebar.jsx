@@ -97,10 +97,15 @@ const sidebarLinks = [
 export default function AdminSidebar() {
   const pathname = usePathname();
 
-  const isActive = (href) => {
-    if (href === "/admin") return pathname === "/admin";
-    return pathname.startsWith(href);
+  const getActiveHref = () => {
+    if (pathname === "/admin") return "/admin";
+    const matches = sidebarLinks
+      .map(link => link.href)
+      .filter(href => href !== "/admin" && (pathname === href || pathname.startsWith(`${href}/`)));
+    return matches.length > 0 ? matches.reduce((a, b) => a.length > b.length ? a : b) : null;
   };
+
+  const activeHref = getActiveHref();
 
   return (
     <Sidebar className="border-r border-teal-50">
@@ -116,7 +121,7 @@ export default function AdminSidebar() {
       <SidebarContent className="px-4 py-2">
         <SidebarMenu>
           {sidebarLinks.map((link) => {
-            const active = isActive(link.href);
+            const active = link.href === activeHref;
             return (
               <SidebarMenuItem key={link.title}>
                 <SidebarMenuButton asChild tooltip={link.title}>

@@ -26,11 +26,6 @@ export default async function DashboardPage(props) {
 
   const studentId = searchParams?.studentId;
 
-  // If admin visits /dashboard directly without impersonating, send them to /admin
-  if (isAdmin && !studentId) {
-    redirect("/admin");
-  }
-
   try {
     const targetUserId = (isAdmin && studentId) ? studentId : session.user.id;
     const isImpersonating = isAdmin && !!studentId && studentId !== session.user.id;

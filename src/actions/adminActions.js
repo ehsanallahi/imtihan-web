@@ -553,3 +553,33 @@ export async function updateUserRole(userId, newRole) {
     return { error: error.message };
   }
 }
+
+export async function verifyTeacher(teacherId) {
+  try {
+    await ensureAdmin();
+    
+    const teacher = await db.teacherProfile.findUnique({
+      where: { userId: teacherId },
+      include: { user: true }
+    });
+    
+    if (!teacher) throw new Error("Teacher profile not found");
+    
+    await db.teacherProfile.update({
+      where: { userId: teacherId },
+      data: { isVerified: true }
+    });
+    
+    await recordAuditLog({
+      action: "VERIFY_TEACHER",
+      entity: "TeacherProfile",
+      entityId: teacherId,
+      details: { teacherName: teacher.user.name }
+    });
+    
+    return { success: true };
+  } catch (error) {
+    console.error("Verify Teacher Error:", error);
+    return { error: error.message };
+  }
+}

@@ -18,6 +18,7 @@ import { Button } from "@/components/ui/button";
 import { Sidebar, SidebarContent, SidebarHeader, SidebarMenu, SidebarMenuItem, SidebarMenuButton } from "@/components/ui/sidebar";
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { NotificationBell } from "@/components/dashboard/NotificationBell";
+import ImpersonationBanner from "@/components/admin/ImpersonationBanner";
 
 const menuItems = [
   { icon: LayoutDashboard, label: "Dashboard", href: "/dashboard" },
@@ -67,7 +68,9 @@ export default function DashboardLayout({ children }) {
 
   return (
     <SidebarProvider>
-      <div className="flex min-h-screen bg-background">
+      <div className="flex flex-col min-h-screen bg-background w-full">
+        <ImpersonationBanner />
+        <div className="flex flex-1">
         <Sidebar className="border-r border-teal-50">
           <SidebarHeader className="p-6">
             <div className="flex items-center gap-2">
@@ -176,6 +179,7 @@ export default function DashboardLayout({ children }) {
           <main className="flex-1 p-6 lg:p-10 max-w-7xl mx-auto w-full">
             {children}
           </main>
+        </div>
         </div>
       </div>
     </SidebarProvider>

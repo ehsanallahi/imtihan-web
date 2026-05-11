@@ -33,6 +33,7 @@ model User {
   subscriptions    Subscription[]
   teacherProfile   TeacherProfile?
   uploadedContent  TextbookUpload[]
+  auditLogs        AuditLog[]
 }
 
 model Account {
@@ -541,4 +542,19 @@ model WaitlistEntry {
   createdAt DateTime @default(now())
 
   @@map("waitlist_entries")
+}
+
+model AuditLog {
+  id        String   @id @default(cuid())
+  userId    String
+  action    String   // e.g., "DELETE_USER", "VERIFY_TEACHER", "UPDATE_SETTING"
+  entity    String?  // e.g., "User", "TeacherProfile", "GlobalSettings"
+  entityId  String?  // The ID of the affected entity
+  details   Json?    // Any additional metadata (old value, new value, etc.)
+  ipAddress String?
+  userAgent String?
+  createdAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id])
+
+  @@map("audit_logs")
 }

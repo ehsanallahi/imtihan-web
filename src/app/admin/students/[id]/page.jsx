@@ -15,6 +15,7 @@ import {
 import Link from "next/link";
 
 import StudentStatusManager from "@/components/admin/StudentStatusManager";
+import ImpersonateButton from "@/components/admin/ImpersonateButton";
 
 export const dynamic = 'force-dynamic';
 
@@ -68,11 +69,7 @@ export default async function AdminStudentDetailsPage({ params }) {
               </div>
            </div>
             <div className="flex gap-3">
-               <Link href={`/dashboard?studentId=${student.id}`} target="_blank">
-                  <button className="bg-teal-600 text-white px-6 py-2.5 rounded-xl font-bold hover:bg-teal-700 transition-all shadow-lg shadow-teal-600/20 flex items-center gap-2">
-                     <BookOpen className="w-4 h-4" /> View Dashboard
-                  </button>
-               </Link>
+               <ImpersonateButton userId={student.id} />
                <button className="bg-white text-slate-700 px-6 py-2.5 rounded-xl font-bold border border-slate-200 hover:bg-slate-50 transition-all shadow-sm">
                   Edit Profile
                </button>

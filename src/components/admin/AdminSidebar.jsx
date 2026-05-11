@@ -13,7 +13,8 @@ import {
   ShieldCheck,
   Sparkles,
   Megaphone,
-  CreditCard
+  CreditCard,
+  History
 } from "lucide-react";
 import { 
   Sidebar, 
@@ -69,6 +70,21 @@ const sidebarLinks = [
     title: "Settings", 
     href: "/admin/settings", 
     icon: Settings 
+  },
+  { 
+    title: "Audit Logs", 
+    href: "/admin/logs", 
+    icon: History 
+  },
+  { 
+    title: "AI Monitor", 
+    href: "/admin/ai", 
+    icon: Sparkles 
+  },
+  { 
+    title: "Staff", 
+    href: "/admin/staff", 
+    icon: ShieldCheck 
   },
 ];
 

@@ -2,6 +2,7 @@
 
 import { db } from "@/lib/db";
 import { auth } from "@/auth";
+import { recordAuditLog } from "@/lib/audit";
 
 async function ensureAdmin() {
   const session = await auth();
@@ -210,6 +211,12 @@ export async function approveMcq(id) {
       where: { id },
       data: { isApproved: true }
     });
+
+    await recordAuditLog({
+      action: "APPROVE_MCQ",
+      entity: "MCQ",
+      entityId: id,
+    });
     
     return { success: true };
   } catch (error) {
@@ -224,6 +231,12 @@ export async function deleteMcq(id) {
     
     await db.mCQ.delete({
       where: { id }
+    });
+
+    await recordAuditLog({
+      action: "DELETE_MCQ",
+      entity: "MCQ",
+      entityId: id,
     });
     
     return { success: true };
@@ -281,6 +294,13 @@ export async function createMcq(data) {
         isApproved: true,
         isAiGenerated: false
       }
+    });
+
+    await recordAuditLog({
+      action: "CREATE_MCQ",
+      entity: "MCQ",
+      entityId: mcq.id,
+      details: { question: data.question }
     });
     
     return { success: true, data: mcq };
@@ -348,10 +368,43 @@ export async function broadcastNotification(data) {
     await db.notification.createMany({
       data: notifications
     });
+
+    await recordAuditLog({
+      action: "BROADCAST_NOTIFICATION",
+      entity: "Notification",
+      details: { title: data.title, count: users.length }
+    });
     
     return { success: true, count: users.length };
   } catch (error) {
     console.error("Broadcast Error:", error);
+    return { error: error.message };
+  }
+}
+
+export async function getAuditLogs() {
+  try {
+    await ensureAdmin();
+    
+    const logs = await db.auditLog.findMany({
+      include: {
+        user: {
+          select: {
+            name: true,
+            email: true,
+            role: true
+          }
+        }
+      },
+      orderBy: {
+        createdAt: "desc"
+      },
+      take: 100
+    });
+    
+    return { success: true, data: logs };
+  } catch (error) {
+    console.error("Audit Logs Error:", error);
     return { error: error.message };
   }
 }
@@ -371,6 +424,13 @@ export async function toggleUserStatus(userId) {
       where: { id: userId },
       data: { isActive: !user.isActive }
     });
+
+    await recordAuditLog({
+      action: "TOGGLE_USER_STATUS",
+      entity: "User",
+      entityId: userId,
+      details: { newStatus: updatedUser.isActive }
+    });
     
     return { success: true, isActive: updatedUser.isActive };
   } catch (error) {
@@ -379,3 +439,117 @@ export async function toggleUserStatus(userId) {
   }
 }
 
+export async function impersonateUser(targetUserId) {
+  try {
+    await ensureAdmin();
+    
+    const targetUser = await db.user.findUnique({
+      where: { id: targetUserId },
+      select: {
+        id: true,
+        name: true,
+        email: true,
+        role: true
+      }
+    });
+    
+    if (!targetUser) throw new Error("Target user not found");
+    
+    await recordAuditLog({
+      action: "IMPERSONATE_START",
+      entity: "User",
+      entityId: targetUserId,
+      details: { targetName: targetUser.name, targetEmail: targetUser.email }
+    });
+    
+    return { success: true, data: targetUser };
+  } catch (error) {
+    console.error("Impersonation Error:", error);
+    return { error: error.message };
+  }
+}
+
+export async function getAiUsageStats() {
+  try {
+    await ensureAdmin();
+    
+    // Total usage across all users
+    const totalUsage = await db.aiUsage.aggregate({
+      _sum: { count: true }
+    });
+    
+    // Usage over the last 30 days
+    const thirtyDaysAgo = new Date();
+    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+    
+    const dailyUsage = await db.aiUsage.groupBy({
+      by: ['date'],
+      where: {
+        date: { gte: thirtyDaysAgo }
+      },
+      _sum: { count: true },
+      orderBy: { date: 'asc' }
+    });
+    
+    // Top users by AI usage
+    const topUsers = await db.aiUsage.groupBy({
+      by: ['userId'],
+      _sum: { count: true },
+      orderBy: { _sum: { count: 'desc' } },
+      take: 10
+    });
+    
+    const topUsersWithDetails = await Promise.all(
+      topUsers.map(async (u) => {
+        const user = await db.user.findUnique({
+          where: { id: u.userId },
+          select: { name: true, email: true }
+        });
+        return { ...u, user };
+      })
+    );
+    
+    return { 
+      success: true, 
+      data: {
+        total: totalUsage._sum.count || 0,
+        dailyUsage,
+        topUsers: topUsersWithDetails
+      } 
+    };
+  } catch (error) {
+    console.error("AI Usage Stats Error:", error);
+    return { error: error.message };
+  }
+}
+
+
+export async function updateUserRole(userId, newRole) {
+  try {
+    await ensureAdmin();
+    
+    const user = await db.user.findUnique({
+      where: { id: userId },
+      select: { role: true, name: true }
+    });
+    
+    if (!user) throw new Error("User not found");
+    
+    const updatedUser = await db.user.update({
+      where: { id: userId },
+      data: { role: newRole }
+    });
+    
+    await recordAuditLog({
+      action: "UPDATE_USER_ROLE",
+      entity: "User",
+      entityId: userId,
+      details: { oldRole: user.role, newRole: newRole, userName: user.name }
+    });
+    
+    return { success: true, role: updatedUser.role };
+  } catch (error) {
+    console.error("Update Role Error:", error);
+    return { error: error.message };
+  }
+}

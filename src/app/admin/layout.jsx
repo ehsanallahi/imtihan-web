@@ -6,6 +6,7 @@ import { auth } from "@/auth";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import { redirect } from "next/navigation";
+import ImpersonationBanner from "@/components/admin/ImpersonationBanner";
 
 export default async function AdminLayout({ children }) {
   const session = await auth();
@@ -40,7 +41,9 @@ export default async function AdminLayout({ children }) {
 
   return (
     <SidebarProvider>
-      <div className="flex min-h-screen bg-background w-full">
+      <div className="flex flex-col min-h-screen bg-background w-full">
+        <ImpersonationBanner />
+        <div className="flex flex-1">
         <AdminSidebar />
         
         <div className="flex-1 flex flex-col min-w-0">
@@ -66,6 +69,7 @@ export default async function AdminLayout({ children }) {
           <main className="flex-1 p-6 lg:p-10 max-w-7xl mx-auto w-full">
             {children}
           </main>
+        </div>
         </div>
       </div>
     </SidebarProvider>

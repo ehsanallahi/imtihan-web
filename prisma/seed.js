@@ -138,7 +138,48 @@ async function main() {
       }
     }
   }
-  console.log("Master data seeded successfully.");
+  // 4. Seed Mock Subscription Data for Admin Dashboard
+  console.log("Seeding Mock Subscriptions...");
+  const plans = ["student_monthly", "student_yearly", "institution_yearly"];
+  for (let i = 0; i < 15; i++) {
+    const randomPlan = plans[Math.floor(Math.random() * plans.length)];
+    let amount = randomPlan === "student_monthly" ? 1000 : randomPlan === "student_yearly" ? 10000 : 50000;
+    
+    await prisma.subscription.create({
+      data: {
+        userId: student.id,
+        plan: randomPlan,
+        status: "active",
+        amountPkr: amount,
+        startDate: new Date(Date.now() - Math.floor(Math.random() * 30) * 24 * 60 * 60 * 1000), // Random date within last 30 days
+      }
+    });
+  }
+
+  // 5. Seed Mock AI Usage Data for Admin Dashboard
+  console.log("Seeding Mock AI Usage...");
+  for (let i = 0; i < 30; i++) {
+    const d = new Date();
+    d.setDate(d.getDate() - i);
+    await prisma.aiUsage.upsert({
+      where: {
+        userId_date: {
+          userId: student.id,
+          date: d,
+        }
+      },
+      update: {
+        count: Math.floor(Math.random() * 50) + 10,
+      },
+      create: {
+        userId: student.id,
+        date: d,
+        count: Math.floor(Math.random() * 50) + 10,
+      }
+    });
+  }
+
+  console.log("Master data and mock data seeded successfully.");
 }
 
 main()

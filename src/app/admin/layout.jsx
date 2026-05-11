@@ -5,9 +5,19 @@ import { NotificationBell } from "@/components/dashboard/NotificationBell";
 import { auth } from "@/auth";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
+import { redirect } from "next/navigation";
 
 export default async function AdminLayout({ children }) {
   const session = await auth();
+
+  if (!session?.user) {
+    redirect("/auth/signin?callbackUrl=/admin");
+  }
+
+  const adminRoles = ["super_admin", "moderator", "marketer", "content_editor", "finance_manager", "support_agent", "institution_admin", "admin"];
+  if (!adminRoles.includes(session.user.role)) {
+    redirect("/dashboard");
+  }
 
   return (
     <SidebarProvider>

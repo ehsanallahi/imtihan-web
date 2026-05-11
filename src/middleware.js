@@ -22,8 +22,8 @@ export default auth((request) => {
     
     return response;
   }
-  
-  return NextResponse.next();
+  // Let NextAuth handle the routing and authorization for all non-API routes
+  return;
 });
 
 export const config = {

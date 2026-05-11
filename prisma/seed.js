@@ -52,6 +52,23 @@ async function main() {
 
   console.log("Student user seeded:", student.email);
 
+  const studentProfile = await prisma.studentProfile.upsert({
+    where: { userId: student.id },
+    update: {
+      grade: "nine",
+      board: "punjab",
+      studyStreak: 3,
+    },
+    create: {
+      userId: student.id,
+      grade: "nine",
+      board: "punjab",
+      studyStreak: 3,
+    }
+  });
+
+  console.log("Student profile seeded.");
+
   // 2. Seed Casbin Rules from CSV
   const policyPath = path.join(process.cwd(), "src/lib/casbin-policy.csv");
   if (fs.existsSync(policyPath)) {
@@ -137,6 +154,27 @@ async function main() {
         });
       }
     }
+  }
+  // 3.5 Seed Achievements
+  console.log("Seeding Achievements...");
+  const defaultAchievements = [
+    { title: "First Steps", description: "Complete your first practice quiz.", criteria: "1_quiz_completed", badgeUrl: "first_steps" },
+    { title: "Centurion", description: "Answer 100 MCQs correctly.", criteria: "100_mcqs_correct", badgeUrl: "centurion" },
+    { title: "Flawless Victory", description: "Score 100% on any practice quiz.", criteria: "100_percent_score", badgeUrl: "flawless" },
+    { title: "Week Warrior", description: "Maintain a 7-day study streak.", criteria: "7_day_streak", badgeUrl: "week_warrior" },
+    { title: "Month Master", description: "Maintain a 30-day study streak.", criteria: "30_day_streak", badgeUrl: "month_master" },
+    { title: "Early Bird", description: "Complete a study session before 8 AM.", criteria: "early_bird", badgeUrl: "early_bird" },
+    { title: "Night Owl", description: "Complete a study session after 10 PM.", criteria: "night_owl", badgeUrl: "night_owl" },
+    { title: "Subject Master", description: "Score 90% or higher on a full Subject Mock Exam.", criteria: "subject_master", badgeUrl: "subject_master" },
+    { title: "Review Champion", description: "Clear your Daily Review queue 5 times.", criteria: "5_reviews_cleared", badgeUrl: "review_champion" },
+  ];
+
+  for (const ach of defaultAchievements) {
+    await prisma.achievement.upsert({
+      where: { id: (await prisma.achievement.findFirst({ where: { criteria: ach.criteria } }))?.id || 'new-ach' },
+      update: { title: ach.title, description: ach.description, badgeUrl: ach.badgeUrl },
+      create: { title: ach.title, description: ach.description, criteria: ach.criteria, badgeUrl: ach.badgeUrl },
+    });
   }
   // 4. Seed Mock Subscription Data for Admin Dashboard
   console.log("Seeding Mock Subscriptions...");

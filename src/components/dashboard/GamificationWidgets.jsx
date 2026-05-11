@@ -102,6 +102,13 @@ export async function BadgesWidget({ studentProfileId }) {
             ))}
           </div>
         )}
+        {achievements.length > 0 && (
+          <div className="mt-4 pt-4 border-t border-slate-50 flex justify-center">
+            <Link href="/dashboard/achievements" className="text-xs font-bold text-indigo-600 hover:text-indigo-700 flex items-center gap-1 group">
+              View All Badges <ArrowRight className="w-3 h-3 group-hover:translate-x-1 transition-transform" />
+            </Link>
+          </div>
+        )}
       </CardContent>
     </Card>
   );

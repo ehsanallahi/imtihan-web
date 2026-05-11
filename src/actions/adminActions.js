@@ -5,10 +5,11 @@ import { auth } from "@/auth";
 
 async function ensureAdmin() {
   const session = await auth();
-  const adminRoles = ["super_admin", "moderator", "marketer", "content_editor", "finance_manager", "support_agent", "institution_admin"];
+  console.log("ensureAdmin session:", session);
+  const adminRoles = ["super_admin", "moderator", "marketer", "content_editor", "finance_manager", "support_agent", "institution_admin", "admin"];
   
   if (!session?.user || !adminRoles.includes(session.user.role)) {
-    throw new Error("Unauthorized access to admin actions");
+    throw new Error(`Unauthorized access to admin actions. Role: ${session?.user?.role || "undefined"}`);
   }
 }
 

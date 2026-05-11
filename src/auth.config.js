@@ -5,8 +5,8 @@ export default {
   callbacks: {
     authorized({ auth, request: { nextUrl } }) {
       const isLoggedIn = !!auth?.user;
-      // In middleware, the role might be directly on the user object
-      const role = auth?.user?.role;
+      // In middleware, the role might be directly on the user object or the token
+      const role = auth?.user?.role || auth?.role;
       const { pathname } = nextUrl;
       
       const isAdminPath = pathname.startsWith("/admin");
@@ -17,8 +17,7 @@ export default {
       const isAdmin = isLoggedIn && role && adminRoles.includes(role);
 
       if (isAdminPath) {
-        if (isAdmin) return true;
-        if (isLoggedIn) return Response.redirect(new URL("/dashboard", nextUrl));
+        if (isLoggedIn) return true;
         return false; // Redirect to login
       }
 

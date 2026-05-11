@@ -14,7 +14,8 @@ import {
   Sparkles,
   Megaphone,
   CreditCard,
-  History
+  History,
+  School
 } from "lucide-react";
 import { 
   Sidebar, 
@@ -50,6 +51,11 @@ const sidebarLinks = [
     title: "Teachers", 
     href: "/admin/teachers", 
     icon: ShieldCheck 
+  },
+  { 
+    title: "Institutions", 
+    href: "/admin/institutions", 
+    icon: School 
   },
   { 
     title: "Content", 

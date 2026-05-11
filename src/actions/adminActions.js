@@ -12,6 +12,7 @@ async function ensureAdmin() {
   if (!session?.user || !adminRoles.includes(session.user.role)) {
     throw new Error(`Unauthorized access to admin actions. Role: ${session?.user?.role || "undefined"}`);
   }
+  return session;
 }
 
 export async function getAdminStudents() {
@@ -583,3 +584,61 @@ export async function verifyTeacher(teacherId) {
     return { error: error.message };
   }
 }
+
+export async function getInstitutions() {
+  try {
+    await ensureAdmin();
+    const institutions = await db.institution.findMany({
+      include: {
+        _count: { select: { teachers: true } }
+      },
+      orderBy: { name: "asc" }
+    });
+    return { success: true, data: institutions };
+  } catch (error) {
+    console.error("Get Institutions Error:", error);
+    return { error: error.message };
+  }
+}
+
+export async function createInstitution(data) {
+  try {
+    const session = await ensureAdmin();
+    
+    const inst = await db.institution.create({ 
+      data: {
+        name: data.name,
+        city: data.address, // Mapping address to city field in schema
+        adminId: session.user.id
+      } 
+    });
+    
+    await recordAuditLog({
+      action: "CREATE_INSTITUTION",
+      entity: "Institution",
+      entityId: inst.id,
+      details: { name: inst.name }
+    });
+    return { success: true, data: inst };
+  } catch (error) {
+    console.error("Create Institution Error:", error);
+    return { error: error.message };
+  }
+}
+
+export async function deleteInstitution(id) {
+  try {
+    await ensureAdmin();
+    await db.institution.delete({ where: { id } });
+    await recordAuditLog({
+      action: "DELETE_INSTITUTION",
+      entity: "Institution",
+      entityId: id
+    });
+    return { success: true };
+  } catch (error) {
+    console.error("Delete Institution Error:", error);
+    return { error: error.message };
+  }
+}
+

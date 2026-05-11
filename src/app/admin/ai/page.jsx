@@ -24,7 +24,7 @@ export default async function AdminAiMonitorPage() {
   }
 
   const overviewStats = [
-    { label: "Total AI Requests", value: stats?.total?.toLocaleString(), icon: Sparkles, color: "text-purple-600", bg: "bg-purple-50" },
+    { label: "Total AI Requests", value: stats?.total?.toLocaleString(), icon: Sparkles, color: "text-teal-600", bg: "bg-teal-50" },
     { label: "Daily Avg.", value: Math.round(stats?.total / 30).toLocaleString(), icon: TrendingUp, color: "text-emerald-600", bg: "bg-emerald-50" },
     { label: "Active Users (AI)", value: stats?.topUsers?.length || 0, icon: Users, color: "text-blue-600", bg: "bg-blue-50" },
     { label: "System Health", value: "Optimal", icon: Zap, color: "text-amber-600", bg: "bg-amber-50" },
@@ -35,7 +35,7 @@ export default async function AdminAiMonitorPage() {
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
         <div>
           <h1 className="text-3xl font-black text-slate-900 flex items-center gap-3">
-            AI Service Monitor <Sparkles className="w-8 h-8 text-purple-600 animate-pulse" />
+            AI Service Monitor <Sparkles className="w-8 h-8 text-teal-600 animate-pulse" />
           </h1>
           <p className="text-slate-500 font-medium italic">Monitor token usage, request patterns, and AI Tutor performance.</p>
         </div>
@@ -60,7 +60,7 @@ export default async function AdminAiMonitorPage() {
          <div className="lg:col-span-2 bg-white rounded-[2rem] border border-slate-200 shadow-sm p-8">
             <div className="flex items-center justify-between mb-8">
                <h3 className="font-black text-slate-900 flex items-center gap-2">
-                  <BarChart3 className="w-5 h-5 text-purple-600" /> Usage Trend (30 Days)
+                  <BarChart3 className="w-5 h-5 text-teal-600" /> Usage Trend (30 Days)
                </h3>
                <span className="text-xs font-bold text-slate-400 uppercase">Requests per day</span>
             </div>
@@ -69,7 +69,7 @@ export default async function AdminAiMonitorPage() {
                {stats?.dailyUsage?.map((day, i) => (
                  <div key={i} className="flex-1 flex flex-col items-center gap-2 group">
                     <div 
-                      className="w-full bg-purple-100 group-hover:bg-purple-500 rounded-t-lg transition-all relative"
+                      className="w-full bg-teal-100 group-hover:bg-teal-500 rounded-t-lg transition-all relative"
                       style={{ height: `${Math.min(100, (day._sum.count / (stats.total / 15)) * 100)}%` }}
                     >
                        <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 hidden group-hover:block bg-slate-900 text-white text-[10px] px-2 py-1 rounded-md whitespace-nowrap z-10">
@@ -91,9 +91,9 @@ export default async function AdminAiMonitorPage() {
 
          {/* Top Users */}
          <div className="bg-slate-900 rounded-[2rem] p-8 text-white relative overflow-hidden">
-            <div className="absolute top-0 right-0 w-32 h-32 bg-purple-500/10 rounded-full blur-3xl" />
+            <div className="absolute top-0 right-0 w-32 h-32 bg-teal-500/10 rounded-full blur-3xl" />
             <h3 className="text-xl font-black mb-8 flex items-center gap-3">
-               <Users className="w-5 h-5 text-purple-400" /> Top Consumers
+               <Users className="w-5 h-5 text-teal-400" /> Top Consumers
             </h3>
             
             <div className="space-y-6">
@@ -109,7 +109,7 @@ export default async function AdminAiMonitorPage() {
                        </div>
                     </div>
                     <div className="text-right">
-                       <p className="text-sm font-black text-purple-400">{u._sum.count}</p>
+                       <p className="text-sm font-black text-teal-400">{u._sum.count}</p>
                        <p className="text-[8px] font-black text-slate-500 uppercase tracking-widest">REQ</p>
                     </div>
                  </div>
@@ -120,9 +120,9 @@ export default async function AdminAiMonitorPage() {
             </div>
 
             <div className="mt-12 pt-8 border-t border-white/10">
-               <div className="flex items-start gap-3 bg-purple-500/10 p-4 rounded-2xl border border-purple-500/20">
-                  <AlertCircle className="w-5 h-5 text-purple-400 flex-shrink-0 mt-0.5" />
-                  <p className="text-[10px] text-purple-100 leading-relaxed">
+               <div className="flex items-start gap-3 bg-teal-500/10 p-4 rounded-2xl border border-teal-500/20">
+                  <AlertCircle className="w-5 h-5 text-teal-400 flex-shrink-0 mt-0.5" />
+                  <p className="text-[10px] text-teal-100 leading-relaxed">
                      <span className="font-black text-white">PRO TIP:</span> High usage from free-tier students may indicate a need for more restrictive rate limiting.
                   </p>
                </div>

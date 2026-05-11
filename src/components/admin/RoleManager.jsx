@@ -47,7 +47,7 @@ export default function RoleManager({ userId, currentRole }) {
     <div className="relative">
       <button 
         onClick={() => setIsOpen(!isOpen)}
-        className="p-2 rounded-lg bg-slate-50 text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 transition-all border border-slate-100"
+        className="p-2 rounded-lg bg-slate-50 text-slate-400 hover:text-teal-600 hover:bg-teal-50 transition-all border border-slate-100"
       >
         <Settings2 className="w-5 h-5" />
       </button>
@@ -65,7 +65,7 @@ export default function RoleManager({ userId, currentRole }) {
                  onClick={() => handleRoleChange(role)}
                  className={`w-full text-left px-3 py-2 rounded-xl text-xs font-bold transition-all flex items-center justify-between group ${
                    currentRole === role 
-                     ? "bg-indigo-50 text-indigo-700" 
+                     ? "bg-teal-50 text-teal-700" 
                      : "text-slate-600 hover:bg-slate-50"
                  }`}
                >

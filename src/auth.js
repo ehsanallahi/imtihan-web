@@ -42,20 +42,25 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
   ],
   callbacks: {
     ...authConfig.callbacks,
-    async jwt({ token, user }) {
+    async jwt({ token, user, trigger, session }) {
       if (user) {
-        token.id = user.id
-        token.role = user.role
+        token.id = user.id;
+        token.role = user.role;
+        token.name = user.name;
       }
-      return token
+      if (trigger === "update" && session) {
+        token.role = session.role;
+        token.name = session.name;
+      }
+      return token;
     },
     async session({ session, token }) {
-      console.log("Auth session callback - Token:", token);
       if (token && session.user) {
-        session.user.id = token.id
-        session.user.role = token.role
+        session.user.id = token.id;
+        session.user.role = token.role;
+        session.user.name = token.name;
       }
-      return session
+      return session;
     },
   },
   debug: true, // Enable debug mode for more logs

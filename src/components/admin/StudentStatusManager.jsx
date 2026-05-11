@@ -42,7 +42,7 @@ export default function StudentStatusManager({ studentId, initialStatus }) {
             : "bg-red-50 border-red-100"
         }`}>
           <div>
-            <p={`text-xs font-black uppercase ${isActive ? "text-emerald-900" : "text-red-900"}`}>Status</p>
+            <p className={`text-xs font-black uppercase ${isActive ? "text-emerald-900" : "text-red-900"}`}>Status</p>
             <p className={`text-sm font-bold ${isActive ? "text-emerald-700" : "text-red-700"}`}>
               {isActive ? "Active Account" : "Suspended"}
             </p>

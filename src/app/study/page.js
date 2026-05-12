@@ -8,6 +8,7 @@ import { BookOpen, Layers, GraduationCap, ArrowRight, CreditCard, Sparkles } fro
 import { Badge } from "@/components/ui/badge";
 import { getAllSubjectsProgress } from "@/actions/progressActions";
 import { Progress } from "@/components/ui/progress";
+import ReferralWidget from "@/components/study/ReferralWidget";
 
 export default async function StudyDashboardPage() {
   const session = await auth();
@@ -126,12 +127,14 @@ export default async function StudyDashboardPage() {
         </div>
       </div>
 
-      {/* Subjects Grid */}
-      <div className="space-y-4">
-        <h2 className="text-2xl font-display font-bold text-teal-900 flex items-center gap-2">
-          <BookOpen className="h-6 w-6 text-teal-600" />
-          Your Subjects
-        </h2>
+      {/* Main Grid */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        {/* Left Column: Subjects */}
+        <div className="lg:col-span-2 space-y-4">
+          <h2 className="text-2xl font-display font-bold text-teal-900 flex items-center gap-2">
+            <BookOpen className="h-6 w-6 text-teal-600" />
+            Your Subjects
+          </h2>
         
         {subjects.length === 0 ? (
           <div className="p-12 text-center border-2 border-dashed border-teal-100 rounded-xl bg-teal-50/30">
@@ -188,6 +191,12 @@ export default async function StudyDashboardPage() {
             ))}
           </div>
         )}
+        </div>
+
+        {/* Right Column: Sidebar */}
+        <div className="space-y-6">
+          <ReferralWidget />
+        </div>
       </div>
 
     </div>

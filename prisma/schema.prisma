@@ -35,6 +35,11 @@ model User {
   auditLogs        AuditLog[]
   mcqReports       MCQReport[]
   notifications    Notification[]
+  referralsMade    Referral[]        @relation("Referrer")
+  referralReceived Referral?         @relation("Referee")
+  referralCode     String?           @unique
+  rewardsClaimed   Int               @default(0)
+  aiCreditsBalance Int               @default(0)
 }
 
 model Account {
@@ -581,4 +586,23 @@ enum NotificationType {
   achievement
   streak_warning
   exam_reminder
+}
+
+enum ReferralStatus {
+  PENDING
+  COMPLETED
+}
+
+model Referral {
+  id          String         @id @default(cuid())
+  referrerId  String
+  refereeId   String         @unique
+  status      ReferralStatus @default(PENDING)
+  createdAt   DateTime       @default(now())
+  updatedAt   DateTime       @updatedAt
+
+  referrer    User           @relation("Referrer", fields: [referrerId], references: [id], onDelete: Cascade)
+  referee     User           @relation("Referee", fields: [refereeId], references: [id], onDelete: Cascade)
+
+  @@map("referrals")
 }

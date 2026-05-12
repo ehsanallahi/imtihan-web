@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -31,6 +31,8 @@ const BOARDS = [
 
 export default function SignUpPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const refCode = searchParams?.get("ref") || null;
   const [step, setStep] = useState(1);
   const [form, setForm] = useState({ name: "", email: "", password: "", confirmPassword: "", grade: "", board: "", subjectIds: [] });
   const [subjects, setSubjects] = useState([]);
@@ -86,7 +88,7 @@ export default function SignUpPage() {
     e.preventDefault();
     setIsLoading(true);
     setError("");
-    const result = await registerUser({ name: form.name, email: form.email, password: form.password, grade: form.grade || null, board: form.board || null, subjectIds: form.subjectIds });
+    const result = await registerUser({ name: form.name, email: form.email, password: form.password, grade: form.grade || null, board: form.board || null, subjectIds: form.subjectIds, referralCode: refCode });
     if (!result.success) {
       setError(result.error);
       setIsLoading(false);

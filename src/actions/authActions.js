@@ -4,11 +4,16 @@ import { db } from "@/lib/db";
 import { auth } from "@/auth";
 import bcrypt from "bcryptjs";
 
-export async function registerUser({ name, email, password, grade, board, subjectIds }) {
+export async function registerUser({ name, email, password, grade, board, subjectIds, referralCode }) {
   try {
     const existing = await db.user.findUnique({ where: { email } });
     if (existing) {
       return { success: false, error: "An account with this email already exists." };
+    }
+
+    let referrer = null;
+    if (referralCode) {
+      referrer = await db.user.findUnique({ where: { referralCode } });
     }
 
     const hashed = await bcrypt.hash(password, 12);
@@ -19,6 +24,13 @@ export async function registerUser({ name, email, password, grade, board, subjec
         email,
         hashedPassword: hashed,
         role: "student",
+        aiCreditsBalance: referrer ? 50 : 0,
+        referralReceived: referrer ? {
+          create: {
+            referrerId: referrer.id,
+            status: "PENDING"
+          }
+        } : undefined,
         studentProfile: {
           create: {
             grade: grade || null,
@@ -68,6 +80,67 @@ export async function updateStudentProfile({ name, grade, board, dailyGoalCount,
         } : undefined
       }
     });
+
+    // Check for pending referral completion
+    if (grade && board) {
+      const pendingReferral = await db.referral.findFirst({
+        where: { refereeId: session.user.id, status: "PENDING" }
+      });
+
+      if (pendingReferral) {
+        // Mark as COMPLETED
+        await db.referral.update({
+          where: { id: pendingReferral.id },
+          data: { status: "COMPLETED" }
+        });
+
+        // Award Referrer Logic
+        const referrerId = pendingReferral.referrerId;
+        const referrerStats = await db.user.findUnique({
+          where: { id: referrerId },
+          include: { _count: { select: { referralsMade: { where: { status: "COMPLETED" } } } } }
+        });
+
+        if (referrerStats) {
+          const totalCompleted = referrerStats._count.referralsMade;
+          const rewardsClaimed = referrerStats.rewardsClaimed;
+
+          // Milestone: 5 Referrals -> 100 Bonus AI Credits (only if exact 5 to not give it every time)
+          if (totalCompleted === 5) {
+             await db.user.update({
+               where: { id: referrerId },
+               data: { aiCreditsBalance: { increment: 100 } }
+             });
+          }
+
+          // Milestone: Every 10 Referrals -> 1 Month Premium
+          if (totalCompleted - (rewardsClaimed * 10) >= 10) {
+             // Create 1-month subscription
+             const startDate = new Date();
+             const endDate = new Date();
+             endDate.setMonth(endDate.getMonth() + 1);
+
+             await db.subscription.create({
+               data: {
+                 userId: referrerId,
+                 plan: "student_monthly",
+                 status: "active",
+                 startDate,
+                 endDate,
+                 amountPkr: 0,
+                 paymentMethod: "referral_reward",
+                 paymentRef: `ref_${pendingReferral.id}`
+               }
+             });
+
+             await db.user.update({
+               where: { id: referrerId },
+               data: { rewardsClaimed: { increment: 1 } }
+             });
+          }
+        }
+      }
+    }
 
     return { success: true };
   } catch (error) {

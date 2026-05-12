@@ -154,7 +154,7 @@ export default async function AchievementsPage() {
               <div className="w-full h-3 bg-slate-200 rounded-full overflow-hidden">
                 <div 
                   className="h-full bg-slate-400 rounded-full"
-                  style={{ width: \`\${ach.progressPercentage}%\` }}
+                  style={{ width: `${ach.progressPercentage}%` }}
                 />
               </div>
             </div>

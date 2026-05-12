@@ -38,35 +38,57 @@ export default async function AchievementsPage() {
         <p className="text-slate-500 font-medium mt-1">Track your progress and unlock rewards</p>
       </div>
 
-      {/* Streak Overview */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-12">
-        <Card className="border-2 border-[#E5E5E5] shadow-[0_4px_0_0_#E5E5E5] rounded-[2rem] overflow-hidden">
-          <div className="bg-gradient-to-r from-[#FF9600] to-[#FFB040] h-3" />
-          <CardContent className="p-8 flex items-center justify-between">
+      {/* Metrics Overview */}
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-12">
+        <Card className="border-2 border-[#E5E5E5] shadow-[0_4px_0_0_#E5E5E5] rounded-3xl overflow-hidden bg-white">
+          <div className="bg-[#FF9600] h-2" />
+          <CardContent className="p-6 flex items-center justify-between">
             <div>
-              <p className="text-sm font-bold text-[#777777] uppercase tracking-wider mb-1">Current Streak</p>
-              <div className="text-5xl font-black text-[#FF9600] font-display flex items-end gap-2">
-                {profile.studyStreak} <span className="text-lg text-[#FF9600]/80 mb-2">Days</span>
+              <p className="text-[10px] font-bold text-[#777777] uppercase tracking-wider mb-1">Current Streak</p>
+              <div className="text-3xl font-black text-[#FF9600] font-display">
+                {profile.studyStreak} <span className="text-sm opacity-70">Days</span>
               </div>
             </div>
-            <div className="w-20 h-20 bg-[#FF9600]/10 rounded-full flex items-center justify-center border-4 border-[#FF9600]/20">
-              <Flame className="w-10 h-10 text-[#FF9600]" />
-            </div>
+            <Flame className="w-8 h-8 text-[#FF9600] opacity-20" />
           </CardContent>
         </Card>
         
-        <Card className="border-2 border-[#E5E5E5] shadow-[0_4px_0_0_#E5E5E5] rounded-[2rem] overflow-hidden">
-          <div className="bg-gradient-to-r from-[#1CB0F6] to-[#40C4FF] h-3" />
-          <CardContent className="p-8 flex items-center justify-between">
+        <Card className="border-2 border-[#E5E5E5] shadow-[0_4px_0_0_#E5E5E5] rounded-3xl overflow-hidden bg-white">
+          <div className="bg-[#FF4B4B] h-2" />
+          <CardContent className="p-6 flex items-center justify-between">
             <div>
-              <p className="text-sm font-bold text-[#777777] uppercase tracking-wider mb-1">Badges Unlocked</p>
-              <div className="text-5xl font-black text-[#1CB0F6] font-display flex items-end gap-2">
-                {unlocked.length} <span className="text-lg text-[#1CB0F6]/80 mb-2">/ {achievements.length}</span>
+              <p className="text-[10px] font-bold text-[#777777] uppercase tracking-wider mb-1">Longest Streak</p>
+              <div className="text-3xl font-black text-[#FF4B4B] font-display">
+                {profile.longestStreak} <span className="text-sm opacity-70">Days</span>
               </div>
             </div>
-            <div className="w-20 h-20 bg-[#1CB0F6]/10 rounded-full flex items-center justify-center border-4 border-[#1CB0F6]/20">
-              <Trophy className="w-10 h-10 text-[#1CB0F6]" />
+            <Trophy className="w-8 h-8 text-[#FF4B4B] opacity-20" />
+          </CardContent>
+        </Card>
+
+        <Card className="border-2 border-[#E5E5E5] shadow-[0_4px_0_0_#E5E5E5] rounded-3xl overflow-hidden bg-white">
+          <div className="bg-[#1CB0F6] h-2" />
+          <CardContent className="p-6 flex items-center justify-between">
+            <div>
+              <p className="text-[10px] font-bold text-[#777777] uppercase tracking-wider mb-1">Badges</p>
+              <div className="text-3xl font-black text-[#1CB0F6] font-display">
+                {unlocked.length} <span className="text-sm opacity-70">/ {achievements.length}</span>
+              </div>
             </div>
+            <Medal className="w-8 h-8 text-[#1CB0F6] opacity-20" />
+          </CardContent>
+        </Card>
+
+        <Card className="border-2 border-[#E5E5E5] shadow-[0_4px_0_0_#E5E5E5] rounded-3xl overflow-hidden bg-white">
+          <div className="bg-[#58CC02] h-2" />
+          <CardContent className="p-6 flex items-center justify-between">
+            <div>
+              <p className="text-[10px] font-bold text-[#777777] uppercase tracking-wider mb-1">Reviews Cleared</p>
+              <div className="text-3xl font-black text-[#58CC02] font-display">
+                {profile.reviewsClearedCount}
+              </div>
+            </div>
+            <CheckCircle2 className="w-8 h-8 text-[#58CC02] opacity-20" />
           </CardContent>
         </Card>
       </div>

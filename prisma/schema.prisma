@@ -76,7 +76,9 @@ model StudentProfile {
   grade              Grade?
   board              Board?
   studyStreak        Int                  @default(0)
+  longestStreak      Int                  @default(0)
   totalMcqsAttempted Int                  @default(0)
+  reviewsClearedCount Int                  @default(0)
   createdAt          DateTime             @default(now())
   updatedAt          DateTime             @updatedAt
   medium             Medium               @default(english)

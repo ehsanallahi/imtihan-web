@@ -63,6 +63,10 @@ export async function getStudentGamificationData() {
           target = 100;
           progress = totalCorrect;
           break;
+        case "100_percent_score":
+          target = 1;
+          progress = isUnlocked ? 1 : 0;
+          break;
         case "7_day_streak":
           target = 7;
           progress = profile.studyStreak;
@@ -71,10 +75,15 @@ export async function getStudentGamificationData() {
           target = 30;
           progress = profile.studyStreak;
           break;
+        case "early_bird":
+        case "night_owl":
+        case "subject_master":
+          target = 1;
+          progress = isUnlocked ? 1 : 0;
+          break;
         case "5_reviews_cleared":
-          // Mock progress for now, would need a field in profile to track review clear count
           target = 5;
-          progress = Math.min(totalExams, 5); 
+          progress = profile.reviewsClearedCount || 0;
           break;
         default:
           target = 1;
@@ -99,7 +108,8 @@ export async function getStudentGamificationData() {
       data: {
         profile: {
           studyStreak: profile.studyStreak,
-          longestStreak: profile.studyStreak, // Can add longestStreak to schema later if desired
+          longestStreak: profile.longestStreak || profile.studyStreak,
+          reviewsClearedCount: profile.reviewsClearedCount || 0,
         },
         achievements: achievementsWithProgress
       }

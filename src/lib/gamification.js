@@ -1,6 +1,6 @@
 import { db } from "@/lib/db";
 
-export async function processGamification(userId, totalQuestions, correctAnswers) {
+export async function processGamification(userId, totalQuestions, correctAnswers, sessionType = "practice") {
   try {
     let profile = await db.studentProfile.findUnique({
       where: { userId },
@@ -16,10 +16,6 @@ export async function processGamification(userId, totalQuestions, correctAnswers
 
     const now = new Date();
     let newStreak = profile.studyStreak;
-    
-    // Simple streak logic: if last exam was completed yesterday, increment streak.
-    // If it was today, keep it. If older, reset to 1.
-    // For MVP, we will just query the last completed exam session before today.
     
     const startOfToday = new Date();
     startOfToday.setHours(0, 0, 0, 0);
@@ -41,7 +37,7 @@ export async function processGamification(userId, totalQuestions, correctAnswers
       }
     });
 
-    // If this is the first exam today
+    // Streak logic
     if (examsToday === 1) { 
       if (examsYesterday > 0) {
         newStreak += 1;
@@ -51,11 +47,20 @@ export async function processGamification(userId, totalQuestions, correctAnswers
     }
 
     const newTotalMcqs = profile.totalMcqsAttempted + totalQuestions;
+    const newLongestStreak = Math.max(profile.longestStreak, newStreak);
+
+    // Fetch total correct answers across all time for "100_mcqs_correct"
+    const stats = await db.examSession.aggregate({
+      where: { studentId: userId, completedAt: { not: null } },
+      _sum: { correctAnswers: true }
+    });
+    const totalCorrectAllTime = (stats._sum.correctAnswers || 0);
 
     await db.studentProfile.update({
       where: { id: profile.id },
       data: {
         studyStreak: newStreak,
+        longestStreak: newLongestStreak,
         totalMcqsAttempted: newTotalMcqs
       }
     });
@@ -68,22 +73,40 @@ export async function processGamification(userId, totalQuestions, correctAnswers
     });
 
     const newAchievementsToAward = [];
+    const currentHour = now.getHours();
 
     for (const achievement of availableAchievements) {
       let earned = false;
       
       switch (achievement.criteria) {
-        case "first_quiz":
+        case "1_quiz_completed":
           if (newTotalMcqs > 0) earned = true;
           break;
-        case "100_mcqs_solved":
-          if (newTotalMcqs >= 100) earned = true;
+        case "100_mcqs_correct":
+          if (totalCorrectAllTime >= 100) earned = true;
+          break;
+        case "100_percent_score":
+          if (totalQuestions > 0 && correctAnswers === totalQuestions) earned = true;
           break;
         case "7_day_streak":
           if (newStreak >= 7) earned = true;
           break;
-        case "perfect_score":
-          if (totalQuestions > 0 && correctAnswers === totalQuestions) earned = true;
+        case "30_day_streak":
+          if (newStreak >= 30) earned = true;
+          break;
+        case "early_bird":
+          if (currentHour >= 4 && currentHour < 8) earned = true;
+          break;
+        case "night_owl":
+          if (currentHour >= 22 || currentHour < 2) earned = true;
+          break;
+        case "subject_master":
+          if (sessionType === "mock_exam" && totalQuestions >= 10 && (correctAnswers / totalQuestions) >= 0.9) {
+            earned = true;
+          }
+          break;
+        case "5_reviews_cleared":
+          if (profile.reviewsClearedCount >= 5) earned = true;
           break;
       }
 
@@ -99,10 +122,19 @@ export async function processGamification(userId, totalQuestions, correctAnswers
       await db.studentAchievement.createMany({
         data: newAchievementsToAward
       });
-      // In a full implementation, you'd trigger a Notification here
+      console.log(`Awarded ${newAchievementsToAward.length} new achievements to user ${userId}`);
+      
+      // Fetch the full achievement details to return to the UI
+      const awardedIds = newAchievementsToAward.map(a => a.achievementId);
+      const fullAchievements = await db.achievement.findMany({
+        where: { id: { in: awardedIds } }
+      });
+      return fullAchievements;
     }
 
+    return [];
   } catch (error) {
     console.error("Error processing gamification:", error);
+    return [];
   }
 }

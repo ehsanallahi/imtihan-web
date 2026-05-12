@@ -108,15 +108,37 @@ export async function submitExam(sessionId, answers) {
     ]);
 
     // Async Gamification Update
-    processGamification(session.user.id, attemptsData.length, correctAnswers);
+    const newAchievements = await processGamification(session.user.id, attemptsData.length, correctAnswers, examSession.sessionType);
     
-    // Async SRS Update
-    const profile = await db.studentProfile.findUnique({ where: { userId: session.user.id } });
+    // Async SRS & Review Clear Tracking
+    const profile = await db.studentProfile.findUnique({ 
+      where: { userId: session.user.id },
+      include: { srsProgress: true } 
+    });
+    
     if (profile) {
-      processSRS(profile.id, attemptsData);
+      await processSRS(profile.id, attemptsData);
+      
+      // Check if review queue is now empty
+      const remainingReviews = await db.studentMCQProgress.count({
+        where: {
+          studentProfileId: profile.id,
+          nextReviewDate: { lte: new Date() }
+        }
+      });
+      
+      if (remainingReviews === 0) {
+        await db.studentProfile.update({
+          where: { id: profile.id },
+          data: { reviewsClearedCount: { increment: 1 } }
+        });
+        
+        const reviewAchievements = await processGamification(session.user.id, 0, 0, examSession.sessionType);
+        newAchievements.push(...reviewAchievements);
+      }
     }
 
-    return { success: true, score: correctAnswers };
+    return { success: true, score: correctAnswers, newAchievements };
   } catch (error) {
     console.error("Failed to submit exam:", error);
     return { success: false, error: "Failed to submit exam" };

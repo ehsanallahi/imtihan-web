@@ -5,7 +5,8 @@ import { useRouter } from 'next/navigation'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { submitExam } from '@/actions/quizActions'
-import { Loader2, ChevronRight, ChevronLeft, CheckCircle2 } from 'lucide-react'
+import { Loader2, ChevronRight, ChevronLeft, CheckCircle2, Trophy } from 'lucide-react'
+import { toast } from 'sonner'
 import { Progress } from '@/components/ui/progress'
 import { AiTutor } from './AiTutor'
 
@@ -60,6 +61,15 @@ export function QuizInteractive({ sessionId, mcqs, medium = 'english' }) {
     const result = await submitExam(sessionId, formattedAnswers)
     
     if (result.success) {
+      if (result.newAchievements?.length > 0) {
+        result.newAchievements.forEach(ach => {
+          toast.success(`Achievement Unlocked: ${ach.title}`, {
+            description: ach.description,
+            icon: <Trophy className="w-5 h-5 text-amber-500" />,
+            duration: 6000,
+          });
+        });
+      }
       router.push(`/study/quiz/results/${sessionId}`)
     } else {
       alert("Failed to submit exam. Please try again.")

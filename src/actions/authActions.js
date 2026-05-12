@@ -35,7 +35,7 @@ export async function registerUser({ name, email, password, grade, board }) {
   }
 }
 
-export async function updateStudentProfile({ name, grade, board }) {
+export async function updateStudentProfile({ name, grade, board, dailyGoalCount }) {
   try {
     const session = await auth();
     if (!session) return { success: false, error: "Unauthorized" };
@@ -47,8 +47,17 @@ export async function updateStudentProfile({ name, grade, board }) {
 
     await db.studentProfile.upsert({
       where: { userId: session.user.id },
-      update: { grade, board },
-      create: { userId: session.user.id, grade, board }
+      update: { 
+        grade, 
+        board,
+        dailyGoalCount: dailyGoalCount ? parseInt(dailyGoalCount) : undefined
+      },
+      create: { 
+        userId: session.user.id, 
+        grade, 
+        board,
+        dailyGoalCount: dailyGoalCount ? parseInt(dailyGoalCount) : 20
+      }
     });
 
     return { success: true };
@@ -81,5 +90,21 @@ export async function changePassword({ currentPassword, newPassword }) {
   } catch (error) {
     console.error("Change password error:", error);
     return { success: false, error: "Failed to change password." };
+  }
+}
+
+export async function getStudentProfile() {
+  try {
+    const session = await auth();
+    if (!session) return null;
+
+    const profile = await db.studentProfile.findUnique({
+      where: { userId: session.user.id }
+    });
+
+    return profile;
+  } catch (error) {
+    console.error("Get student profile error:", error);
+    return null;
   }
 }

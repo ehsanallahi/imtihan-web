@@ -90,6 +90,7 @@ model StudentProfile {
   doubtThreads        DoubtThread[]
   achievements        StudentAchievement[]
   srsProgress         StudentMCQProgress[]
+  subjects            Subject[]            @relation("StudentSubjects")
 }
 
 model TeacherProfile {
@@ -147,6 +148,7 @@ model Subject {
   pastPaperMcqs    PastPaperMCQ[]
   pastPaperUploads PastPaperUpload[]
   textbookUploads  TextbookUpload[]
+  students         StudentProfile[]  @relation("StudentSubjects")
 }
 
 model Chapter {

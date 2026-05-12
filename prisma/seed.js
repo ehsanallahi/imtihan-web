@@ -108,6 +108,32 @@ async function main() {
     { name: "Physics", nameUrdu: "طبعیات", grade: "nine", board: "punjab" },
     { name: "Chemistry", nameUrdu: "کیمیاء", grade: "nine", board: "punjab" },
     { name: "Mathematics", nameUrdu: "ریاضی", grade: "nine", board: "punjab" },
+    { name: "Computer Science", nameUrdu: "کمپیوٹر سائنس", grade: "nine", board: "punjab" },
+    
+    // Grade 10 Punjab
+    { name: "Biology", nameUrdu: "حیاتیات", grade: "ten", board: "punjab" },
+    { name: "Physics", nameUrdu: "طبعیات", grade: "ten", board: "punjab" },
+    { name: "Chemistry", nameUrdu: "کیمیاء", grade: "ten", board: "punjab" },
+    { name: "Mathematics", nameUrdu: "ریاضی", grade: "ten", board: "punjab" },
+    { name: "Computer Science", nameUrdu: "کمپیوٹر سائنس", grade: "ten", board: "punjab" },
+
+    // Grade 11 Federal
+    { name: "Physics", nameUrdu: "طبعیات", grade: "eleven", board: "federal" },
+    { name: "Chemistry", nameUrdu: "کیمیاء", grade: "eleven", board: "federal" },
+    { name: "Mathematics", nameUrdu: "ریاضی", grade: "eleven", board: "federal" },
+    { name: "Biology", nameUrdu: "حیاتیات", grade: "eleven", board: "federal" },
+
+    // Grade 12 Federal
+    { name: "Physics", nameUrdu: "طبعیات", grade: "twelve", board: "federal" },
+    { name: "Chemistry", nameUrdu: "کیمیاء", grade: "twelve", board: "federal" },
+    { name: "Mathematics", nameUrdu: "ریاضی", grade: "twelve", board: "federal" },
+    { name: "Biology", nameUrdu: "حیاتیات", grade: "twelve", board: "federal" },
+    
+    // Grade 9 Sindh
+    { name: "Biology", nameUrdu: "حیاتیات", grade: "nine", board: "sindh" },
+    { name: "Physics", nameUrdu: "طبعیات", grade: "nine", board: "sindh" },
+    { name: "Chemistry", nameUrdu: "کیمیاء", grade: "nine", board: "sindh" },
+    { name: "Mathematics", nameUrdu: "ریاضی", grade: "nine", board: "sindh" },
   ];
 
   for (const s of subjects) {

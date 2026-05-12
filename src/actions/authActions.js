@@ -4,7 +4,7 @@ import { db } from "@/lib/db";
 import { auth } from "@/auth";
 import bcrypt from "bcryptjs";
 
-export async function registerUser({ name, email, password, grade, board }) {
+export async function registerUser({ name, email, password, grade, board, subjectIds }) {
   try {
     const existing = await db.user.findUnique({ where: { email } });
     if (existing) {
@@ -23,6 +23,9 @@ export async function registerUser({ name, email, password, grade, board }) {
           create: {
             grade: grade || null,
             board: board || null,
+            subjects: subjectIds?.length > 0 ? {
+              connect: subjectIds.map(id => ({ id }))
+            } : undefined
           }
         }
       }
@@ -35,7 +38,7 @@ export async function registerUser({ name, email, password, grade, board }) {
   }
 }
 
-export async function updateStudentProfile({ name, grade, board, dailyGoalCount }) {
+export async function updateStudentProfile({ name, grade, board, dailyGoalCount, subjectIds }) {
   try {
     const session = await auth();
     if (!session) return { success: false, error: "Unauthorized" };
@@ -50,13 +53,19 @@ export async function updateStudentProfile({ name, grade, board, dailyGoalCount 
       update: { 
         grade, 
         board,
-        dailyGoalCount: dailyGoalCount ? parseInt(dailyGoalCount) : undefined
+        dailyGoalCount: dailyGoalCount ? parseInt(dailyGoalCount) : undefined,
+        subjects: subjectIds !== undefined ? {
+          set: subjectIds.map(id => ({ id }))
+        } : undefined
       },
       create: { 
         userId: session.user.id, 
         grade, 
         board,
-        dailyGoalCount: dailyGoalCount ? parseInt(dailyGoalCount) : 20
+        dailyGoalCount: dailyGoalCount ? parseInt(dailyGoalCount) : 20,
+        subjects: subjectIds?.length > 0 ? {
+          connect: subjectIds.map(id => ({ id }))
+        } : undefined
       }
     });
 
@@ -99,7 +108,8 @@ export async function getStudentProfile() {
     if (!session) return null;
 
     const profile = await db.studentProfile.findFirst({
-      where: { userId: session.user.id }
+      where: { userId: session.user.id },
+      include: { subjects: true }
     });
 
     return profile;

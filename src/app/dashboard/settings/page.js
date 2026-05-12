@@ -9,6 +9,7 @@ import { Label } from "@/components/ui/label";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { CheckCircle2, AlertCircle, Loader2, User, Lock, GraduationCap } from "lucide-react";
 import { updateStudentProfile, changePassword, getStudentProfile } from "@/actions/authActions";
+import { getSubjectsByGradeAndBoard } from "@/actions/subjectActions";
 import { Target } from "lucide-react";
 import { Slider } from "@/components/ui/slider";
 
@@ -29,7 +30,9 @@ const BOARDS = [
 
 export default function SettingsPage() {
   const { data: session, update: updateSession } = useSession();
-  const [profileForm, setProfileForm] = useState({ name: "", grade: "", board: "", dailyGoalCount: 20 });
+  const [profileForm, setProfileForm] = useState({ name: "", grade: "", board: "", dailyGoalCount: 20, subjectIds: [] });
+  const [subjects, setSubjects] = useState([]);
+  const [loadingSubjects, setLoadingSubjects] = useState(false);
   const [passwordForm, setPasswordForm] = useState({ currentPassword: "", newPassword: "", confirmPassword: "" });
   const [profileStatus, setProfileStatus] = useState(null);
   const [passwordStatus, setPasswordStatus] = useState(null);
@@ -47,12 +50,27 @@ export default function SettingsPage() {
             grade: profile.grade || "",
             board: profile.board || "",
             dailyGoalCount: profile.dailyGoalCount || 20,
+            subjectIds: profile.subjects?.map(s => s.id) || [],
           }));
         }
       }
     }
     loadProfile();
   }, [session]);
+
+  useEffect(() => {
+    async function loadSubjects() {
+      if (profileForm.grade && profileForm.board) {
+        setLoadingSubjects(true);
+        const fetched = await getSubjectsByGradeAndBoard(profileForm.grade, profileForm.board);
+        setSubjects(fetched);
+        setLoadingSubjects(false);
+      } else {
+        setSubjects([]);
+      }
+    }
+    loadSubjects();
+  }, [profileForm.grade, profileForm.board]);
 
   const handleProfileSave = async (e) => {
     e.preventDefault();
@@ -82,7 +100,24 @@ export default function SettingsPage() {
     setPasswordLoading(false);
   };
 
-  const pick = (field, val) => setProfileForm((f) => ({ ...f, [field]: val }));
+  const pick = (field, val) => {
+    setProfileForm((f) => {
+      const updated = { ...f, [field]: val };
+      if (field === "grade" || field === "board") {
+        updated.subjectIds = [];
+      }
+      return updated;
+    });
+  };
+
+  const toggleSubject = (id) => {
+    setProfileForm((f) => ({
+      ...f,
+      subjectIds: f.subjectIds?.includes(id)
+        ? f.subjectIds.filter((s) => s !== id)
+        : [...(f.subjectIds || []), id],
+    }));
+  };
 
   return (
     <div className="space-y-8 animate-in fade-in duration-700 max-w-2xl">
@@ -134,6 +169,23 @@ export default function SettingsPage() {
                 ))}
               </div>
             </div>
+            {loadingSubjects ? (
+              <div className="flex items-center justify-center py-2 text-zinc-400 text-sm">
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Loading subjects...
+              </div>
+            ) : subjects.length > 0 ? (
+              <div className="space-y-2">
+                <Label>Subjects</Label>
+                <div className="flex flex-wrap gap-2">
+                  {subjects.map((s) => (
+                    <button key={s.id} type="button" onClick={() => toggleSubject(s.id)}
+                      className={`py-1.5 px-3 rounded-full border text-xs font-semibold transition-all ${profileForm.subjectIds?.includes(s.id) ? "border-teal-500 bg-teal-50 text-teal-700" : "border-slate-200 text-zinc-600 hover:border-teal-300"}`}>
+                      {s.name}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            ) : null}
             <div className="space-y-4 pt-2 border-t border-slate-100">
               <div className="flex items-center justify-between">
                 <Label className="flex items-center gap-2 font-display font-bold text-slate-700 uppercase tracking-tight">

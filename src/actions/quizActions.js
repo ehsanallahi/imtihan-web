@@ -175,6 +175,7 @@ export async function startMockExamSession(subjectId) {
         sessionType: "mock_exam",
         subjectId: subjectId,
         totalQuestions: totalQuestions,
+        timeLimitMinutes: 30, // Default 30 mins
       }
     });
 

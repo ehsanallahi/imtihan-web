@@ -5,7 +5,7 @@ import ReactMarkdown from "react-markdown";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { BrainCircuit, Send, Loader2, User, Sparkles, X } from "lucide-react";
+import { BrainCircuit, Send, Loader2, User, Sparkles, X, Mic, MicOff, Volume2, VolumeX } from "lucide-react";
 import { askAiTutor, getDoubtHistory } from "@/actions/aiActions";
 import { toast } from "sonner";
 
@@ -15,7 +15,11 @@ export function AiTutor({ mcqId, medium = 'english' }) {
   const [messages, setMessages] = useState([]);
   const [loading, setLoading] = useState(false);
   const [threadId, setThreadId] = useState(null);
+  const [isRecording, setIsRecording] = useState(false);
+  const [isSpeaking, setIsSpeaking] = useState(null); // stores index of message being spoken
   const scrollRef = useRef(null);
+  const recognitionRef = useRef(null);
+  const synthRef = useRef(typeof window !== 'undefined' ? window.speechSynthesis : null);
 
   useEffect(() => {
     if (isOpen && mcqId) {
@@ -37,29 +41,78 @@ export function AiTutor({ mcqId, medium = 'english' }) {
     }
   }
 
-  async function handleAsk() {
-    if (!doubt.trim()) return;
+  async function handleAsk(textOverride) {
+    const query = textOverride || doubt;
+    if (!query.trim()) return;
 
     setLoading(true);
-    const userMsg = { senderRole: "student", content: doubt, createdAt: new Date() };
+    const userMsg = { senderRole: "student", content: query, createdAt: new Date() };
     setMessages(prev => [...prev, userMsg]);
     setDoubt("");
 
     try {
-      const res = await askAiTutor(mcqId, doubt, threadId);
+      const res = await askAiTutor(mcqId, query, threadId);
       if (res.success) {
         setThreadId(res.threadId);
         const aiMsg = { senderRole: "ai", content: res.aiResponse, createdAt: new Date() };
         setMessages(prev => [...prev, aiMsg]);
+        // Optionally auto-speak AI response if wanted, but better let user click
       } else {
         toast.error(res.error);
-        // Remove the user message if it failed (optional)
       }
     } catch (err) {
       toast.error("Something went wrong. Please try again.");
     } finally {
       setLoading(false);
     }
+  }
+
+  function toggleRecording() {
+    if (isRecording) {
+      recognitionRef.current?.stop();
+      setIsRecording(false);
+      return;
+    }
+
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (!SpeechRecognition) {
+      toast.error("Speech recognition is not supported in this browser.");
+      return;
+    }
+
+    recognitionRef.current = new SpeechRecognition();
+    recognitionRef.current.continuous = false;
+    recognitionRef.current.interimResults = false;
+    recognitionRef.current.lang = medium === 'urdu' ? 'ur-PK' : 'en-US';
+
+    recognitionRef.current.onstart = () => setIsRecording(true);
+    recognitionRef.current.onend = () => setIsRecording(false);
+    recognitionRef.current.onerror = () => setIsRecording(false);
+    
+    recognitionRef.current.onresult = (event) => {
+      const transcript = event.results[0][0].transcript;
+      handleAsk(transcript);
+    };
+
+    recognitionRef.current.start();
+  }
+
+  function handleSpeak(text, index) {
+    if (isSpeaking === index) {
+      synthRef.current?.cancel();
+      setIsSpeaking(null);
+      return;
+    }
+
+    synthRef.current?.cancel();
+    const utterance = new SpeechSynthesisUtterance(text);
+    utterance.lang = medium === 'urdu' ? 'ur-PK' : 'en-US';
+    
+    utterance.onend = () => setIsSpeaking(null);
+    utterance.onerror = () => setIsSpeaking(null);
+    
+    setIsSpeaking(index);
+    synthRef.current?.speak(utterance);
   }
 
   if (!isOpen) {
@@ -128,6 +181,14 @@ export function AiTutor({ mcqId, medium = 'english' }) {
                     {msg.content}
                   </ReactMarkdown>
                 </div>
+                {msg.senderRole === 'ai' && (
+                  <button 
+                    onClick={() => handleSpeak(msg.content, i)}
+                    className={`mt-2 p-1 rounded-full transition-colors ${isSpeaking === i ? 'bg-indigo-200 text-indigo-700' : 'hover:bg-indigo-100 text-indigo-400'}`}
+                  >
+                    {isSpeaking === i ? <VolumeX className="w-3 h-3" /> : <Volume2 className="w-3 h-3" />}
+                  </button>
+                )}
               </div>
             </div>
           ))}
@@ -154,7 +215,16 @@ export function AiTutor({ mcqId, medium = 'english' }) {
             className="bg-white border-zinc-200 text-sm"
             disabled={loading}
           />
-          <Button size="icon" onClick={handleAsk} disabled={loading || !doubt.trim()} className="bg-indigo-600 hover:bg-indigo-700 flex-shrink-0">
+          <Button 
+            size="icon" 
+            variant={isRecording ? "destructive" : "outline"}
+            onClick={toggleRecording}
+            disabled={loading}
+            className={`flex-shrink-0 ${!isRecording ? 'text-indigo-600 border-indigo-200 hover:bg-indigo-50' : 'animate-pulse'}`}
+          >
+            {isRecording ? <MicOff className="w-4 h-4" /> : <Mic className="w-4 h-4" />}
+          </Button>
+          <Button size="icon" onClick={() => handleAsk()} disabled={loading || !doubt.trim()} className="bg-indigo-600 hover:bg-indigo-700 flex-shrink-0">
             <Send className="w-4 h-4" />
           </Button>
         </div>

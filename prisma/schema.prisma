@@ -281,6 +281,7 @@ model ExamSession {
   totalQuestions   Int
   correctAnswers   Int          @default(0)
   timeTakenSeconds Int?
+  timeLimitMinutes Int?
   completedAt      DateTime?
   createdAt        DateTime     @default(now())
   student          User         @relation(fields: [studentId], references: [id])

@@ -99,7 +99,12 @@ export default async function QuizPage({ params, searchParams }) {
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 w-full animate-in fade-in slide-in-from-bottom-4 duration-700">
-      <QuizInteractive sessionId={sessionId} mcqs={mcqs} medium={medium} />
+      <QuizInteractive 
+        sessionId={sessionId} 
+        mcqs={mcqs} 
+        medium={medium} 
+        timeLimitMinutes={examSession.timeLimitMinutes}
+      />
     </div>
   );
 }

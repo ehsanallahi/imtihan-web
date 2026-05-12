@@ -3,7 +3,7 @@ generator client {
 }
 
 datasource db {
-  provider  = "postgresql"
+  provider = "postgresql"
 }
 
 model User {
@@ -22,10 +22,8 @@ model User {
   updatedAt        DateTime          @updatedAt
   deletedAt        DateTime?
   accounts         Account[]
-  aiUsages         AiUsage[]
   examSessions     ExamSession[]
   guardianProfile  GuardianProfile?
-  notifications    Notification[]
   pastPapers       PastPaper[]       @relation("UploadedBy")
   pastPaperUploads PastPaperUpload[]
   sessions         Session[]
@@ -33,8 +31,10 @@ model User {
   subscriptions    Subscription[]
   teacherProfile   TeacherProfile?
   uploadedContent  TextbookUpload[]
+  aiUsages         AiUsage[]
   auditLogs        AuditLog[]
   mcqReports       MCQReport[]
+  notifications    Notification[]
 }
 
 model Account {
@@ -72,24 +72,24 @@ model VerificationToken {
 }
 
 model StudentProfile {
-  id                 String               @id @default(cuid())
-  userId             String               @unique
-  grade              Grade?
-  board              Board?
-  studyStreak        Int                  @default(0)
-  longestStreak      Int                  @default(0)
-  totalMcqsAttempted Int                  @default(0)
+  id                  String               @id @default(cuid())
+  userId              String               @unique
+  grade               Grade?
+  board               Board?
+  studyStreak         Int                  @default(0)
+  totalMcqsAttempted  Int                  @default(0)
+  createdAt           DateTime             @default(now())
+  updatedAt           DateTime             @updatedAt
+  medium              Medium               @default(english)
+  longestStreak       Int                  @default(0)
   reviewsClearedCount Int                  @default(0)
   dailyGoalCount      Int                  @default(20)
-  createdAt          DateTime             @default(now())
-  updatedAt          DateTime             @updatedAt
-  medium             Medium               @default(english)
-  doubtThreads       DoubtThread[]
-  guardians          GuardianStudent[]
-  achievements       StudentAchievement[]
-  srsProgress        StudentMCQProgress[]
-  tutorChats         AiTutorChat[]
-  user               User                 @relation(fields: [userId], references: [id], onDelete: Cascade)
+  guardians           GuardianStudent[]
+  user                User                 @relation(fields: [userId], references: [id], onDelete: Cascade)
+  tutorChats          AiTutorChat[]
+  doubtThreads        DoubtThread[]
+  achievements        StudentAchievement[]
+  srsProgress         StudentMCQProgress[]
 }
 
 model TeacherProfile {
@@ -97,9 +97,9 @@ model TeacherProfile {
   userId           String       @unique
   institutionId    String?
   subjectSpecialty String?
-  isVerified       Boolean      @default(false)
   createdAt        DateTime     @default(now())
   updatedAt        DateTime     @updatedAt
+  isVerified       Boolean      @default(false)
   institution      Institution? @relation(fields: [institutionId], references: [id])
   user             User         @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
@@ -202,26 +202,26 @@ model MCQ {
   updatedAt        DateTime             @updatedAt
   deletedAt        DateTime?
   textbookUploadId String?
-  doubtThreads     DoubtThread[]
   chapter          Chapter?             @relation(fields: [chapterId], references: [id])
   subject          Subject              @relation(fields: [subjectId], references: [id])
   textbookUpload   TextbookUpload?      @relation(fields: [textbookUploadId], references: [id])
   attempts         MCQAttempt[]
-  srsProgress      StudentMCQProgress[]
+  doubtThreads     DoubtThread[]
   reports          MCQReport[]
+  srsProgress      StudentMCQProgress[]
 }
 
 model MCQReport {
-  id          String   @id @default(cuid())
-  mcqId       String
-  studentId   String
-  reason      String   // e.g., "wrong_answer", "typo", "vague"
-  details     String?  @db.Text
-  status      String   @default("pending") // pending, resolved, dismissed
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-  mcq         MCQ      @relation(fields: [mcqId], references: [id], onDelete: Cascade)
-  student     User     @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  id        String   @id @default(cuid())
+  mcqId     String
+  studentId String
+  reason    String
+  details   String?
+  status    String   @default("pending")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  mcq       MCQ      @relation(fields: [mcqId], references: [id], onDelete: Cascade)
+  student   User     @relation(fields: [studentId], references: [id], onDelete: Cascade)
 
   @@map("mcq_reports")
 }
@@ -298,9 +298,9 @@ model ExamSession {
   totalQuestions   Int
   correctAnswers   Int          @default(0)
   timeTakenSeconds Int?
-  timeLimitMinutes Int?
   completedAt      DateTime?
   createdAt        DateTime     @default(now())
+  timeLimitMinutes Int?
   student          User         @relation(fields: [studentId], references: [id])
   results          MCQAttempt[]
 }
@@ -361,9 +361,9 @@ model CasbinRule {
 model Achievement {
   id          String               @id @default(cuid())
   title       String
-  description String               @db.Text
+  description String
   badgeUrl    String?
-  criteria    String               // e.g., "100_mcqs_solved", "7_day_streak"
+  criteria    String
   createdAt   DateTime             @default(now())
   students    StudentAchievement[]
 
@@ -375,8 +375,8 @@ model StudentAchievement {
   studentProfileId String
   achievementId    String
   unlockedAt       DateTime       @default(now())
-  student          StudentProfile @relation(fields: [studentProfileId], references: [id], onDelete: Cascade)
   achievement      Achievement    @relation(fields: [achievementId], references: [id], onDelete: Cascade)
+  student          StudentProfile @relation(fields: [studentProfileId], references: [id], onDelete: Cascade)
 
   @@unique([studentProfileId, achievementId])
   @@map("student_achievements")
@@ -386,14 +386,14 @@ model StudentMCQProgress {
   id               String         @id @default(cuid())
   studentProfileId String
   mcqId            String
-  easeFactor       Float          @default(2.5) // Standard SuperMemo 2 ease factor
-  interval         Int            @default(0)   // Days until next review
+  easeFactor       Float          @default(2.5)
+  interval         Int            @default(0)
   nextReviewDate   DateTime       @default(now())
   lastReviewedAt   DateTime?
   createdAt        DateTime       @default(now())
   updatedAt        DateTime       @updatedAt
-  student          StudentProfile @relation(fields: [studentProfileId], references: [id], onDelete: Cascade)
   mcq              MCQ            @relation(fields: [mcqId], references: [id], onDelete: Cascade)
+  student          StudentProfile @relation(fields: [studentProfileId], references: [id], onDelete: Cascade)
 
   @@unique([studentProfileId, mcqId])
   @@map("student_mcq_progress")
@@ -406,20 +406,20 @@ model DoubtThread {
   status           ThreadStatus   @default(open)
   createdAt        DateTime       @default(now())
   updatedAt        DateTime       @updatedAt
-  student          StudentProfile @relation(fields: [studentProfileId], references: [id], onDelete: Cascade)
-  mcq              MCQ            @relation(fields: [mcqId], references: [id], onDelete: Cascade)
   messages         DoubtMessage[]
+  mcq              MCQ            @relation(fields: [mcqId], references: [id], onDelete: Cascade)
+  student          StudentProfile @relation(fields: [studentProfileId], references: [id], onDelete: Cascade)
 
   @@map("doubt_threads")
 }
 
 model DoubtMessage {
-  id          String       @id @default(cuid())
-  threadId    String
-  senderRole  MessageRole  // student or ai
-  content     String       @db.Text
-  createdAt   DateTime     @default(now())
-  thread      DoubtThread  @relation(fields: [threadId], references: [id], onDelete: Cascade)
+  id         String      @id @default(cuid())
+  threadId   String
+  senderRole MessageRole
+  content    String
+  createdAt  DateTime    @default(now())
+  thread     DoubtThread @relation(fields: [threadId], references: [id], onDelete: Cascade)
 
   @@map("doubt_messages")
 }
@@ -440,10 +440,10 @@ model AiUsage {
 model AiTutorChat {
   id               String           @id @default(cuid())
   studentProfileId String
-  title            String?          @default("New Conversation")
   language         Medium           @default(english)
   createdAt        DateTime         @default(now())
   updatedAt        DateTime         @updatedAt
+  title            String?          @default("New Conversation")
   student          StudentProfile   @relation(fields: [studentProfileId], references: [id], onDelete: Cascade)
   messages         AiTutorMessage[]
 
@@ -453,8 +453,8 @@ model AiTutorChat {
 model AiTutorMessage {
   id        String      @id @default(cuid())
   chatId    String
-  role      MessageRole // student or ai
-  content   String      @db.Text
+  role      MessageRole
+  content   String
   createdAt DateTime    @default(now())
   chat      AiTutorChat @relation(fields: [chatId], references: [id], onDelete: Cascade)
 
@@ -465,13 +465,41 @@ model Notification {
   id        String           @id @default(cuid())
   userId    String
   title     String
-  message   String           @db.Text
+  message   String
   type      NotificationType @default(system)
   isRead    Boolean          @default(false)
   createdAt DateTime         @default(now())
   user      User             @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@map("notifications")
+}
+
+model WaitlistEntry {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  name      String
+  phone     String?
+  grade     String?
+  board     String?
+  interest  String?
+  createdAt DateTime @default(now())
+
+  @@map("waitlist_entries")
+}
+
+model AuditLog {
+  id        String   @id @default(cuid())
+  userId    String
+  action    String
+  entity    String?
+  entityId  String?
+  details   Json?
+  ipAddress String?
+  userAgent String?
+  createdAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id])
+
+  @@map("audit_logs")
 }
 
 enum Role {
@@ -551,32 +579,4 @@ enum NotificationType {
   achievement
   streak_warning
   exam_reminder
-}
-
-model WaitlistEntry {
-  id        String   @id @default(cuid())
-  email     String   @unique
-  name      String
-  phone     String?
-  grade     String?
-  board     String?
-  interest  String?
-  createdAt DateTime @default(now())
-
-  @@map("waitlist_entries")
-}
-
-model AuditLog {
-  id        String   @id @default(cuid())
-  userId    String
-  action    String   // e.g., "DELETE_USER", "VERIFY_TEACHER", "UPDATE_SETTING"
-  entity    String?  // e.g., "User", "TeacherProfile", "GlobalSettings"
-  entityId  String?  // The ID of the affected entity
-  details   Json?    // Any additional metadata (old value, new value, etc.)
-  ipAddress String?
-  userAgent String?
-  createdAt DateTime @default(now())
-  user      User     @relation(fields: [userId], references: [id])
-
-  @@map("audit_logs")
 }

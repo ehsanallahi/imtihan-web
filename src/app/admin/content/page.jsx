@@ -8,7 +8,8 @@ import {
   Clock, 
   Sparkles,
   ChevronRight,
-  Settings2
+  Settings2,
+  AlertTriangle
 } from "lucide-react";
 import Link from "next/link";
 
@@ -31,6 +32,7 @@ export default async function AdminContentPage() {
     { label: "Approved", value: mcqStats?.approved, icon: CheckCircle2, color: "text-emerald-600", bg: "bg-emerald-50" },
     { label: "Pending Review", value: mcqStats?.pending, icon: Clock, color: "text-orange-600", bg: "bg-orange-50", href: "/admin/content/review" },
     { label: "AI Generated", value: mcqStats?.aiGenerated, icon: Sparkles, color: "text-purple-600", bg: "bg-purple-50" },
+    { label: "Student Reports", value: "Audit", icon: AlertTriangle, color: "text-rose-600", bg: "bg-rose-50", href: "/admin/content/audit" },
   ];
 
   return (
@@ -52,7 +54,7 @@ export default async function AdminContentPage() {
       </div>
 
       {/* MCQ Repository Overview */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-5 gap-6">
          {statCards.map((stat, i) => {
            const CardWrapper = stat.href ? Link : 'div';
            return (

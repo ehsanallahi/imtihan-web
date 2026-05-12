@@ -230,3 +230,28 @@ export async function startReviewSession() {
     return { success: false, error: "Failed to start review session" };
   }
 }
+
+/**
+ * Reports an issue with an MCQ.
+ */
+export async function reportMcq({ mcqId, reason, details }) {
+  try {
+    const session = await auth();
+    if (!session) return { success: false, error: "Unauthorized" };
+
+    await db.mCQReport.create({
+      data: {
+        mcqId,
+        studentId: session.user.id,
+        reason,
+        details,
+        status: "pending"
+      }
+    });
+
+    return { success: true };
+  } catch (error) {
+    console.error("REPORT_MCQ_ERROR:", error);
+    return { success: false, error: "Failed to submit report" };
+  }
+}

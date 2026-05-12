@@ -75,12 +75,14 @@ export async function getAdminStats() {
   try {
     await ensureAdmin();
     
-    const [userCount, studentCount, teacherCount, premiumCount, mcqCount] = await Promise.all([
+    const [userCount, studentCount, teacherCount, premiumCount, mcqCount, reportsCount, pendingReviewsCount] = await Promise.all([
       db.user.count(),
       db.user.count({ where: { role: "student" } }),
       db.user.count({ where: { role: "teacher" } }),
       db.user.count({ where: { role: "premium_student" } }),
-      db.mCQ.count()
+      db.mCQ.count(),
+      db.mCQReport.count({ where: { status: "pending" } }),
+      db.mCQ.count({ where: { isApproved: false } })
     ]);
     
     return {
@@ -91,6 +93,8 @@ export async function getAdminStats() {
         teachers: teacherCount,
         premium: premiumCount,
         mcqs: mcqCount,
+        pendingReports: reportsCount,
+        pendingReviews: pendingReviewsCount,
         recentStudents: await db.user.findMany({
           where: { role: { in: ["student", "premium_student"] } },
           include: { studentProfile: true },
@@ -656,6 +660,49 @@ export async function getBroadcastHistory() {
     return { success: true, data: logs };
   } catch (error) {
     console.error("Get Broadcast History Error:", error);
+    return { error: error.message };
+  }
+}
+export async function resolveMcqReport(reportId) {
+  try {
+    await ensureAdmin();
+    
+    await db.mCQReport.update({
+      where: { id: reportId },
+      data: { status: "resolved" }
+    });
+
+    await recordAuditLog({
+      action: "RESOLVE_MCQ_REPORT",
+      entity: "MCQReport",
+      entityId: reportId,
+    });
+    
+    return { success: true };
+  } catch (error) {
+    console.error("Resolve Report Error:", error);
+    return { error: error.message };
+  }
+}
+
+export async function dismissMcqReport(reportId) {
+  try {
+    await ensureAdmin();
+    
+    await db.mCQReport.update({
+      where: { id: reportId },
+      data: { status: "dismissed" }
+    });
+
+    await recordAuditLog({
+      action: "DISMISS_MCQ_REPORT",
+      entity: "MCQReport",
+      entityId: reportId,
+    });
+    
+    return { success: true };
+  } catch (error) {
+    console.error("Dismiss Report Error:", error);
     return { error: error.message };
   }
 }

@@ -5,11 +5,12 @@ import { useRouter } from 'next/navigation'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { submitExam } from '@/actions/quizActions'
-import { Loader2, ChevronRight, ChevronLeft, CheckCircle2, Trophy } from 'lucide-react'
+import { Loader2, ChevronRight, ChevronLeft, CheckCircle2, Trophy, AlertTriangle } from 'lucide-react'
 import { toast } from 'sonner'
 import { Progress } from '@/components/ui/progress'
 import { Badge } from '@/components/ui/badge'
 import { AiTutor } from './AiTutor'
+import { reportMcq } from '@/actions/quizActions'
 
 export function QuizInteractive({ sessionId, mcqs, medium = 'english', timeLimitMinutes }) {
   const router = useRouter()
@@ -185,7 +186,26 @@ export function QuizInteractive({ sessionId, mcqs, medium = 'english', timeLimit
       </Card>
 
       {/* AI Tutor Integration */}
-      <AiTutor mcqId={currentMcq.id} medium={medium} />
+                  <div className="flex flex-col sm:flex-row items-center gap-3 w-full">
+                    <AiTutor mcqId={currentMcq.id} medium={medium} />
+                    <Button 
+                      variant="ghost" 
+                      size="sm" 
+                      onClick={() => {
+                        const reason = window.prompt("Reason for reporting (e.g., wrong_answer, typo):");
+                        if (reason) {
+                          reportMcq({ mcqId: currentMcq.id, reason }).then(res => {
+                            if (res.success) toast.success("Report submitted. Thank you!");
+                            else toast.error("Failed to submit report.");
+                          });
+                        }
+                      }}
+                      className="text-amber-600 hover:text-amber-700 hover:bg-amber-50 gap-2 font-medium text-xs"
+                    >
+                      <AlertTriangle className="w-3.5 h-3.5" />
+                      Report Issue
+                    </Button>
+                  </div>
 
       {/* Navigation Footer */}
       <div className="flex items-center justify-between pt-4 gap-3">

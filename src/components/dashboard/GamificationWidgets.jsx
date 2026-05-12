@@ -1,8 +1,9 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Trophy, Medal, Star, Flame, CalendarClock, ArrowRight, CheckCircle2 } from "lucide-react";
+import { Trophy, Medal, Star, Flame, CalendarClock, ArrowRight, CheckCircle2, Target } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import { db } from "@/lib/db";
+import { getDailyGoalProgress } from "@/actions/progressActions";
 
 export async function LeaderboardWidget({ board, grade, currentUserId }) {
   if (!board || !grade || !currentUserId) {
@@ -154,6 +155,62 @@ export async function DailyReviewWidget({ studentProfileId }) {
             <p className="text-xs text-indigo-200 mt-1">Check back tomorrow.</p>
           </div>
         )}
+      </CardContent>
+    </Card>
+  );
+}
+export async function DailyGoalWidget({ userId }) {
+  if (!userId) return null;
+
+  const res = await getDailyGoalProgress();
+  if (!res.success) return null;
+
+  const { current, goal, percent } = res.data;
+
+  return (
+    <Card className="border-none shadow-sm h-full bg-white">
+      <CardHeader className="pb-2">
+        <CardTitle className="text-xl font-display font-bold text-teal-900 flex items-center gap-2">
+          <Target className="w-5 h-5 text-rose-500" />
+          Daily Goal
+        </CardTitle>
+      </CardHeader>
+      <CardContent className="flex flex-col items-center justify-center py-6">
+        <div className="relative w-32 h-32 mb-4">
+          <svg className="w-full h-full -rotate-90">
+            <circle
+              cx="64"
+              cy="64"
+              r="58"
+              fill="none"
+              stroke="#F1F5F9"
+              strokeWidth="10"
+            />
+            <circle
+              cx="64"
+              cy="64"
+              r="58"
+              fill="none"
+              stroke="#F43F5E"
+              strokeWidth="10"
+              strokeDasharray={364}
+              strokeDashoffset={364 - (364 * percent) / 100}
+              strokeLinecap="round"
+              className="transition-all duration-1000 ease-out"
+            />
+          </svg>
+          <div className="absolute inset-0 flex flex-col items-center justify-center">
+            <span className="text-3xl font-black text-slate-800">{percent}%</span>
+          </div>
+        </div>
+        <div className="text-center">
+          <p className="text-sm font-bold text-slate-500 uppercase tracking-wider">
+            {current} / {goal} MCQs
+          </p>
+          <p className="text-xs text-slate-400 mt-1">
+            {percent >= 100 ? "Goal reached! 🌟" : `${goal - current} more to hit your goal`}
+          </p>
+        </div>
       </CardContent>
     </Card>
   );

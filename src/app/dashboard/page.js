@@ -9,7 +9,7 @@ import {
   FileText, ArrowRight, BookOpen, Flame, Users, AlertCircle
 } from "lucide-react";
 import { DashboardUploadSyllabus } from "@/components/dashboard/DashboardActions";
-import { LeaderboardWidget, BadgesWidget, DailyReviewWidget } from "@/components/dashboard/GamificationWidgets";
+import { LeaderboardWidget, BadgesWidget, DailyReviewWidget, DailyGoalWidget } from "@/components/dashboard/GamificationWidgets";
 
 export default async function DashboardPage(props) {
   const searchParams = await props.searchParams;
@@ -202,7 +202,8 @@ export default async function DashboardPage(props) {
 
         {/* Gamification Section */}
         {profile?.id && (
-          <div className="grid gap-6 grid-cols-1 md:grid-cols-3">
+          <div className="grid gap-6 grid-cols-1 md:grid-cols-4">
+            <DailyGoalWidget userId={session.user.id} />
             <DailyReviewWidget studentProfileId={profile?.id} />
             <LeaderboardWidget board={profile?.board} grade={profile?.grade} currentUserId={session.user.id} />
             <BadgesWidget studentProfileId={profile?.id} />

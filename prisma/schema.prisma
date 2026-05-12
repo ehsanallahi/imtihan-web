@@ -79,6 +79,7 @@ model StudentProfile {
   longestStreak      Int                  @default(0)
   totalMcqsAttempted Int                  @default(0)
   reviewsClearedCount Int                  @default(0)
+  dailyGoalCount      Int                  @default(20)
   createdAt          DateTime             @default(now())
   updatedAt          DateTime             @updatedAt
   medium             Medium               @default(english)

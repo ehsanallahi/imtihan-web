@@ -52,6 +52,23 @@ async function main() {
 
   console.log("Student user seeded:", student.email);
 
+  const studentProfile = await prisma.studentProfile.upsert({
+    where: { userId: student.id },
+    update: {
+      grade: "nine",
+      board: "punjab",
+      studyStreak: 3,
+    },
+    create: {
+      userId: student.id,
+      grade: "nine",
+      board: "punjab",
+      studyStreak: 3,
+    }
+  });
+
+  console.log("Student profile seeded.");
+
   // 2. Seed Casbin Rules from CSV
   const policyPath = path.join(process.cwd(), "src/lib/casbin-policy.csv");
   if (fs.existsSync(policyPath)) {
@@ -91,6 +108,32 @@ async function main() {
     { name: "Physics", nameUrdu: "طبعیات", grade: "nine", board: "punjab" },
     { name: "Chemistry", nameUrdu: "کیمیاء", grade: "nine", board: "punjab" },
     { name: "Mathematics", nameUrdu: "ریاضی", grade: "nine", board: "punjab" },
+    { name: "Computer Science", nameUrdu: "کمپیوٹر سائنس", grade: "nine", board: "punjab" },
+    
+    // Grade 10 Punjab
+    { name: "Biology", nameUrdu: "حیاتیات", grade: "ten", board: "punjab" },
+    { name: "Physics", nameUrdu: "طبعیات", grade: "ten", board: "punjab" },
+    { name: "Chemistry", nameUrdu: "کیمیاء", grade: "ten", board: "punjab" },
+    { name: "Mathematics", nameUrdu: "ریاضی", grade: "ten", board: "punjab" },
+    { name: "Computer Science", nameUrdu: "کمپیوٹر سائنس", grade: "ten", board: "punjab" },
+
+    // Grade 11 Federal
+    { name: "Physics", nameUrdu: "طبعیات", grade: "eleven", board: "federal" },
+    { name: "Chemistry", nameUrdu: "کیمیاء", grade: "eleven", board: "federal" },
+    { name: "Mathematics", nameUrdu: "ریاضی", grade: "eleven", board: "federal" },
+    { name: "Biology", nameUrdu: "حیاتیات", grade: "eleven", board: "federal" },
+
+    // Grade 12 Federal
+    { name: "Physics", nameUrdu: "طبعیات", grade: "twelve", board: "federal" },
+    { name: "Chemistry", nameUrdu: "کیمیاء", grade: "twelve", board: "federal" },
+    { name: "Mathematics", nameUrdu: "ریاضی", grade: "twelve", board: "federal" },
+    { name: "Biology", nameUrdu: "حیاتیات", grade: "twelve", board: "federal" },
+    
+    // Grade 9 Sindh
+    { name: "Biology", nameUrdu: "حیاتیات", grade: "nine", board: "sindh" },
+    { name: "Physics", nameUrdu: "طبعیات", grade: "nine", board: "sindh" },
+    { name: "Chemistry", nameUrdu: "کیمیاء", grade: "nine", board: "sindh" },
+    { name: "Mathematics", nameUrdu: "ریاضی", grade: "nine", board: "sindh" },
   ];
 
   for (const s of subjects) {
@@ -138,7 +181,69 @@ async function main() {
       }
     }
   }
-  console.log("Master data seeded successfully.");
+  // 3.5 Seed Achievements
+  console.log("Seeding Achievements...");
+  const defaultAchievements = [
+    { title: "First Steps", description: "Complete your first practice quiz.", criteria: "1_quiz_completed", badgeUrl: "first_steps" },
+    { title: "Centurion", description: "Answer 100 MCQs correctly.", criteria: "100_mcqs_correct", badgeUrl: "centurion" },
+    { title: "Flawless Victory", description: "Score 100% on any practice quiz.", criteria: "100_percent_score", badgeUrl: "flawless" },
+    { title: "Week Warrior", description: "Maintain a 7-day study streak.", criteria: "7_day_streak", badgeUrl: "week_warrior" },
+    { title: "Month Master", description: "Maintain a 30-day study streak.", criteria: "30_day_streak", badgeUrl: "month_master" },
+    { title: "Early Bird", description: "Complete a study session before 8 AM.", criteria: "early_bird", badgeUrl: "early_bird" },
+    { title: "Night Owl", description: "Complete a study session after 10 PM.", criteria: "night_owl", badgeUrl: "night_owl" },
+    { title: "Subject Master", description: "Score 90% or higher on a full Subject Mock Exam.", criteria: "subject_master", badgeUrl: "subject_master" },
+    { title: "Review Champion", description: "Clear your Daily Review queue 5 times.", criteria: "5_reviews_cleared", badgeUrl: "review_champion" },
+  ];
+
+  for (const ach of defaultAchievements) {
+    await prisma.achievement.upsert({
+      where: { id: (await prisma.achievement.findFirst({ where: { criteria: ach.criteria } }))?.id || 'new-ach' },
+      update: { title: ach.title, description: ach.description, badgeUrl: ach.badgeUrl },
+      create: { title: ach.title, description: ach.description, criteria: ach.criteria, badgeUrl: ach.badgeUrl },
+    });
+  }
+  // 4. Seed Mock Subscription Data for Admin Dashboard
+  console.log("Seeding Mock Subscriptions...");
+  const plans = ["student_monthly", "student_yearly", "institution_yearly"];
+  for (let i = 0; i < 15; i++) {
+    const randomPlan = plans[Math.floor(Math.random() * plans.length)];
+    let amount = randomPlan === "student_monthly" ? 1000 : randomPlan === "student_yearly" ? 10000 : 50000;
+    
+    await prisma.subscription.create({
+      data: {
+        userId: student.id,
+        plan: randomPlan,
+        status: "active",
+        amountPkr: amount,
+        startDate: new Date(Date.now() - Math.floor(Math.random() * 30) * 24 * 60 * 60 * 1000), // Random date within last 30 days
+      }
+    });
+  }
+
+  // 5. Seed Mock AI Usage Data for Admin Dashboard
+  console.log("Seeding Mock AI Usage...");
+  for (let i = 0; i < 30; i++) {
+    const d = new Date();
+    d.setDate(d.getDate() - i);
+    await prisma.aiUsage.upsert({
+      where: {
+        userId_date: {
+          userId: student.id,
+          date: d,
+        }
+      },
+      update: {
+        count: Math.floor(Math.random() * 50) + 10,
+      },
+      create: {
+        userId: student.id,
+        date: d,
+        count: Math.floor(Math.random() * 50) + 10,
+      }
+    });
+  }
+
+  console.log("Master data and mock data seeded successfully.");
 }
 
 main()

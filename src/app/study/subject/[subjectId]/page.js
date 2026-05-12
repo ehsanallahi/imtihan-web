@@ -8,6 +8,8 @@ import { BookOpen, FileText, CheckCircle2, ChevronLeft, BrainCircuit } from "luc
 import { Badge } from "@/components/ui/badge";
 import { checkUserSubscription } from "@/actions/subscriptionActions";
 import { startMockExamSession } from "@/actions/quizActions";
+import { getSubjectProgress } from "@/actions/progressActions";
+import { Progress } from "@/components/ui/progress";
 
 export default async function SubjectPage({ params }) {
   const session = await auth();
@@ -46,6 +48,10 @@ export default async function SubjectPage({ params }) {
   // Check Subscription for Mock Exam access
   const sub = await checkUserSubscription();
   const isPremium = sub.isPremium;
+
+  // Fetch Chapter Progress
+  const progressRes = await getSubjectProgress(subjectId);
+  const chapterProgress = progressRes.success ? progressRes.progress : {};
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 w-full animate-in fade-in slide-in-from-bottom-4 duration-700">
@@ -144,9 +150,28 @@ export default async function SubjectPage({ params }) {
                     )}
                   </CardHeader>
                   <CardContent className="p-4 sm:p-6 pt-0 sm:pt-0 flex-1">
-                    <div className="text-xs sm:text-sm text-zinc-500 flex items-center gap-2">
-                      <FileText className="h-4 w-4" />
-                      {chapter._count.mcqs} Practice Questions
+                    <div className="flex flex-col gap-3">
+                      <div className="flex justify-between items-end">
+                        <div className="text-xs sm:text-sm text-zinc-500 flex items-center gap-2">
+                          <FileText className="h-4 w-4" />
+                          {chapter._count.mcqs} Practice Questions
+                        </div>
+                        {chapterProgress[chapter.id] && (
+                          <div className="text-[10px] font-bold text-teal-600 uppercase">
+                            {chapterProgress[chapter.id].solved} Solved
+                          </div>
+                        )}
+                      </div>
+                      
+                      {chapterProgress[chapter.id] && (
+                        <div className="space-y-1">
+                          <div className="flex justify-between text-[10px] text-zinc-400 font-medium">
+                            <span>Progress</span>
+                            <span>{chapterProgress[chapter.id].percent}%</span>
+                          </div>
+                          <Progress value={chapterProgress[chapter.id].percent} className="h-1.5 bg-slate-100" />
+                        </div>
+                      )}
                     </div>
                   </CardContent>
                   <CardFooter className="p-4 sm:p-6 pt-4 border-t border-slate-100 bg-slate-50/50">

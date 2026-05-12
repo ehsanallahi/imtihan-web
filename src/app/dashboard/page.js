@@ -5,11 +5,11 @@ import Link from "next/link";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import {
-  GraduationCap, Clock, CheckCircle2, BrainCircuit,
-  FileText, ArrowRight, BookOpen, Flame, Users, AlertCircle
+  FileText, ArrowRight, BookOpen, Flame, Users, AlertCircle, Settings2, GraduationCap,
+  CheckCircle2, BrainCircuit, Clock
 } from "lucide-react";
 import { DashboardUploadSyllabus } from "@/components/dashboard/DashboardActions";
-import { LeaderboardWidget, BadgesWidget, DailyReviewWidget } from "@/components/dashboard/GamificationWidgets";
+import { LeaderboardWidget, BadgesWidget, DailyReviewWidget, DailyGoalWidget } from "@/components/dashboard/GamificationWidgets";
 
 export default async function DashboardPage(props) {
   const searchParams = await props.searchParams;
@@ -91,37 +91,57 @@ export default async function DashboardPage(props) {
           </div>
         )}
 
-        <div className="flex flex-col gap-2">
-          <h1 className="text-3xl font-display font-bold tracking-tight text-teal-900 sm:text-4xl">
-            Dashboard Overview
-          </h1>
-          <p className="text-zinc-500">
-            Welcome back, {targetUser?.name || "Student"}. Track your progress and manage your exams.
-          </p>
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 bg-gradient-to-br from-teal-900 to-teal-800 p-8 rounded-[2rem] text-white shadow-xl shadow-teal-900/20">
+          <div className="space-y-2">
+            <h1 className="text-3xl font-display font-bold tracking-tight sm:text-4xl">
+              Hello, {targetUser?.name?.split(' ')[0] || "Student"}! 👋
+            </h1>
+            <p className="text-teal-100/80 max-w-md">
+              You've solved {totalQs} questions so far. Ready to crush some more today?
+            </p>
+          </div>
+          <Link href="/study">
+            <Button size="lg" className="bg-white text-teal-900 hover:bg-teal-50 rounded-2xl font-black px-8 h-14 shadow-lg shadow-white/10 group">
+              Resume Learning
+              <ArrowRight className="w-5 h-5 ml-2 group-hover:translate-x-1 transition-transform" />
+            </Button>
+          </Link>
         </div>
 
         {/* Stats Grid */}
-        <div className="grid gap-4 grid-cols-2 lg:grid-cols-4">
+        <div className="grid gap-6 grid-cols-2 lg:grid-cols-4">
           {stats.map((stat) => (
             <Link key={stat.title} href={stat.href}>
-              <Card className="border-none shadow-sm hover:shadow-md transition-shadow cursor-pointer group">
-                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-xs sm:text-sm font-medium text-zinc-600">{stat.title}</CardTitle>
-                  <div className={`p-2 rounded-lg ${stat.bg} group-hover:scale-110 transition-transform`}>
-                    <stat.icon className={`h-4 w-4 ${stat.color}`} />
+              <div className="bg-white p-6 rounded-[2rem] border border-slate-100 shadow-sm hover:shadow-md transition-all cursor-pointer group relative overflow-hidden">
+                <div className={`absolute top-0 right-0 w-24 h-24 ${stat.bg} opacity-20 rounded-full -mr-12 -mt-12 group-hover:scale-110 transition-transform`} />
+                <div className="relative z-10 flex flex-col gap-3">
+                  <div className={`w-10 h-10 rounded-xl ${stat.bg} flex items-center justify-center`}>
+                    <stat.icon className={`h-5 w-5 ${stat.color}`} />
                   </div>
-                </CardHeader>
-                <CardContent>
-                  <div className="text-2xl font-bold font-display text-teal-900">{stat.value}</div>
-                </CardContent>
-              </Card>
+                  <div>
+                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{stat.title}</p>
+                    <div className="text-2xl font-black font-display text-teal-900 mt-0.5">{stat.value}</div>
+                  </div>
+                </div>
+              </div>
             </Link>
           ))}
         </div>
 
+        {/* Quick Tip / Onboarding */}
+        <div className="bg-amber-50 border border-amber-100 p-4 rounded-2xl flex items-center gap-4 text-amber-800">
+           <div className="w-10 h-10 rounded-full bg-amber-100 flex items-center justify-center flex-shrink-0">
+              <AlertCircle className="w-5 h-5" />
+           </div>
+           <div className="text-xs">
+              <p className="font-bold">Pro Tip: Goal Setting</p>
+              <p className="opacity-80">You can adjust your daily MCQ target in <Link href="/dashboard/settings" className="underline font-bold">Settings</Link> to match your study pace!</p>
+           </div>
+        </div>
+
         <div className="grid gap-6 grid-cols-1 md:grid-cols-7">
           {/* Recent Activity */}
-          <Card className="md:col-span-4 border-none shadow-sm">
+          <Card className="md:col-span-5 border-none shadow-sm overflow-hidden">
             <CardHeader className="flex flex-row items-center justify-between">
               <CardTitle className="text-xl font-display font-bold text-teal-900">Recent Activity</CardTitle>
               {recentSessions.length > 0 && (
@@ -163,51 +183,51 @@ export default async function DashboardPage(props) {
             </CardContent>
           </Card>
 
-          {/* Quick Actions */}
-          <Card className="md:col-span-3 border-none shadow-sm">
+          <Card className="md:col-span-2 border-none shadow-sm">
             <CardHeader>
-              <CardTitle className="text-xl font-display font-bold text-teal-900">Quick Actions</CardTitle>
+              <CardTitle className="text-lg font-display font-bold text-teal-900">Shortcuts</CardTitle>
             </CardHeader>
-            <CardContent className="space-y-3">
-              <Link href="/study" className="block">
-                <div className="p-4 rounded-xl bg-teal-600 text-white space-y-1 hover:bg-teal-700 transition-colors">
-                  <div className="flex items-center justify-between">
-                    <p className="text-sm font-bold">Study Subjects</p>
-                    <BookOpen className="w-4 h-4 opacity-80" />
-                  </div>
-                  <p className="text-xs text-teal-100">Browse chapters and practice MCQs</p>
+            <CardContent className="grid grid-cols-1 gap-3">
+              <Link href="/study" className="flex items-center gap-3 p-3 rounded-xl bg-teal-50 text-teal-700 hover:bg-teal-100 transition-colors border border-teal-100/50">
+                <BookOpen className="w-5 h-5" />
+                <div className="min-w-0">
+                  <p className="text-xs font-bold truncate">Study Hub</p>
+                  <p className="text-[10px] opacity-70 truncate">Browse Subjects</p>
                 </div>
               </Link>
-              <Link href="/study/analytics" className="block">
-                <div className="p-4 rounded-xl bg-indigo-50 text-indigo-900 space-y-1 hover:bg-indigo-100 transition-colors border border-indigo-100">
-                  <div className="flex items-center justify-between">
-                    <p className="text-sm font-bold">View Analytics</p>
-                    <GraduationCap className="w-4 h-4 opacity-80" />
-                  </div>
-                  <p className="text-xs text-indigo-600">Accuracy & subject breakdown</p>
+              <Link href="/study/analytics" className="flex items-center gap-3 p-3 rounded-xl bg-indigo-50 text-indigo-700 hover:bg-indigo-100 transition-colors border border-indigo-100/50">
+                <GraduationCap className="w-5 h-5" />
+                <div className="min-w-0">
+                  <p className="text-xs font-bold truncate">Performance</p>
+                  <p className="text-[10px] opacity-70 truncate">View Analytics</p>
                 </div>
               </Link>
-              <Link href="/dashboard/settings" className="block">
-                <div className="p-4 rounded-xl bg-slate-50 text-zinc-700 space-y-1 hover:bg-slate-100 transition-colors border border-slate-200">
-                  <div className="flex items-center justify-between">
-                    <p className="text-sm font-bold">Complete Profile</p>
-                    <Clock className="w-4 h-4 opacity-60" />
-                  </div>
-                  <p className="text-xs text-zinc-400">Set your grade & board for better results</p>
+              <Link href="/dashboard/settings" className="flex items-center gap-3 p-3 rounded-xl bg-slate-50 text-slate-700 hover:bg-slate-100 transition-colors border border-slate-200/50">
+                <Settings2 className="w-5 h-5" />
+                <div className="min-w-0">
+                  <p className="text-xs font-bold truncate">Settings</p>
+                  <p className="text-[10px] opacity-70 truncate">Update Profile</p>
                 </div>
               </Link>
             </CardContent>
           </Card>
         </div>
 
-        {/* Gamification Section */}
-        {profile?.id && (
-          <div className="grid gap-6 grid-cols-1 md:grid-cols-3">
-            <DailyReviewWidget studentProfileId={profile?.id} />
-            <LeaderboardWidget board={profile?.board} grade={profile?.grade} currentUserId={session.user.id} />
-            <BadgesWidget studentProfileId={profile?.id} />
+        <div className="space-y-6">
+          <div className="flex items-center gap-2">
+            <div className="w-1.5 h-6 bg-teal-500 rounded-full" />
+            <h2 className="text-xl font-display font-bold text-teal-900 uppercase tracking-tight">My Growth</h2>
           </div>
-        )}
+          
+          {profile?.id && (
+            <div className="grid gap-6 grid-cols-1 md:grid-cols-4">
+              <DailyGoalWidget userId={session.user.id} />
+              <DailyReviewWidget studentProfileId={profile?.id} />
+              <LeaderboardWidget board={profile?.board} grade={profile?.grade} currentUserId={session.user.id} />
+              <BadgesWidget studentProfileId={profile?.id} />
+            </div>
+          )}
+        </div>
       </div>
     );
   } catch (error) {

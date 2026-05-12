@@ -1,28 +1,42 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { submitExam } from '@/actions/quizActions'
-import { Loader2, ChevronRight, ChevronLeft, CheckCircle2 } from 'lucide-react'
+import { Loader2, ChevronRight, ChevronLeft, CheckCircle2, Trophy, AlertTriangle } from 'lucide-react'
+import { toast } from 'sonner'
 import { Progress } from '@/components/ui/progress'
+import { Badge } from '@/components/ui/badge'
 import { AiTutor } from './AiTutor'
+import { reportMcq } from '@/actions/quizActions'
 
-export function QuizInteractive({ sessionId, mcqs, medium = 'english' }) {
+export function QuizInteractive({ sessionId, mcqs, medium = 'english', timeLimitMinutes }) {
   const router = useRouter()
   const [currentIndex, setCurrentIndex] = useState(0)
   const [answers, setAnswers] = useState({})
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [timeTakenSeconds, setTimeTakenSeconds] = useState(0)
+  const [timeLeftSeconds, setTimeLeftSeconds] = useState(timeLimitMinutes ? timeLimitMinutes * 60 : null)
 
   // Timer
   useEffect(() => {
     const timer = setInterval(() => {
       setTimeTakenSeconds(prev => prev + 1)
+      if (timeLeftSeconds !== null && timeLeftSeconds > 0) {
+        setTimeLeftSeconds(prev => prev - 1)
+      }
     }, 1000)
     return () => clearInterval(timer)
-  }, [])
+  }, [timeLeftSeconds])
+
+  // Auto-submit when time is up
+  useEffect(() => {
+    if (timeLeftSeconds === 0 && !isSubmitting) {
+      handleSubmit()
+    }
+  }, [timeLeftSeconds, isSubmitting])
 
   const currentMcq = mcqs[currentIndex]
   const isLastQuestion = currentIndex === mcqs.length - 1
@@ -47,7 +61,8 @@ export function QuizInteractive({ sessionId, mcqs, medium = 'english' }) {
     }
   }
 
-  const handleSubmit = async () => {
+  const handleSubmit = useCallback(async () => {
+    if (isSubmitting) return;
     setIsSubmitting(true)
     
     // Format answers for submission
@@ -60,12 +75,21 @@ export function QuizInteractive({ sessionId, mcqs, medium = 'english' }) {
     const result = await submitExam(sessionId, formattedAnswers)
     
     if (result.success) {
+      if (result.newAchievements?.length > 0) {
+        result.newAchievements.forEach(ach => {
+          toast.success(`Achievement Unlocked: ${ach.title}`, {
+            description: ach.description,
+            icon: <Trophy className="w-5 h-5 text-amber-500" />,
+            duration: 6000,
+          });
+        });
+      }
       router.push(`/study/quiz/results/${sessionId}`)
     } else {
       alert("Failed to submit exam. Please try again.")
       setIsSubmitting(false)
     }
-  }
+  }, [answers, isSubmitting, mcqs, sessionId, timeTakenSeconds, router]);
 
   // Format time (MM:SS)
   const formatTime = (seconds) => {
@@ -79,11 +103,18 @@ export function QuizInteractive({ sessionId, mcqs, medium = 'english' }) {
       {/* Header / Progress */}
       <div className="mb-8 flex flex-col gap-4">
         <div className="flex items-center justify-between">
-          <span className="text-sm font-medium text-zinc-500">
-            {medium === 'urdu' ? `${mcqs.length} میں سے سوال ${currentIndex + 1}` : `Question ${currentIndex + 1} of ${mcqs.length}`}
-          </span>
-          <span className="text-sm font-mono font-medium text-teal-600 bg-teal-50 px-3 py-1 rounded-md">
-            {formatTime(timeTakenSeconds)}
+          <div className="flex items-center gap-3">
+            <span className="text-sm font-medium text-zinc-500">
+              {medium === 'urdu' ? `${mcqs.length} میں سے سوال ${currentIndex + 1}` : `Question ${currentIndex + 1} of ${mcqs.length}`}
+            </span>
+            {timeLimitMinutes && (
+              <Badge variant="outline" className="bg-rose-50 text-rose-600 border-rose-100 font-bold px-2 py-0.5 text-[10px] uppercase tracking-wider">
+                Mock Exam
+              </Badge>
+            )}
+          </div>
+          <span className={`text-sm font-mono font-medium px-3 py-1 rounded-md ${timeLeftSeconds !== null && timeLeftSeconds < 60 ? 'bg-rose-50 text-rose-600 animate-pulse' : 'bg-teal-50 text-teal-600'}`}>
+            {timeLeftSeconds !== null ? `Time Left: ${formatTime(timeLeftSeconds)}` : formatTime(timeTakenSeconds)}
           </span>
         </div>
         <Progress value={progress} className="h-2 bg-teal-50" />
@@ -155,7 +186,26 @@ export function QuizInteractive({ sessionId, mcqs, medium = 'english' }) {
       </Card>
 
       {/* AI Tutor Integration */}
-      <AiTutor mcqId={currentMcq.id} medium={medium} />
+                  <div className="flex flex-col sm:flex-row items-center gap-3 w-full">
+                    <AiTutor mcqId={currentMcq.id} medium={medium} />
+                    <Button 
+                      variant="ghost" 
+                      size="sm" 
+                      onClick={() => {
+                        const reason = window.prompt("Reason for reporting (e.g., wrong_answer, typo):");
+                        if (reason) {
+                          reportMcq({ mcqId: currentMcq.id, reason }).then(res => {
+                            if (res.success) toast.success("Report submitted. Thank you!");
+                            else toast.error("Failed to submit report.");
+                          });
+                        }
+                      }}
+                      className="text-amber-600 hover:text-amber-700 hover:bg-amber-50 gap-2 font-medium text-xs"
+                    >
+                      <AlertTriangle className="w-3.5 h-3.5" />
+                      Report Issue
+                    </Button>
+                  </div>
 
       {/* Navigation Footer */}
       <div className="flex items-center justify-between pt-4 gap-3">

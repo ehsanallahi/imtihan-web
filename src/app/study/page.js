@@ -6,6 +6,9 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter }
 import { Button } from "@/components/ui/button";
 import { BookOpen, Layers, GraduationCap, ArrowRight, CreditCard, Sparkles } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import { getAllSubjectsProgress } from "@/actions/progressActions";
+import { Progress } from "@/components/ui/progress";
+import ReferralWidget from "@/components/study/ReferralWidget";
 
 export default async function StudyDashboardPage() {
   const session = await auth();
@@ -41,6 +44,10 @@ export default async function StudyDashboardPage() {
   // Calculate some basic stats
   const totalChapters = subjects.reduce((acc, sub) => acc + sub._count.chapters, 0);
   const totalMcqs = subjects.reduce((acc, sub) => acc + sub._count.mcqs, 0);
+
+  // Fetch Subject Progress
+  const progressRes = await getAllSubjectsProgress();
+  const subjectProgress = progressRes.success ? progressRes.progress : {};
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 w-full animate-in fade-in slide-in-from-bottom-4 duration-700">
@@ -120,12 +127,14 @@ export default async function StudyDashboardPage() {
         </div>
       </div>
 
-      {/* Subjects Grid */}
-      <div className="space-y-4">
-        <h2 className="text-2xl font-display font-bold text-teal-900 flex items-center gap-2">
-          <BookOpen className="h-6 w-6 text-teal-600" />
-          Your Subjects
-        </h2>
+      {/* Main Grid */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        {/* Left Column: Subjects */}
+        <div className="lg:col-span-2 space-y-4">
+          <h2 className="text-2xl font-display font-bold text-teal-900 flex items-center gap-2">
+            <BookOpen className="h-6 w-6 text-teal-600" />
+            Your Subjects
+          </h2>
         
         {subjects.length === 0 ? (
           <div className="p-12 text-center border-2 border-dashed border-teal-100 rounded-xl bg-teal-50/30">
@@ -148,15 +157,27 @@ export default async function StudyDashboardPage() {
                   )}
                 </CardHeader>
                 <CardContent className="p-4 sm:p-6 pt-0 sm:pt-0 flex-1">
-                  <div className="flex flex-col gap-2 text-sm text-zinc-600">
-                    <div className="flex justify-between items-center bg-slate-50 p-2 rounded-md">
-                      <span>Chapters</span>
-                      <span className="font-semibold text-teal-900">{subject._count.chapters}</span>
+                  <div className="flex flex-col gap-4">
+                    <div className="flex flex-col gap-2 text-sm text-zinc-600">
+                      <div className="flex justify-between items-center bg-slate-50 p-2 rounded-md">
+                        <span>Chapters</span>
+                        <span className="font-semibold text-teal-900">{subject._count.chapters}</span>
+                      </div>
+                      <div className="flex justify-between items-center bg-slate-50 p-2 rounded-md">
+                        <span>MCQs</span>
+                        <span className="font-semibold text-teal-900">{subject._count.mcqs}</span>
+                      </div>
                     </div>
-                    <div className="flex justify-between items-center bg-slate-50 p-2 rounded-md">
-                      <span>MCQs</span>
-                      <span className="font-semibold text-teal-900">{subject._count.mcqs}</span>
-                    </div>
+
+                    {subjectProgress[subject.id] && (
+                      <div className="space-y-1.5">
+                        <div className="flex justify-between items-center text-[10px] font-bold uppercase tracking-tight">
+                          <span className="text-zinc-400">Total Progress</span>
+                          <span className="text-teal-600">{subjectProgress[subject.id].percent}%</span>
+                        </div>
+                        <Progress value={subjectProgress[subject.id].percent} className="h-1.5 bg-slate-100" />
+                      </div>
+                    )}
                   </div>
                 </CardContent>
                 <CardFooter className="p-4 sm:p-6 pt-4 border-t border-slate-100">
@@ -170,6 +191,12 @@ export default async function StudyDashboardPage() {
             ))}
           </div>
         )}
+        </div>
+
+        {/* Right Column: Sidebar */}
+        <div className="space-y-6">
+          <ReferralWidget />
+        </div>
       </div>
 
     </div>

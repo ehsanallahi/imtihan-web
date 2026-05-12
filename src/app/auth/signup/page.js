@@ -1,7 +1,7 @@
 "use client";
 
-import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { useState, useEffect } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -10,6 +10,7 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { AlertCircle, Loader2, CheckCircle2, Eye, EyeOff } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { registerUser } from "@/actions/authActions";
+import { getSubjectsByGradeAndBoard } from "@/actions/subjectActions";
 import { signIn } from "next-auth/react";
 
 const GRADES = [
@@ -30,8 +31,36 @@ const BOARDS = [
 
 export default function SignUpPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const refCode = searchParams?.get("ref") || null;
   const [step, setStep] = useState(1);
-  const [form, setForm] = useState({ name: "", email: "", password: "", confirmPassword: "", grade: "", board: "" });
+  const [form, setForm] = useState({ name: "", email: "", password: "", confirmPassword: "", grade: "", board: "", subjectIds: [] });
+  const [subjects, setSubjects] = useState([]);
+  const [loadingSubjects, setLoadingSubjects] = useState(false);
+
+  useEffect(() => {
+    async function loadSubjects() {
+      if (form.grade && form.board) {
+        setLoadingSubjects(true);
+        const fetched = await getSubjectsByGradeAndBoard(form.grade, form.board);
+        setSubjects(fetched);
+        setForm((f) => ({ ...f, subjectIds: [] }));
+        setLoadingSubjects(false);
+      } else {
+        setSubjects([]);
+      }
+    }
+    loadSubjects();
+  }, [form.grade, form.board]);
+
+  const toggleSubject = (id) => {
+    setForm((f) => ({
+      ...f,
+      subjectIds: f.subjectIds?.includes(id)
+        ? f.subjectIds.filter((s) => s !== id)
+        : [...(f.subjectIds || []), id],
+    }));
+  };
   const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [success, setSuccess] = useState(false);
@@ -59,7 +88,7 @@ export default function SignUpPage() {
     e.preventDefault();
     setIsLoading(true);
     setError("");
-    const result = await registerUser({ name: form.name, email: form.email, password: form.password, grade: form.grade || null, board: form.board || null });
+    const result = await registerUser({ name: form.name, email: form.email, password: form.password, grade: form.grade || null, board: form.board || null, subjectIds: form.subjectIds, referralCode: refCode });
     if (!result.success) {
       setError(result.error);
       setIsLoading(false);
@@ -187,6 +216,23 @@ export default function SignUpPage() {
                   ))}
                 </div>
               </div>
+              {loadingSubjects ? (
+                <div className="flex items-center justify-center py-2 text-zinc-400 text-sm">
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Loading subjects...
+                </div>
+              ) : subjects.length > 0 ? (
+                <div className="space-y-2">
+                  <Label>Select Subjects (Optional)</Label>
+                  <div className="flex flex-wrap gap-2">
+                    {subjects.map((s) => (
+                      <button key={s.id} type="button" onClick={() => toggleSubject(s.id)}
+                        className={`py-1.5 px-3 rounded-full border text-xs font-semibold transition-all ${form.subjectIds?.includes(s.id) ? "border-teal-500 bg-teal-50 text-teal-700" : "border-slate-200 text-zinc-600 hover:border-teal-300"}`}>
+                        {s.name}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              ) : null}
               <p className="text-xs text-zinc-400 text-center">You can change these later in Settings.</p>
             </CardContent>
             <CardFooter className="flex flex-col gap-3">

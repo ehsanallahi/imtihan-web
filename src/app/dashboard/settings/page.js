@@ -8,7 +8,10 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { CheckCircle2, AlertCircle, Loader2, User, Lock, GraduationCap } from "lucide-react";
-import { updateStudentProfile, changePassword } from "@/actions/authActions";
+import { updateStudentProfile, changePassword, getStudentProfile } from "@/actions/authActions";
+import { getSubjectsByGradeAndBoard } from "@/actions/subjectActions";
+import { Target } from "lucide-react";
+import { Slider } from "@/components/ui/slider";
 
 const GRADES = [
   { value: "nine", label: "Grade 9" },
@@ -27,7 +30,9 @@ const BOARDS = [
 
 export default function SettingsPage() {
   const { data: session, update: updateSession } = useSession();
-  const [profileForm, setProfileForm] = useState({ name: "", grade: "", board: "" });
+  const [profileForm, setProfileForm] = useState({ name: "", grade: "", board: "", dailyGoalCount: 20, subjectIds: [] });
+  const [subjects, setSubjects] = useState([]);
+  const [loadingSubjects, setLoadingSubjects] = useState(false);
   const [passwordForm, setPasswordForm] = useState({ currentPassword: "", newPassword: "", confirmPassword: "" });
   const [profileStatus, setProfileStatus] = useState(null);
   const [passwordStatus, setPasswordStatus] = useState(null);
@@ -35,10 +40,37 @@ export default function SettingsPage() {
   const [passwordLoading, setPasswordLoading] = useState(false);
 
   useEffect(() => {
-    if (session?.user) {
-      setProfileForm((f) => ({ ...f, name: session.user.name || "" }));
+    async function loadProfile() {
+      if (session?.user) {
+        setProfileForm((f) => ({ ...f, name: session.user.name || "" }));
+        const profile = await getStudentProfile();
+        if (profile) {
+          setProfileForm((f) => ({
+            ...f,
+            grade: profile.grade || "",
+            board: profile.board || "",
+            dailyGoalCount: profile.dailyGoalCount || 20,
+            subjectIds: profile.subjects?.map(s => s.id) || [],
+          }));
+        }
+      }
     }
+    loadProfile();
   }, [session]);
+
+  useEffect(() => {
+    async function loadSubjects() {
+      if (profileForm.grade && profileForm.board) {
+        setLoadingSubjects(true);
+        const fetched = await getSubjectsByGradeAndBoard(profileForm.grade, profileForm.board);
+        setSubjects(fetched);
+        setLoadingSubjects(false);
+      } else {
+        setSubjects([]);
+      }
+    }
+    loadSubjects();
+  }, [profileForm.grade, profileForm.board]);
 
   const handleProfileSave = async (e) => {
     e.preventDefault();
@@ -68,7 +100,24 @@ export default function SettingsPage() {
     setPasswordLoading(false);
   };
 
-  const pick = (field, val) => setProfileForm((f) => ({ ...f, [field]: val }));
+  const pick = (field, val) => {
+    setProfileForm((f) => {
+      const updated = { ...f, [field]: val };
+      if (field === "grade" || field === "board") {
+        updated.subjectIds = [];
+      }
+      return updated;
+    });
+  };
+
+  const toggleSubject = (id) => {
+    setProfileForm((f) => ({
+      ...f,
+      subjectIds: f.subjectIds?.includes(id)
+        ? f.subjectIds.filter((s) => s !== id)
+        : [...(f.subjectIds || []), id],
+    }));
+  };
 
   return (
     <div className="space-y-8 animate-in fade-in duration-700 max-w-2xl">
@@ -119,6 +168,45 @@ export default function SettingsPage() {
                   </button>
                 ))}
               </div>
+            </div>
+            {loadingSubjects ? (
+              <div className="flex items-center justify-center py-2 text-zinc-400 text-sm">
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Loading subjects...
+              </div>
+            ) : subjects.length > 0 ? (
+              <div className="space-y-2">
+                <Label>Subjects</Label>
+                <div className="flex flex-wrap gap-2">
+                  {subjects.map((s) => (
+                    <button key={s.id} type="button" onClick={() => toggleSubject(s.id)}
+                      className={`py-1.5 px-3 rounded-full border text-xs font-semibold transition-all ${profileForm.subjectIds?.includes(s.id) ? "border-teal-500 bg-teal-50 text-teal-700" : "border-slate-200 text-zinc-600 hover:border-teal-300"}`}>
+                      {s.name}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            ) : null}
+            <div className="space-y-4 pt-2 border-t border-slate-100">
+              <div className="flex items-center justify-between">
+                <Label className="flex items-center gap-2 font-display font-bold text-slate-700 uppercase tracking-tight">
+                  <Target className="w-4 h-4 text-rose-500" />
+                  Daily MCQ Goal
+                </Label>
+                <span className="text-lg font-black text-teal-700">{profileForm.dailyGoalCount}</span>
+              </div>
+              <div className="px-2">
+                <Slider
+                  value={[profileForm.dailyGoalCount]}
+                  min={5}
+                  max={100}
+                  step={5}
+                  onValueChange={(val) => setProfileForm((f) => ({ ...f, dailyGoalCount: val[0] }))}
+                  className="py-4"
+                />
+              </div>
+              <p className="text-[10px] text-zinc-400 font-medium italic">
+                Set a target for how many practice questions you want to complete every day.
+              </p>
             </div>
             <Button type="submit" disabled={profileLoading} className="bg-teal-600 hover:bg-teal-700 text-white">
               {profileLoading ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Saving...</> : "Save Profile"}

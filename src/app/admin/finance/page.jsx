@@ -10,6 +10,8 @@ import {
   Activity,
   History
 } from "lucide-react";
+import ExportButton from "@/components/admin/ExportButton";
+import { Button } from "@/components/ui/button";
 
 export const dynamic = 'force-dynamic';
 
@@ -40,9 +42,11 @@ export default async function AdminFinancePage() {
           <p className="text-slate-500 font-medium italic">Monitor platform revenue, subscriptions, and financial growth.</p>
         </div>
         <div className="flex items-center gap-3">
-           <button className="flex items-center gap-2 bg-white text-slate-700 px-6 py-2.5 rounded-xl font-bold border border-slate-200 hover:bg-slate-50 transition-all shadow-sm">
-              <Download className="w-4 h-4" /> Download Report
-           </button>
+           <ExportButton 
+            data={stats?.recentPayments?.map(p => ({ ...p, userName: p.user?.name, userEmail: p.user?.email }))} 
+            filename="imtihan_revenue_report" 
+            headers={["userName", "userEmail", "plan", "amountPkr", "startDate"]} 
+          />
         </div>
       </div>
 

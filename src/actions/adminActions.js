@@ -2,6 +2,7 @@
 
 import { db } from "@/lib/db";
 import { auth } from "@/auth";
+import { recordAuditLog } from "@/lib/audit";
 
 async function ensureAdmin() {
   const session = await auth();
@@ -11,6 +12,7 @@ async function ensureAdmin() {
   if (!session?.user || !adminRoles.includes(session.user.role)) {
     throw new Error(`Unauthorized access to admin actions. Role: ${session?.user?.role || "undefined"}`);
   }
+  return session;
 }
 
 export async function getAdminStudents() {
@@ -73,12 +75,14 @@ export async function getAdminStats() {
   try {
     await ensureAdmin();
     
-    const [userCount, studentCount, teacherCount, premiumCount, mcqCount] = await Promise.all([
+    const [userCount, studentCount, teacherCount, premiumCount, mcqCount, reportsCount, pendingReviewsCount] = await Promise.all([
       db.user.count(),
       db.user.count({ where: { role: "student" } }),
       db.user.count({ where: { role: "teacher" } }),
       db.user.count({ where: { role: "premium_student" } }),
-      db.mCQ.count()
+      db.mCQ.count(),
+      db.mCQReport.count({ where: { status: "pending" } }),
+      db.mCQ.count({ where: { isApproved: false } })
     ]);
     
     return {
@@ -89,6 +93,8 @@ export async function getAdminStats() {
         teachers: teacherCount,
         premium: premiumCount,
         mcqs: mcqCount,
+        pendingReports: reportsCount,
+        pendingReviews: pendingReviewsCount,
         recentStudents: await db.user.findMany({
           where: { role: { in: ["student", "premium_student"] } },
           include: { studentProfile: true },
@@ -113,7 +119,7 @@ export async function getAdminContent() {
           orderBy: { number: "asc" }
         },
         _count: {
-          select: { mcqs: true }
+          select: { mcqs: true, chapters: true }
         }
       },
       orderBy: [
@@ -210,6 +216,12 @@ export async function approveMcq(id) {
       where: { id },
       data: { isApproved: true }
     });
+
+    await recordAuditLog({
+      action: "APPROVE_MCQ",
+      entity: "MCQ",
+      entityId: id,
+    });
     
     return { success: true };
   } catch (error) {
@@ -224,6 +236,12 @@ export async function deleteMcq(id) {
     
     await db.mCQ.delete({
       where: { id }
+    });
+
+    await recordAuditLog({
+      action: "DELETE_MCQ",
+      entity: "MCQ",
+      entityId: id,
     });
     
     return { success: true };
@@ -281,6 +299,13 @@ export async function createMcq(data) {
         isApproved: true,
         isAiGenerated: false
       }
+    });
+
+    await recordAuditLog({
+      action: "CREATE_MCQ",
+      entity: "MCQ",
+      entityId: mcq.id,
+      details: { question: data.question }
     });
     
     return { success: true, data: mcq };
@@ -348,10 +373,43 @@ export async function broadcastNotification(data) {
     await db.notification.createMany({
       data: notifications
     });
+
+    await recordAuditLog({
+      action: "BROADCAST_NOTIFICATION",
+      entity: "Notification",
+      details: { title: data.title, targetCount: users.length }
+    });
     
     return { success: true, count: users.length };
   } catch (error) {
     console.error("Broadcast Error:", error);
+    return { error: error.message };
+  }
+}
+
+export async function getAuditLogs() {
+  try {
+    await ensureAdmin();
+    
+    const logs = await db.auditLog.findMany({
+      include: {
+        user: {
+          select: {
+            name: true,
+            email: true,
+            role: true
+          }
+        }
+      },
+      orderBy: {
+        createdAt: "desc"
+      },
+      take: 100
+    });
+    
+    return { success: true, data: logs };
+  } catch (error) {
+    console.error("Audit Logs Error:", error);
     return { error: error.message };
   }
 }
@@ -371,6 +429,13 @@ export async function toggleUserStatus(userId) {
       where: { id: userId },
       data: { isActive: !user.isActive }
     });
+
+    await recordAuditLog({
+      action: "TOGGLE_USER_STATUS",
+      entity: "User",
+      entityId: userId,
+      details: { newStatus: updatedUser.isActive }
+    });
     
     return { success: true, isActive: updatedUser.isActive };
   } catch (error) {
@@ -379,3 +444,265 @@ export async function toggleUserStatus(userId) {
   }
 }
 
+export async function impersonateUser(targetUserId) {
+  try {
+    await ensureAdmin();
+    
+    const targetUser = await db.user.findUnique({
+      where: { id: targetUserId },
+      select: {
+        id: true,
+        name: true,
+        email: true,
+        role: true
+      }
+    });
+    
+    if (!targetUser) throw new Error("Target user not found");
+    
+    await recordAuditLog({
+      action: "IMPERSONATE_START",
+      entity: "User",
+      entityId: targetUserId,
+      details: { targetName: targetUser.name, targetEmail: targetUser.email }
+    });
+    
+    return { success: true, data: targetUser };
+  } catch (error) {
+    console.error("Impersonation Error:", error);
+    return { error: error.message };
+  }
+}
+
+export async function getAiUsageStats() {
+  try {
+    await ensureAdmin();
+    
+    // Total usage across all users
+    const totalUsage = await db.aiUsage.aggregate({
+      _sum: { count: true }
+    });
+    
+    // Usage over the last 30 days
+    const thirtyDaysAgo = new Date();
+    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+    
+    const dailyUsage = await db.aiUsage.groupBy({
+      by: ['date'],
+      where: {
+        date: { gte: thirtyDaysAgo }
+      },
+      _sum: { count: true },
+      orderBy: { date: 'asc' }
+    });
+    
+    // Top users by AI usage
+    const topUsers = await db.aiUsage.groupBy({
+      by: ['userId'],
+      _sum: { count: true },
+      orderBy: { _sum: { count: 'desc' } },
+      take: 10
+    });
+    
+    const topUsersWithDetails = await Promise.all(
+      topUsers.map(async (u) => {
+        const user = await db.user.findUnique({
+          where: { id: u.userId },
+          select: { name: true, email: true }
+        });
+        return { ...u, user };
+      })
+    );
+    
+    return { 
+      success: true, 
+      data: {
+        total: totalUsage._sum.count || 0,
+        dailyUsage,
+        topUsers: topUsersWithDetails
+      } 
+    };
+  } catch (error) {
+    console.error("AI Usage Stats Error:", error);
+    return { error: error.message };
+  }
+}
+
+
+export async function updateUserRole(userId, newRole) {
+  try {
+    await ensureAdmin();
+    
+    const user = await db.user.findUnique({
+      where: { id: userId },
+      select: { role: true, name: true }
+    });
+    
+    if (!user) throw new Error("User not found");
+    
+    const updatedUser = await db.user.update({
+      where: { id: userId },
+      data: { role: newRole }
+    });
+    
+    await recordAuditLog({
+      action: "UPDATE_USER_ROLE",
+      entity: "User",
+      entityId: userId,
+      details: { oldRole: user.role, newRole: newRole, userName: user.name }
+    });
+    
+    return { success: true, role: updatedUser.role };
+  } catch (error) {
+    console.error("Update Role Error:", error);
+    return { error: error.message };
+  }
+}
+
+export async function verifyTeacher(teacherId) {
+  try {
+    await ensureAdmin();
+    
+    const teacher = await db.teacherProfile.findUnique({
+      where: { userId: teacherId },
+      include: { user: true }
+    });
+    
+    if (!teacher) throw new Error("Teacher profile not found");
+    
+    await db.teacherProfile.update({
+      where: { userId: teacherId },
+      data: { isVerified: true }
+    });
+    
+    await recordAuditLog({
+      action: "VERIFY_TEACHER",
+      entity: "TeacherProfile",
+      entityId: teacherId,
+      details: { teacherName: teacher.user.name }
+    });
+    
+    return { success: true };
+  } catch (error) {
+    console.error("Verify Teacher Error:", error);
+    return { error: error.message };
+  }
+}
+
+export async function getInstitutions() {
+  try {
+    await ensureAdmin();
+    const institutions = await db.institution.findMany({
+      include: {
+        _count: { select: { teachers: true } }
+      },
+      orderBy: { name: "asc" }
+    });
+    return { success: true, data: institutions };
+  } catch (error) {
+    console.error("Get Institutions Error:", error);
+    return { error: error.message };
+  }
+}
+
+export async function createInstitution(data) {
+  try {
+    const session = await ensureAdmin();
+    
+    const inst = await db.institution.create({ 
+      data: {
+        name: data.name,
+        city: data.address, // Mapping address to city field in schema
+        adminId: session.user.id
+      } 
+    });
+    
+    await recordAuditLog({
+      action: "CREATE_INSTITUTION",
+      entity: "Institution",
+      entityId: inst.id,
+      details: { name: inst.name }
+    });
+    return { success: true, data: inst };
+  } catch (error) {
+    console.error("Create Institution Error:", error);
+    return { error: error.message };
+  }
+}
+
+export async function deleteInstitution(id) {
+  try {
+    await ensureAdmin();
+    await db.institution.delete({ where: { id } });
+    await recordAuditLog({
+      action: "DELETE_INSTITUTION",
+      entity: "Institution",
+      entityId: id
+    });
+    return { success: true };
+  } catch (error) {
+    console.error("Delete Institution Error:", error);
+    return { error: error.message };
+  }
+}
+
+
+
+export async function getBroadcastHistory() {
+  try {
+    await ensureAdmin();
+    const logs = await db.auditLog.findMany({
+      where: { action: "BROADCAST_NOTIFICATION" },
+      include: { user: true },
+      orderBy: { createdAt: "desc" },
+      take: 20
+    });
+    return { success: true, data: logs };
+  } catch (error) {
+    console.error("Get Broadcast History Error:", error);
+    return { error: error.message };
+  }
+}
+export async function resolveMcqReport(reportId) {
+  try {
+    await ensureAdmin();
+    
+    await db.mCQReport.update({
+      where: { id: reportId },
+      data: { status: "resolved" }
+    });
+
+    await recordAuditLog({
+      action: "RESOLVE_MCQ_REPORT",
+      entity: "MCQReport",
+      entityId: reportId,
+    });
+    
+    return { success: true };
+  } catch (error) {
+    console.error("Resolve Report Error:", error);
+    return { error: error.message };
+  }
+}
+
+export async function dismissMcqReport(reportId) {
+  try {
+    await ensureAdmin();
+    
+    await db.mCQReport.update({
+      where: { id: reportId },
+      data: { status: "dismissed" }
+    });
+
+    await recordAuditLog({
+      action: "DISMISS_MCQ_REPORT",
+      entity: "MCQReport",
+      entityId: reportId,
+    });
+    
+    return { success: true };
+  } catch (error) {
+    console.error("Dismiss Report Error:", error);
+    return { error: error.message };
+  }
+}

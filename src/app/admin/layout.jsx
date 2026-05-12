@@ -1,3 +1,4 @@
+export const dynamic = "force-dynamic";
 import AdminSidebar from "@/components/admin/AdminSidebar";
 import { User, ShieldCheck } from "lucide-react";
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";

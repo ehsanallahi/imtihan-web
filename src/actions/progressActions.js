@@ -14,9 +14,10 @@ export async function getSubjectProgress(subjectId) {
     if (!session) return { success: false, error: "Unauthorized" };
 
     const userId = session.user.id;
-    const profile = await db.studentProfile.findUnique({
-      where: { userId },
-      select: { id: true }
+    if (!userId) return { success: false, error: "User ID missing from session" };
+
+    const profile = await db.studentProfile.findFirst({
+      where: { userId: String(userId) }
     });
 
     if (!profile) return { success: false, error: "Profile not found" };
@@ -85,9 +86,10 @@ export async function getAllSubjectsProgress() {
     if (!session) return { success: false, error: "Unauthorized" };
 
     const userId = session.user.id;
-    const profile = await db.studentProfile.findUnique({
-      where: { userId },
-      select: { id: true }
+    if (!userId) return { success: false, error: "User ID missing from session" };
+
+    const profile = await db.studentProfile.findFirst({
+      where: { userId: String(userId) }
     });
 
     if (!profile) return { success: false, error: "Profile not found" };
@@ -139,9 +141,10 @@ export async function getDailyGoalProgress() {
     if (!session) return { success: false, error: "Unauthorized" };
 
     const userId = session.user.id;
-    const profile = await db.studentProfile.findUnique({
-      where: { userId },
-      select: { dailyGoalCount: true }
+    if (!userId) return { success: false, error: "User ID missing from session" };
+
+    const profile = await db.studentProfile.findFirst({
+      where: { userId: String(userId) }
     });
 
     if (!profile) return { success: false, error: "Profile not found" };

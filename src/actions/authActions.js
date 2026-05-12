@@ -98,7 +98,7 @@ export async function getStudentProfile() {
     const session = await auth();
     if (!session) return null;
 
-    const profile = await db.studentProfile.findUnique({
+    const profile = await db.studentProfile.findFirst({
       where: { userId: session.user.id }
     });
 

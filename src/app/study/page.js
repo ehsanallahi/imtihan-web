@@ -4,7 +4,7 @@ import { redirect } from "next/navigation";
 import Link from "next/link";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { BookOpen, Layers, GraduationCap, ArrowRight, CreditCard, Sparkles } from "lucide-react";
+import { BookOpen, Layers, GraduationCap, ArrowRight, CreditCard, Sparkles, Shield, MessageSquare, Trophy, Users } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { getAllSubjectsProgress } from "@/actions/progressActions";
 import { Progress } from "@/components/ui/progress";
@@ -195,6 +195,57 @@ export default async function StudyDashboardPage() {
 
         {/* Right Column: Sidebar */}
         <div className="space-y-6">
+          {/* Social & Community */}
+          <Card className="border-none shadow-sm overflow-hidden bg-white">
+            <CardHeader className="pb-4">
+              <CardTitle className="text-xl font-display font-black text-slate-800 flex items-center gap-2">
+                <Users className="w-5 h-5 text-indigo-500" />
+                Community
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              <Link href="/study/tribes" className="block p-4 rounded-2xl bg-teal-50 border-2 border-transparent hover:border-teal-200 transition-all group">
+                <div className="flex justify-between items-center">
+                  <div className="flex items-center gap-3">
+                    <Shield className="w-5 h-5 text-teal-600" />
+                    <span className="font-bold text-teal-900">Study Tribes</span>
+                  </div>
+                  <ArrowRight className="w-4 h-4 text-teal-400 group-hover:translate-x-1 transition-transform" />
+                </div>
+                <p className="text-[10px] font-medium text-teal-600 mt-1 uppercase tracking-wider">Join a clan & earn XP</p>
+              </Link>
+
+              <Link href="/study/community" className="block p-4 rounded-2xl bg-indigo-50 border-2 border-transparent hover:border-indigo-200 transition-all group">
+                <div className="flex justify-between items-center">
+                  <div className="flex items-center gap-3">
+                    <MessageSquare className="w-5 h-5 text-indigo-600" />
+                    <span className="font-bold text-indigo-900">Peer Doubts</span>
+                  </div>
+                  <ArrowRight className="w-4 h-4 text-indigo-400 group-hover:translate-x-1 transition-transform" />
+                </div>
+                <p className="text-[10px] font-medium text-indigo-600 mt-1 uppercase tracking-wider">Help others & earn KP</p>
+              </Link>
+            </CardContent>
+          </Card>
+
+          {/* Live Exams */}
+          <Card className="border-none shadow-sm overflow-hidden bg-gradient-to-br from-indigo-900 to-indigo-800 text-white">
+            <CardHeader className="pb-4">
+              <CardTitle className="text-xl font-display font-black flex items-center gap-2">
+                <Trophy className="w-5 h-5 text-amber-400" />
+                Live Exams
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p className="text-indigo-100 text-sm mb-4">Compete nationally and win scholarship points!</p>
+              <Link href="/study/live">
+                <Button className="w-full bg-amber-400 text-amber-950 hover:bg-amber-500 font-black rounded-xl">
+                  View Schedule
+                </Button>
+              </Link>
+            </CardContent>
+          </Card>
+
           <ReferralWidget />
         </div>
       </div>

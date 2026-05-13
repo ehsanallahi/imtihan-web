@@ -77,6 +77,7 @@ export async function askAiTutor(mcqId, doubt, threadId = null) {
     await db.doubtMessage.create({
       data: {
         threadId: currentThreadId,
+        senderId: userId,
         senderRole: 'student',
         content: doubt
       }

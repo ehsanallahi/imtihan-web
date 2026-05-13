@@ -40,6 +40,7 @@ model User {
   referralCode     String?           @unique
   rewardsClaimed   Int               @default(0)
   aiCreditsBalance Int               @default(0)
+  sentDoubtMessages DoubtMessage[]   @relation("MessageSender")
 }
 
 model Account {
@@ -89,6 +90,8 @@ model StudentProfile {
   longestStreak       Int                  @default(0)
   reviewsClearedCount Int                  @default(0)
   dailyGoalCount      Int                  @default(20)
+  knowledgePoints     Int                  @default(0)
+  tribeXp             Int                  @default(0)
   guardians           GuardianStudent[]
   user                User                 @relation(fields: [userId], references: [id], onDelete: Cascade)
   tutorChats          AiTutorChat[]
@@ -96,6 +99,7 @@ model StudentProfile {
   achievements        StudentAchievement[]
   srsProgress         StudentMCQProgress[]
   subjects            Subject[]            @relation("StudentSubjects")
+  tribeMemberships    TribeMember[]
 }
 
 model TeacherProfile {
@@ -153,6 +157,7 @@ model Subject {
   pastPaperMcqs    PastPaperMCQ[]
   pastPaperUploads PastPaperUpload[]
   textbookUploads  TextbookUpload[]
+  liveExams        LiveExam[]
   students         StudentProfile[]  @relation("StudentSubjects")
 }
 
@@ -302,6 +307,7 @@ model ExamSession {
   sessionType      SessionType
   subjectId        String?
   pastPaperId      String?
+  liveExamId       String?
   totalQuestions   Int
   correctAnswers   Int          @default(0)
   timeTakenSeconds Int?
@@ -309,6 +315,7 @@ model ExamSession {
   createdAt        DateTime     @default(now())
   timeLimitMinutes Int?
   student          User         @relation(fields: [studentId], references: [id])
+  liveExam         LiveExam?    @relation(fields: [liveExamId], references: [id])
   results          MCQAttempt[]
 }
 
@@ -423,10 +430,12 @@ model DoubtThread {
 model DoubtMessage {
   id         String      @id @default(cuid())
   threadId   String
+  senderId   String?
   senderRole MessageRole
   content    String
   createdAt  DateTime    @default(now())
   thread     DoubtThread @relation(fields: [threadId], references: [id], onDelete: Cascade)
+  sender     User?       @relation("MessageSender", fields: [senderId], references: [id])
 
   @@map("doubt_messages")
 }
@@ -579,6 +588,7 @@ enum ThreadStatus {
 enum MessageRole {
   student
   ai
+  peer
 }
 
 enum NotificationType {
@@ -605,4 +615,55 @@ model Referral {
   referee     User           @relation("Referee", fields: [refereeId], references: [id], onDelete: Cascade)
 
   @@map("referrals")
+}
+
+model Tribe {
+  id          String        @id @default(cuid())
+  name        String        @unique
+  description String?
+  avatar      String?
+  leaderId    String
+  xp          Int           @default(0)
+  level       Int           @default(1)
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+  members     TribeMember[]
+
+  @@map("tribes")
+}
+
+model TribeMember {
+  id               String         @id @default(cuid())
+  tribeId          String
+  studentProfileId String
+  role             TribeRole      @default(MEMBER)
+  joinedAt         DateTime       @default(now())
+  tribe            Tribe          @relation(fields: [tribeId], references: [id], onDelete: Cascade)
+  student          StudentProfile @relation(fields: [studentProfileId], references: [id], onDelete: Cascade)
+
+  @@unique([tribeId, studentProfileId])
+  @@map("tribe_members")
+}
+
+model LiveExam {
+  id               String        @id @default(cuid())
+  title            String
+  subjectId        String
+  startTime        DateTime
+  endTime          DateTime
+  durationMinutes  Int
+  totalQuestions   Int
+  isPublished      Boolean       @default(false)
+  createdAt        DateTime      @default(now())
+  updatedAt        DateTime      @updatedAt
+  subject          Subject       @relation(fields: [subjectId], references: [id])
+  sessions         ExamSession[]
+
+  @@map("live_exams")
+}
+
+enum TribeRole {
+  LEADER
+  OFFICER
+  MEMBER
 }

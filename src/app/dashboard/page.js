@@ -4,19 +4,23 @@ import { db } from "@/lib/db";
 import Link from "next/link";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import {
-  FileText, ArrowRight, BookOpen, Flame, Users, AlertCircle, Settings2, GraduationCap,
-  CheckCircle2, BrainCircuit, Clock
-} from "lucide-react";
 import { DashboardUploadSyllabus } from "@/components/dashboard/DashboardActions";
 import { LeaderboardWidget, BadgesWidget, DailyReviewWidget, DailyGoalWidget } from "@/components/dashboard/GamificationWidgets";
 import StudyRoadmap from "@/components/dashboard/StudyRoadmap";
+import { refreshDailyCredits } from "@/actions/creditActions";
+import {
+  FileText, ArrowRight, BookOpen, Flame, Users, AlertCircle, Settings2, GraduationCap,
+  CheckCircle2, BrainCircuit, Clock, Crown, Sparkles
+} from "lucide-react";
 
 export default async function DashboardPage(props) {
   const searchParams = await props.searchParams;
   const session = await auth();
   
   if (!session) redirect("/auth/signin");
+
+  // Refresh credits for the day
+  await refreshDailyCredits();
 
   const userRole = session?.user?.role;
   const adminRoles = [
@@ -35,7 +39,7 @@ export default async function DashboardPage(props) {
     const [targetUser, examSessions, profile] = await Promise.all([
       db.user.findUnique({
         where: { id: targetUserId },
-        select: { name: true, role: true }
+        select: { name: true, role: true, aiCreditsBalance: true }
       }),
       db.examSession.findMany({
         where: { studentId: targetUserId, completedAt: { not: null } },
@@ -46,6 +50,7 @@ export default async function DashboardPage(props) {
     ]);
 
     const isCmsUser = ["super_admin", "content_editor", "moderator"].includes(userRole);
+    const isPremium = targetUser?.role === 'premium_student' || targetUser?.role === 'super_admin';
     
     const totalQs = examSessions.reduce((a, s) => a + s.totalQuestions, 0);
     const totalCorrect = examSessions.reduce((a, s) => a + s.correctAnswers, 0);
@@ -94,12 +99,28 @@ export default async function DashboardPage(props) {
 
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 bg-gradient-to-br from-teal-900 to-teal-800 p-8 rounded-[2rem] text-white shadow-xl shadow-teal-900/20">
           <div className="space-y-2">
-            <h1 className="text-3xl font-display font-bold tracking-tight sm:text-4xl">
-              Hello, {targetUser?.name?.split(' ')[0] || "Student"}! 👋
-            </h1>
-            <p className="text-teal-100/80 max-w-md">
-              You've solved {totalQs} questions so far. Ready to crush some more today?
-            </p>
+            <div className="flex items-center gap-3">
+              <h1 className="text-3xl font-display font-bold tracking-tight sm:text-4xl">
+                Hello, {targetUser?.name?.split(' ')[0] || "Student"}! 👋
+              </h1>
+              {isPremium && (
+                <div className="bg-amber-400 text-amber-950 text-[10px] font-black px-2 py-1 rounded-full flex items-center gap-1 shadow-lg shadow-amber-400/20">
+                  <Crown className="w-3 h-3" /> PRO
+                </div>
+              )}
+            </div>
+            <div className="flex items-center gap-4 text-teal-100/80">
+              <p className="max-w-md">
+                You've solved {totalQs} questions so far.
+              </p>
+              <div className="w-1 h-1 rounded-full bg-teal-400" />
+              <Link href="/study/premium" className="flex items-center gap-2 bg-white/10 px-3 py-1.5 rounded-xl hover:bg-white/20 transition-all group">
+                <Sparkles className="w-3.5 h-3.5 text-amber-300 group-hover:rotate-12 transition-transform" />
+                <span className="text-xs font-black uppercase tracking-wider">
+                  {isPremium ? "Unlimited AI" : `${targetUser?.aiCreditsBalance || 0} AI Credits`}
+                </span>
+              </Link>
+            </div>
           </div>
           <Link href="/study">
             <Button size="lg" className="bg-white text-teal-900 hover:bg-teal-50 rounded-2xl font-black px-8 h-14 shadow-lg shadow-white/10 group">

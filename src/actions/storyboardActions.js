@@ -3,11 +3,18 @@
 import { db } from "@/lib/db";
 import { auth } from "@/auth";
 import { flashModel } from "@/lib/services/ai-service";
+import { checkAndDeductCredits } from "./creditActions";
 
 export async function generateChapterStoryboard(chapterId) {
   try {
     const session = await auth();
     if (!session) return { success: false, error: "Unauthorized" };
+
+    // Check and deduct credits
+    const creditCheck = await checkAndDeductCredits(5);
+    if (!creditCheck.allowed) {
+      return { success: false, error: creditCheck.error };
+    }
 
     const chapter = await db.chapter.findUnique({
       where: { id: chapterId },

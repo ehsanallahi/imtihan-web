@@ -4,7 +4,7 @@ import { auth } from "@/auth";
 import { getTutorResponse, getGroqTutorResponse, generateChatTitle } from "@/lib/services/ai-service";
 import { revalidatePath } from "next/cache";
 
-const FREE_USER_DAILY_LIMIT = 5;
+import { checkAndDeductCredits } from "./creditActions";
 
 /**
  * Handles a student's doubt about an MCQ.
@@ -18,23 +18,11 @@ export async function askAiTutor(mcqId, doubt, threadId = null) {
     if (!session) return { success: false, error: "Unauthorized" };
 
     const userId = session.user.id;
-    const isPremium = session.user.role === 'premium_student' || session.user.role === 'super_admin'; // Adjust roles as needed
-
-    // Check usage limits for free users
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-
-    if (!isPremium) {
-      const usage = await db.aiUsage.findUnique({
-        where: { userId_date: { userId, date: today } }
-      });
-
-      if (usage && usage.count >= FREE_USER_DAILY_LIMIT) {
-        return { 
-          success: false, 
-          error: `You've reached your daily limit of ${FREE_USER_DAILY_LIMIT} AI questions. Upgrade to Premium for unlimited access!` 
-        };
-      }
+    
+    // Check and deduct credits
+    const creditCheck = await checkAndDeductCredits(1);
+    if (!creditCheck.allowed) {
+      return { success: false, error: creditCheck.error };
     }
 
     // Get or create StudentProfile

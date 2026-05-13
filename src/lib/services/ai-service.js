@@ -1,7 +1,7 @@
 import { GoogleGenerativeAI } from "@google/generative-ai";
 
 const genAI = new GoogleGenerativeAI(process.env.GOOGLE_AI_API_KEY);
-const flashModel = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+export const flashModel = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
 
 /**
  * Generates MCQs from provided textbook text using Gemini.
@@ -400,5 +400,46 @@ export async function generateChatTitle(firstMessage) {
   } catch (error) {
     console.error("[TITLE_GENERATION_ERROR]:", error);
     return "New Conversation";
+  }
+}
+
+/**
+ * Analyzes an image (diagram, handwritten note, etc.) and solves the problem.
+ * @param {string} base64Image - The image data in base64.
+ * @param {string} mimeType - The mime type of the image.
+ * @param {string} prompt - The student's question or context.
+ * @returns {Promise<string>} - The AI's explanation.
+ */
+export async function analyzeImageProblem(base64Image, mimeType, prompt = "Analyze this image and solve the problem step-by-step.") {
+  const model = flashModel;
+
+  const parts = [
+    {
+      inlineData: {
+        data: base64Image,
+        mimeType: mimeType
+      }
+    },
+    { text: `You are Imtihan AI Tutor, an expert in Pakistani curriculum (9th-12th Grade). 
+    Your task is to analyze the provided image (which could be a diagram, a handwritten question, or a textbook page) and solve the problem.
+    
+    INSTRUCTIONS:
+    1. Identify what the image is (e.g., "This looks like a Physics circuit diagram" or "This is a Biology cell diagram").
+    2. Provide a step-by-step explanation of the solution.
+    3. If the image is unclear, ask the student to provide a better photo.
+    4. If there are multiple problems in the image, solve the most prominent one or provide a general overview.
+    5. Always encourage the student to practice similar problems on the Imtihan app.
+    
+    Student's Message: ${prompt}
+    
+    SOLVE STEP-BY-STEP:` }
+  ];
+
+  try {
+    const result = await model.generateContent(parts);
+    return result.response.text();
+  } catch (error) {
+    console.error("[VISUAL_AI_ERROR]:", error);
+    throw new Error("Failed to analyze image. Please ensure your API key has multi-modal support.");
   }
 }

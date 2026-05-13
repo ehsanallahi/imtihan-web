@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { BrainCircuit, Send, Loader2, User, Sparkles, X, Mic, MicOff, Volume2, VolumeX } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
 import { askAiTutor, getDoubtHistory } from "@/actions/aiActions";
 import { toast } from "sonner";
 
@@ -17,6 +18,7 @@ export function AiTutor({ mcqId, medium = 'english' }) {
   const [threadId, setThreadId] = useState(null);
   const [isRecording, setIsRecording] = useState(false);
   const [isSpeaking, setIsSpeaking] = useState(null); // stores index of message being spoken
+  const [isHandsFree, setIsHandsFree] = useState(false);
   const scrollRef = useRef(null);
   const recognitionRef = useRef(null);
   const synthRef = useRef(typeof window !== 'undefined' ? window.speechSynthesis : null);
@@ -32,6 +34,16 @@ export function AiTutor({ mcqId, medium = 'english' }) {
       scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
     }
   }, [messages]);
+
+  // Handle auto-speak and auto-listen in hands-free mode
+  useEffect(() => {
+    if (isHandsFree && messages.length > 0) {
+      const lastMsg = messages[messages.length - 1];
+      if (lastMsg.senderRole === 'ai' && isSpeaking === null) {
+        handleSpeak(lastMsg.content, messages.length - 1, true);
+      }
+    }
+  }, [messages, isHandsFree]);
 
   async function loadHistory() {
     const thread = await getDoubtHistory(mcqId);
@@ -56,7 +68,6 @@ export function AiTutor({ mcqId, medium = 'english' }) {
         setThreadId(res.threadId);
         const aiMsg = { senderRole: "ai", content: res.aiResponse, createdAt: new Date() };
         setMessages(prev => [...prev, aiMsg]);
-        // Optionally auto-speak AI response if wanted, but better let user click
       } else {
         toast.error(res.error);
       }
@@ -97,18 +108,25 @@ export function AiTutor({ mcqId, medium = 'english' }) {
     recognitionRef.current.start();
   }
 
-  function handleSpeak(text, index) {
-    if (isSpeaking === index) {
+  function handleSpeak(text, index, triggerListenAfter = false) {
+    if (isSpeaking === index && !triggerListenAfter) {
       synthRef.current?.cancel();
       setIsSpeaking(null);
       return;
     }
 
     synthRef.current?.cancel();
-    const utterance = new SpeechSynthesisUtterance(text);
+    // Clean text for speech (remove markdown)
+    const cleanText = text.replace(/[*#_]/g, '');
+    const utterance = new SpeechSynthesisUtterance(cleanText);
     utterance.lang = medium === 'urdu' ? 'ur-PK' : 'en-US';
     
-    utterance.onend = () => setIsSpeaking(null);
+    utterance.onend = () => {
+      setIsSpeaking(null);
+      if (triggerListenAfter && isHandsFree) {
+        toggleRecording();
+      }
+    };
     utterance.onerror = () => setIsSpeaking(null);
     
     setIsSpeaking(index);
@@ -132,10 +150,21 @@ export function AiTutor({ mcqId, medium = 'english' }) {
   return (
     <Card className="mt-4 border-indigo-100 shadow-lg animate-in zoom-in-95 duration-200 overflow-hidden">
       <CardHeader className="bg-indigo-50/50 py-3 flex flex-row items-center justify-between">
-        <CardTitle className={`text-sm font-bold text-indigo-900 flex items-center gap-2 ${medium === 'urdu' ? 'flex-row-reverse' : ''}`}>
-          <Sparkles className="w-4 h-4 text-indigo-500" />
-          {medium === 'urdu' ? 'اے آئی ٹیوٹر کی مدد' : 'AI Tutor Help'}
-        </CardTitle>
+        <div className="flex items-center gap-4">
+          <CardTitle className={`text-sm font-bold text-indigo-900 flex items-center gap-2 ${medium === 'urdu' ? 'flex-row-reverse' : ''}`}>
+            <Sparkles className="w-4 h-4 text-indigo-500" />
+            {medium === 'urdu' ? 'اے آئی ٹیوٹر کی مدد' : 'AI Tutor Help'}
+          </CardTitle>
+          <div className="flex items-center gap-2 border-l border-indigo-200 pl-4">
+            <button 
+              onClick={() => setIsHandsFree(!isHandsFree)}
+              className={`flex items-center gap-1.5 px-2 py-1 rounded-full text-[10px] font-black uppercase tracking-widest transition-all ${isHandsFree ? 'bg-indigo-600 text-white shadow-sm' : 'bg-white text-indigo-400 border border-indigo-100'}`}
+            >
+              <Mic className="w-3 h-3" />
+              Hands-Free {isHandsFree ? 'ON' : 'OFF'}
+            </button>
+          </div>
+        </div>
         <Button variant="ghost" size="icon" className="h-6 w-6 text-indigo-400 hover:text-indigo-600" onClick={() => setIsOpen(false)}>
           <X className="w-4 h-4" />
         </Button>
@@ -151,9 +180,10 @@ export function AiTutor({ mcqId, medium = 'english' }) {
               <p className="text-sm text-zinc-500 font-medium">
                 {medium === 'urdu' ? 'اس سوال میں الجھن ہے؟ مجھ سے کچھ بھی پوچھیں!' : 'Confused about this question? Ask me anything!'}
               </p>
-              <p className="text-xs text-zinc-400 italic">
-                {medium === 'urdu' ? 'مثال: "آپشن سی کیوں غلط ہے؟"' : 'Example: "Why is option C incorrect?"'}
-              </p>
+              <div className="flex gap-2">
+                <Badge variant="secondary" className="text-[10px] bg-indigo-50 text-indigo-600 border-indigo-100 cursor-pointer" onClick={() => handleAsk("Why is the correct answer better than others?")}>"Why is it correct?"</Badge>
+                <Badge variant="secondary" className="text-[10px] bg-indigo-50 text-indigo-600 border-indigo-100 cursor-pointer" onClick={() => handleAsk("Explain this concept simply.")}>"Simplify concept"</Badge>
+              </div>
             </div>
           )}
           

@@ -4,7 +4,7 @@ import { redirect } from "next/navigation";
 import Link from "next/link";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { BookOpen, Layers, GraduationCap, ArrowRight, CreditCard, Sparkles, Shield, MessageSquare, Trophy, Users } from "lucide-react";
+import { BookOpen, Layers, GraduationCap, ArrowRight, CreditCard, Sparkles, Shield, MessageSquare, Trophy, Users, Eye } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { getAllSubjectsProgress } from "@/actions/progressActions";
 import { Progress } from "@/components/ui/progress";
@@ -224,6 +224,17 @@ export default async function StudyDashboardPage() {
                   <ArrowRight className="w-4 h-4 text-indigo-400 group-hover:translate-x-1 transition-transform" />
                 </div>
                 <p className="text-[10px] font-medium text-indigo-600 mt-1 uppercase tracking-wider">Help others & earn KP</p>
+              </Link>
+
+              <Link href="/study/visual-solver" className="block p-4 rounded-2xl bg-amber-50 border-2 border-transparent hover:border-amber-200 transition-all group">
+                <div className="flex justify-between items-center">
+                  <div className="flex items-center gap-3">
+                    <Eye className="w-5 h-5 text-amber-600" />
+                    <span className="font-bold text-amber-900">Visual Solver</span>
+                  </div>
+                  <ArrowRight className="w-4 h-4 text-amber-400 group-hover:translate-x-1 transition-transform" />
+                </div>
+                <p className="text-[10px] font-medium text-amber-600 mt-1 uppercase tracking-wider">Snap a photo & solve</p>
               </Link>
             </CardContent>
           </Card>

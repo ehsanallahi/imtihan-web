@@ -128,6 +128,9 @@ export default async function SubjectPage({ params }) {
                         Chapter {chapter.number}
                       </Badge>
                       <div className="flex gap-1">
+                        <Badge variant="secondary" className="bg-amber-50 text-amber-700 hover:bg-amber-100 px-1.5 cursor-pointer" title="AI Lesson Available">
+                          <Sparkles className="h-3 w-3" />
+                        </Badge>
                         {hasExplanation && (
                           <Badge variant="secondary" className="bg-indigo-50 text-indigo-700 hover:bg-indigo-100 px-1.5" title="Theory Available">
                             <BookOpen className="h-3 w-3" />

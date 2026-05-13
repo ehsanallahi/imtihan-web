@@ -137,16 +137,23 @@ export async function DailyReviewWidget({ studentProfileId }) {
         </div>
         
         {dueForReviewCount > 0 ? (
-          <div className="space-y-4 w-full">
+          <div className="space-y-3 w-full">
             <div className="bg-white/10 rounded-lg p-3">
               <span className="text-3xl font-black">{dueForReviewCount}</span>
               <span className="text-indigo-200 text-sm ml-2">Questions Due</span>
             </div>
-            <Link href="/study/review" className="block w-full">
-              <Button className="w-full bg-white text-indigo-700 hover:bg-indigo-50 font-bold">
-                Start Review <ArrowRight className="w-4 h-4 ml-2" />
-              </Button>
-            </Link>
+            <div className="grid grid-cols-1 gap-2 w-full">
+              <Link href="/study/review" className="block w-full">
+                <Button className="w-full bg-white text-indigo-700 hover:bg-indigo-50 font-bold h-10 text-xs">
+                  Quiz Mode <ArrowRight className="w-3 h-3 ml-2" />
+                </Button>
+              </Link>
+              <Link href="/study/flashcards" className="block w-full">
+                <Button variant="outline" className="w-full bg-transparent border-white/30 text-white hover:bg-white/10 font-bold h-10 text-xs">
+                  Flashcard Mode <Star className="w-3 h-3 ml-2" />
+                </Button>
+              </Link>
+            </div>
           </div>
         ) : (
           <div className="bg-white/10 rounded-lg p-4 w-full border border-white/20 mt-4">

@@ -4,6 +4,8 @@ import { redirect } from "next/navigation";
 import { Card, CardContent } from "@/components/ui/card";
 import { BrainCircuit, Target, Trophy, Flame, ChevronRight } from "lucide-react";
 import Link from "next/link";
+import { getChapterMastery } from "@/actions/analyticsActions";
+import MasteryHeatmap from "@/components/study/analytics/MasteryHeatmap";
 
 export const metadata = {
   title: "Analytics | Imtihan",
@@ -20,6 +22,8 @@ export default async function AnalyticsPage() {
       where: { userId: session.user.id }
     });
   }
+  
+  const masteryResult = await getChapterMastery();
 
   const streak = profile?.studyStreak || 0;
 
@@ -116,6 +120,9 @@ export default async function AnalyticsPage() {
           textColor="text-[#D9A300]" 
         />
       </div>
+
+      {/* Mastery Heatmap */}
+      {masteryResult.success && <MasteryHeatmap data={masteryResult.data} />}
 
       {/* Subject Breakdown */}
       <h2 className="text-2xl font-display font-bold text-slate-800 mb-6">Subject Breakdown</h2>

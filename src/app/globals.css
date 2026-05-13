@@ -140,6 +140,23 @@
     font-family: 'Noto Nastaliq Urdu', serif;
     direction: rtl;
   }
+
+  .custom-scrollbar::-webkit-scrollbar {
+    width: 6px;
+  }
+  .custom-scrollbar::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  .custom-scrollbar::-webkit-scrollbar-thumb {
+    @apply bg-slate-200 rounded-full hover:bg-teal-200 transition-colors;
+  }
+  .custom-scrollbar-hidden::-webkit-scrollbar {
+    display: none;
+  }
+  .custom-scrollbar-hidden {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
 }
 
 /* Prevent horizontal scroll on mobile */
@@ -164,6 +181,14 @@ img, video, iframe {
   0% { opacity: 0.5; scale: 1; }
   50% { opacity: 0.8; scale: 1.05; }
   100% { opacity: 0.5; scale: 1; }
+}
+
+@keyframes shimmer {
+  100% { transform: translateX(100%); }
+}
+
+.animate-shimmer {
+  animation: shimmer 2s infinite;
 }
 
 @keyframes mesh-gradient {

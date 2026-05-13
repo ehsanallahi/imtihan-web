@@ -233,12 +233,14 @@ export default async function DashboardPage(props) {
               </Link>
             </CardContent>
           </Card>
-      {/* AI Study Roadmap */}
-      <div className="grid grid-cols-1 gap-6">
-        <StudyRoadmap />
-      </div>
+        </div>
 
-      <div className="space-y-6">
+        {/* AI Study Roadmap */}
+        <div className="grid grid-cols-1 gap-6">
+          <StudyRoadmap />
+        </div>
+
+        <div className="space-y-6">
           <div className="flex items-center gap-2">
             <div className="w-1.5 h-6 bg-teal-500 rounded-full" />
             <h2 className="text-xl font-display font-bold text-teal-900 uppercase tracking-tight">My Growth</h2>

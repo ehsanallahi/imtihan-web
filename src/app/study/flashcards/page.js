@@ -18,8 +18,8 @@ export default async function FlashcardsPage(props) {
   const result = await getDueFlashcards(subjectId);
 
   return (
-    <div className="max-w-4xl mx-auto px-4 py-10">
-      <div className="mb-8 flex items-center justify-between">
+    <div className="min-h-[calc(100vh-80px)] flex flex-col max-w-4xl mx-auto px-4 py-6">
+      <div className="flex-shrink-0 mb-6 flex items-center justify-between">
         <div className="flex items-center gap-4">
           <Link href="/study">
             <div className="p-2 rounded-xl bg-white border-2 border-slate-100 text-slate-400 hover:text-teal-600 hover:border-teal-100 transition-all">
@@ -27,16 +27,15 @@ export default async function FlashcardsPage(props) {
             </div>
           </Link>
           <div>
-            <h1 className="text-3xl font-display font-black text-slate-800">SRS Review</h1>
+            <h1 className="text-2xl sm:text-3xl font-display font-black text-slate-800">SRS Review</h1>
             <p className="text-slate-500 font-medium uppercase tracking-widest text-[10px]">Mastering through memory</p>
           </div>
         </div>
       </div>
 
-      <div className="mt-10">
+      <div className="flex-1 flex flex-col justify-center">
         <FlashcardPlayer 
           cards={result.success ? result.cards : []} 
-          onComplete={() => redirect("/study/analytics")} 
         />
       </div>
     </div>

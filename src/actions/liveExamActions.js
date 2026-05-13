@@ -7,7 +7,7 @@ import { revalidatePath } from "next/cache";
 export async function getUpcomingLiveExams() {
   try {
     const today = new Date();
-    const exams = await db.liveExam.findMany({
+    let exams = await db.liveExam.findMany({
       where: {
         endTime: { gte: today },
         isPublished: true
@@ -18,6 +18,36 @@ export async function getUpcomingLiveExams() {
       },
       orderBy: { startTime: 'asc' }
     });
+
+    // Self-seed for development if empty
+    if (exams.length === 0 && process.env.NODE_ENV === 'development') {
+      const subject = await db.subject.findFirst();
+      if (subject) {
+        const now = new Date();
+        const startSoon = new Date(now.getTime() + (60 * 60 * 1000));
+        const endSoon = new Date(startSoon.getTime() + (60 * 60 * 1000));
+        
+        await db.liveExam.create({
+          data: {
+            title: 'National Mathematics Mock Exam',
+            subjectId: subject.id,
+            startTime: startSoon,
+            endTime: endSoon,
+            durationMinutes: 60,
+            totalQuestions: 50,
+            isPublished: true
+          }
+        });
+        
+        // Refetch
+        exams = await db.liveExam.findMany({
+          where: { endTime: { gte: today }, isPublished: true },
+          include: { subject: { select: { name: true } }, _count: { select: { sessions: true } } },
+          orderBy: { startTime: 'asc' }
+        });
+      }
+    }
+
     return exams;
   } catch (error) {
     console.error("GET_UPCOMING_LIVE_EXAMS_ERROR:", error);

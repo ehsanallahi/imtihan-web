@@ -7,7 +7,9 @@ import { Button } from "@/components/ui/button";
 import { DashboardUploadSyllabus } from "@/components/dashboard/DashboardActions";
 import { LeaderboardWidget, BadgesWidget, DailyReviewWidget, DailyGoalWidget } from "@/components/dashboard/GamificationWidgets";
 import StudyRoadmap from "@/components/dashboard/StudyRoadmap";
+import LiveExamWidget from "@/components/dashboard/LiveExamWidget";
 import { refreshDailyCredits } from "@/actions/creditActions";
+import { getUpcomingLiveExams } from "@/actions/liveExamActions";
 import {
   FileText, ArrowRight, BookOpen, Flame, Users, AlertCircle, Settings2, GraduationCap,
   CheckCircle2, BrainCircuit, Clock, Crown, Sparkles
@@ -36,7 +38,7 @@ export default async function DashboardPage(props) {
     const isImpersonating = isAdmin && !!studentId && studentId !== session.user.id;
 
     // Fetch essential data in parallel for speed
-    const [targetUser, examSessions, profile] = await Promise.all([
+    const [targetUser, examSessions, profile, upcomingLiveExams] = await Promise.all([
       db.user.findUnique({
         where: { id: targetUserId },
         select: { name: true, role: true, aiCreditsBalance: true }
@@ -46,7 +48,8 @@ export default async function DashboardPage(props) {
         orderBy: { completedAt: "desc" },
         take: 10
       }),
-      db.studentProfile.findUnique({ where: { userId: targetUserId } })
+      db.studentProfile.findUnique({ where: { userId: targetUserId } }),
+      getUpcomingLiveExams()
     ]);
 
     const isCmsUser = ["super_admin", "content_editor", "moderator"].includes(userRole);
@@ -235,8 +238,9 @@ export default async function DashboardPage(props) {
           </Card>
         </div>
 
-        {/* AI Study Roadmap */}
-        <div className="grid grid-cols-1 gap-6">
+        {/* Upcoming Competitions & Study Roadmap */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mt-10">
+          <LiveExamWidget exams={upcomingLiveExams} />
           <StudyRoadmap />
         </div>
 

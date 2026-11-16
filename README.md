@@ -1,36 +1,48 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://github.com/vercel/next.js/tree/canary/packages/create-next-app).
+# imtihan.app
 
-## Getting Started
-
-First, run the development server:
+The public website for the Imtihan app: landing page, legal pages and the pages the app links to.
+Next.js, exported as static files and hosted on Vercel, which deploys every push to `main`.
+The admin portal is a separate project (`imtihan_web`).
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+npm install
+npm run dev      # http://localhost:3000
+npm run build    # writes the site to out/
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## Pages
 
-You can start editing the page by modifying `app/page.js`. The page auto-updates as you edit the file.
+| Address | What it is |
+|---|---|
+| `/` | Landing page |
+| `/privacy`, `/terms`, `/delete-account` | Legal pages, English and Urdu |
+| `/p/<code>`, `/parent` | Where the app's parent links land. Says the report is coming soon |
+| `/r/<partner-code>` | A partner's invite link: shows the code to enter in the app |
+| `/testers` | How to join the closed test: Google Group, Play opt-in, install |
+| `/download` | Link for posters and QR codes |
+| `/upgrade` | Linked from the app's "ask a parent" message. Says the app is free |
+| `/contact` | Support email |
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+`/p/…` and `/r/…` are not real folders: `vercel.json` serves the `/p` and `/r` pages for them.
+`npm run dev` does not do that, so test those links on a Vercel preview deployment.
 
-## Learn More
+## Things to change in one place
 
-To learn more about Next.js, take a look at the following resources:
+`lib/site.js` holds the support email, the list of boards and which classes are live, and
+`APP_IS_PUBLIC`. While that is `false`, every download button invites people to `/testers`. Set it to `true`
+when the Play Store listing is public.
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## Languages
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+English is the default, like the app. Every piece of text is written with `<T ur="…" en="…" />`, which puts both
+languages in the page; CSS hides the one not chosen, and the header button saves the choice.
+The legal pages always show both languages.
 
-## Deploy on Vercel
+## Legal text and screenshots
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+`content/legal/*.html`, `public/screens/`, the icon and the share image come from the app repo.
+After changing them there, run:
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+```bash
+node scripts/import-assets.mjs ../../imtihan_mobile_app
+```

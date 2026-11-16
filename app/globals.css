@@ -1,0 +1,289 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+@import "shadcn/tailwind.css";
+
+@theme inline {
+  --font-sans: var(--font-latin), var(--font-urdu), system-ui, sans-serif;
+  --font-heading: var(--font-latin), var(--font-urdu), system-ui, sans-serif;
+  --color-ring: var(--ring);
+  --color-input: var(--input);
+  --color-border: var(--border);
+  --color-destructive: var(--destructive);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-accent: var(--accent);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-muted: var(--muted);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-secondary: var(--secondary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-primary: var(--primary);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-popover: var(--popover);
+  --color-card-foreground: var(--card-foreground);
+  --color-card: var(--card);
+  --color-foreground: var(--foreground);
+  --color-background: var(--background);
+  --radius-sm: calc(var(--radius) * 0.6);
+  --radius-md: calc(var(--radius) * 0.8);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) * 1.4);
+  --radius-2xl: calc(var(--radius) * 1.8);
+  --radius-3xl: calc(var(--radius) * 2.2);
+  --radius-4xl: calc(var(--radius) * 2.6);
+}
+
+/* shadcn/ui theme in the app's colours (lib/core/theme/app_theme.dart in the app repo). */
+:root {
+  --background: #f8fafc;
+  --foreground: #0f172a;
+  --card: #ffffff;
+  --card-foreground: #0f172a;
+  --popover: #ffffff;
+  --popover-foreground: #0f172a;
+  --primary: #047857;
+  --primary-foreground: #ffffff;
+  --secondary: #ecfdf5;
+  --secondary-foreground: #064e3b;
+  --muted: #f1f5f9;
+  --muted-foreground: #475569;
+  --accent: #ecfdf5;
+  --accent-foreground: #064e3b;
+  --destructive: #dc2626;
+  --border: #e2e8f0;
+  --input: #e2e8f0;
+  --ring: #10b981;
+  --radius: 0.875rem;
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  html {
+    @apply font-sans;
+    scroll-behavior: smooth;
+    scroll-padding-top: 5rem;
+  }
+  body {
+    @apply bg-background text-foreground;
+  }
+  button:not(:disabled),
+  [role="button"]:not(:disabled) {
+    cursor: pointer;
+  }
+}
+
+/* Language switch: see components/t.jsx. */
+html[data-lang="ur"] [data-l="en"],
+html[data-lang="en"] [data-l="ur"] {
+  display: none !important;
+}
+
+/* Nastaliq needs tall lines or its descenders are cut off, and reads small at Latin sizes. */
+[lang="ur"] {
+  font-family: var(--font-urdu), "Jameel Noori Nastaleeq", serif;
+  line-height: 2.2;
+}
+[data-l="ur"] {
+  font-size: 1.08em;
+}
+h1 [lang="ur"],
+h2 [lang="ur"],
+h3 [lang="ur"] {
+  line-height: 1.9;
+}
+
+/* Legal pages: text imported as HTML from the app repo (content/legal). */
+.legal h1 {
+  font-size: 1.75rem;
+  font-weight: 800;
+  color: #064e3b;
+}
+.legal h2 {
+  font-size: 1.15rem;
+  font-weight: 700;
+  margin-top: 1.8em;
+}
+.legal p,
+.legal ul,
+.legal ol {
+  margin-top: 0.75em;
+}
+.legal ul {
+  list-style: disc;
+  padding-inline-start: 1.4em;
+}
+.legal ol {
+  list-style: decimal;
+  padding-inline-start: 1.4em;
+}
+.legal a {
+  color: #047857;
+  text-decoration: underline;
+}
+.legal .meta {
+  color: #64748b;
+  font-size: 0.9rem;
+}
+
+/* ---------- Motion ---------- */
+
+/* Scroll reveals (components/motion.jsx). Only hidden when scripts run, see langScript. */
+html[data-js] [data-reveal] {
+  opacity: 0;
+  translate: 0 24px;
+  transition: opacity 0.6s ease-out, translate 0.6s ease-out;
+  transition-delay: var(--delay, 0ms);
+}
+html[data-js] [data-reveal][data-shown] {
+  opacity: 1;
+  translate: 0 0;
+}
+
+/* Hero: a tilted phone that leans toward the mouse, with cards floating in front of it. */
+.hero-stage {
+  perspective: 1200px;
+}
+.hero-tilt {
+  transform-style: preserve-3d;
+  transform: rotateX(calc(6deg + var(--tilt-x, 0deg))) rotateY(calc(-14deg + var(--tilt-y, 0deg)));
+  transition: transform 0.25s ease-out;
+}
+[dir="rtl"] .hero-tilt {
+  transform: rotateX(calc(6deg + var(--tilt-x, 0deg))) rotateY(calc(14deg + var(--tilt-y, 0deg)));
+}
+.hero-chip {
+  position: absolute;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  border-radius: 1rem;
+  background: #fff;
+  padding: 0.6rem 0.9rem;
+  font-size: 0.875rem;
+  font-weight: 600;
+  white-space: nowrap;
+  color: #064e3b;
+  box-shadow: 0 16px 32px rgb(2 44 34 / 0.35);
+}
+.float-slow {
+  animation: float 7s ease-in-out infinite;
+}
+.float-a {
+  --z: 70px;
+  animation: float-chip 5s ease-in-out infinite;
+}
+.float-b {
+  --z: 110px;
+  animation: float-chip 6s ease-in-out -2s infinite;
+}
+.float-c {
+  --z: 50px;
+  animation: float-chip 5.5s ease-in-out -3.5s infinite;
+}
+@keyframes float {
+  50% {
+    translate: 0 -10px;
+  }
+}
+@keyframes float-chip {
+  from,
+  to {
+    transform: translateZ(var(--z)) translateY(0);
+  }
+  50% {
+    transform: translateZ(var(--z)) translateY(-12px);
+  }
+}
+
+/* Numbers that count up. Where @property is unsupported they simply show the final value. */
+@property --count {
+  syntax: "<integer>";
+  initial-value: 0;
+  inherits: false;
+}
+.count-up {
+  --count: var(--to);
+  counter-reset: n var(--count);
+  animation: count-up 1.8s ease-out 0.4s both;
+}
+.count-up::after {
+  content: counter(n);
+}
+@keyframes count-up {
+  from {
+    --count: 0;
+  }
+}
+.bar-fill {
+  animation: bar-fill 1.8s ease-out 0.4s both;
+}
+@keyframes bar-fill {
+  from {
+    width: 0;
+  }
+}
+.flicker {
+  transform-origin: 50% 90%;
+  animation: flicker 1.4s ease-in-out infinite;
+}
+@keyframes flicker {
+  30% {
+    transform: scale(1.12) rotate(-4deg);
+  }
+  60% {
+    transform: scale(0.94) rotate(3deg);
+  }
+}
+
+/* Screenshot strip: slides forever, pauses under the pointer or a finger. */
+.marquee {
+  overflow: hidden;
+  mask-image: linear-gradient(to right, transparent, #000 6%, #000 94%, transparent);
+}
+.marquee-track {
+  display: flex;
+  gap: 1rem;
+  width: max-content;
+  padding-block: 0.5rem 1rem;
+  animation: marquee 45s linear infinite;
+}
+.marquee:hover .marquee-track,
+.marquee:active .marquee-track {
+  animation-play-state: paused;
+}
+@keyframes marquee {
+  to {
+    transform: translateX(calc(-50% - 0.5rem));
+  }
+}
+
+/* Visitors who ask their device for less motion get a still page. */
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+  html[data-js] [data-reveal] {
+    opacity: 1;
+    translate: 0 0;
+    transition: none;
+  }
+  .float-slow,
+  .float-a,
+  .float-b,
+  .float-c,
+  .count-up,
+  .bar-fill,
+  .flicker,
+  .marquee-track {
+    animation: none;
+  }
+  .float-a,
+  .float-b,
+  .float-c {
+    transform: translateZ(var(--z));
+  }
+  .marquee {
+    overflow-x: auto;
+  }
+}

@@ -1,14 +1,8 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  serverExternalPackages: ['pdf-parse', 'canvas', '@napi-rs/canvas'],
-  images: {
-    remotePatterns: [
-      {
-        protocol: 'https',
-        hostname: 'i.pravatar.cc',
-      },
-    ],
-  },
+  // Plain HTML/CSS/JS in `out/`, served by Vercel. Routing for /p/… and /r/… is in vercel.json.
+  output: "export",
+  images: { unoptimized: true },
 };
 
 export default nextConfig;
